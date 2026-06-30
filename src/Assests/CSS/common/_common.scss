@@ -1,0 +1,298 @@
+
+table tbody > tr:first-child > td {
+    border-top: 0;
+}
+
+table tbody > tr:last-child > td {
+    border-bottom: 0;
+}
+
+.logo--login {
+  padding-left: 15px;
+  padding-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heading--login {
+  background: #000;
+  color: #fff;
+  width: 100%;
+  max-width: 190px;
+  margin: 0 auto;
+  margin-bottom: -25px;
+  z-index: 1;
+  position: relative;
+  border-radius: 5px;
+  font-size: 17px;
+  font-weight: 500;
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  line-height: normal;
+}
+
+.login--form--admin form {
+  z-index: 1;
+  position: relative;
+  border: 1px solid #d5d5d5;
+  padding: 42px 15px;
+  border-radius: 15px;
+  padding-bottom: 20px;
+  background-color: #fff;
+}
+
+input.number--appearance-none[type="number"]::-webkit-inner-spin-button,
+input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.buttons--overflow::-webkit-scrollbar {
+  height: 0px;
+}
+
+.custom--input {
+  border: 1px solid #c5c5c5;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-size: 15px;
+  line-height: normal;
+}
+
+.custom--date .react-datepicker-wrapper {
+  width: 100%;
+}
+
+.shodow--box {
+  box-shadow: 0px 1px 4px 0px rgb(0 0 0 / 4%);
+}
+
+.overlay--sidebar {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  left: 0;
+  opacity: 0.5;
+  z-index: 1;
+  display: none;
+  z-index: 999;
+  @media (max-width: 1200px) {
+    display: block;
+  }
+}
+
+.profile--view > div.profile--icon {
+  @media (max-width: 1200px) {
+    width: 50px;
+    padding: 0;
+  }
+
+  .profile--text {
+    @media (max-width: 1200px) {
+      display: none;
+    }
+  }
+}
+
+.custom--checkbox {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  user-select: none;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+
+  .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 22px;
+    width: 22px;
+    background-color: #fff;
+    border: 1px solid #D4D4D4;
+    border-radius: 5px;
+
+    &:after {
+      content: "";
+      position: absolute;
+      display: none;
+          left: 7px;
+    top: 2.5px;
+    width: 6px;
+    height: 11px;
+      border: solid white;
+      border-width: 0 3px 3px 0;
+      transform: rotate(45deg);
+    }
+  }
+
+  input:checked ~ .checkmark {
+    background-color: #008421;
+  }
+
+  input:checked ~ .checkmark:after {
+    display: block;
+  }
+}
+
+.custom--checkbox--white {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  width: 25px;
+  height: 25px;
+  user-select: none;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+
+  .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #fff;
+    border: 1px solid #D4D4D4;
+    border-radius: 5px;
+
+    &:after {
+      content: "";
+      position: absolute;
+      display: none;
+          left: 7px;
+    top: 2.5px;
+    width: 6px;
+    height: 11px;
+      border: solid white;
+      border-width: 0 3px 3px 0;
+      transform: rotate(45deg);
+    }
+  }
+
+  input:checked ~ .checkmark {
+    background-color: #008421;
+  }
+
+  input:checked ~ .checkmark:after {
+    display: block;
+  }
+}
+
+/* width */
+.custom--overflow::-webkit-scrollbar {
+  width: 0px;
+}
+
+/* Track */
+.custom--overflow::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+/* Handle */
+.custom--overflow::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+/* Handle on hover */
+.custom--overflow::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+.custom--shodow{
+  box-shadow: 0px 2px 4px 0px #0000001A;
+}
+
+.input--icon {
+  padding-left: 40px !important;
+}
+
+.custom--date .react-datepicker-wrapper {
+  width: 100%;
+}
+
+.custom--date .react-datepicker-wrapper input {
+  width: 100%;
+  border: 1px solid #c5c5c5;
+  padding: 7px 15px;
+  border-radius: 5px;
+  min-height: 40px;
+
+  @media(max-width:992px){
+    min-height: 36px;
+    font-size: 13px;
+  }
+}
+
+.DateRangePicker .pagination--button {
+    position: absolute;
+    top: 15px;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.DateRangePicker .pagination--button.pagination--prev {
+    left: 15px;
+}
+
+.DateRangePicker .pagination--button.pagination--next {
+    right: 15px;
+}
+
+.pagination--button {
+  transition: all 0.2s ease;
+}
+.pagination--button:hover {
+  color: #c0392b;
+  transform: scale(1.1);
+}
+
+.inner--shadow{
+  box-shadow: 0px 4px 4px 0px #0000001A inset;
+}
+
+.loader-new{
+  width: 100%;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #00000099;
+    height: 100%;
+    z-index: 99999;
+}
+
+.custom--btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--black);
+    color: var(--white);
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 15px;
+}
+.custom--date .react-datepicker-wrapper {
+    width: 100%;
+}
+.custom--date .react-datepicker-popper{
+  z-index: 99;
+}
