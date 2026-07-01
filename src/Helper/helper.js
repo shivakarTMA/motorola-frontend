@@ -9,7 +9,7 @@ export const customStyles = {
       "&:hover": {
         borderColor: "black",
       },
-      minHeight: isMobile ? "36px" : "40px",
+      minHeight: isMobile ? "33px" : "40px",
       fontSize: isMobile ? "13px" : "14px",
       borderRadius: "5px",
       paddingLeft: isMobile ? "2px" : "3px",
@@ -56,15 +56,38 @@ export const customStyles = {
     //   backgroundColor: "#e0e0e0", // Optional: Add a hover effect for the clear button
     // },
   }),
+  dropdownIndicator: (base, state) => {
+    const isMobile = window.innerWidth < 640;
+
+    return {
+      ...base,
+      color: state.isFocused ? "#000000" : "#6b7280",
+      padding: isMobile ? "4px" : "6px",
+      transition: "all 0.2s ease",
+
+      "&:hover": {
+        color: "#000000",
+      },
+
+      svg: {
+        width: isMobile ? 16 : 18,
+        height: isMobile ? 16 : 18,
+        transform: state.selectProps.menuIsOpen
+          ? "rotate(180deg)"
+          : "rotate(0deg)",
+        transition: "transform 0.2s ease",
+      },
+    };
+  },
 };
 
 export const formatRole = (role) => {
-  if (!role) return '';
+  if (!role) return "";
   return role
     .toLowerCase()
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 export function formatDate(dateString) {
@@ -78,34 +101,44 @@ export function formatDate(dateString) {
   return `${day}-${month}-${year}`;
 }
 
-export function formatCapitalText(status){
-  if (!status) return '';
+export function formatCapitalText(status) {
+  if (!status) return "";
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-};
+}
 
 export function formatStatus(status) {
-  if (!status) return '';
+  if (!status) return "";
 
   // Replace underscores with spaces, split into words
   return status
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 export function formatWithTimeDate(dateString) {
-  if (!dateString) return '';
+  if (!dateString) return "";
 
   const date = new Date(dateString);
 
-  const day = date.toLocaleString('en-GB', { day: '2-digit' });
-  const month = date.toLocaleString('en-GB', { month: 'short' });
+  const day = date.toLocaleString("en-GB", { day: "2-digit" });
+  const month = date.toLocaleString("en-GB", { month: "2-digit" });
   const year = date.getFullYear();
-  const time = date.toLocaleString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
+  const time = date.toLocaleString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: true,
   });
 
-  return `${day} ${month}, ${year}, ${time.toLowerCase()}`;
+  return `${day}/${month}/${year} ${time}`;
+}
+
+export function formatText(status) {
+  if (!status) return "";
+
+  // Replace underscores with spaces, split into words
+  return status
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }

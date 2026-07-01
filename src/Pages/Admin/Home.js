@@ -9,6 +9,14 @@ import { Link } from "react-router-dom";
 import { LuCalendar } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { authAxios } from "../../Config/config";
+import {
+  FaUsers,
+  FaUserCheck,
+  FaUserSlash,
+  FaBan,
+  FaUserPlus,
+  FaClipboardCheck,
+} from "react-icons/fa";
 
 const filterOptions = [
   { value: "today", label: "Today" },
@@ -17,31 +25,42 @@ const filterOptions = [
   { value: "custom", label: "Custom Date" },
 ];
 
-const StatCard = ({ title, value, highlight = false, subtitle }) => {
+const StatCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  iconBg = "bg-blue-100",
+  iconColor = "text-blue-600",
+  highlight = false,
+}) => {
   return (
     <div
-      className={`rounded-lg border p-4 bg-white min-h-[95px]
-      ${highlight ? "border-red-200 bg-red-50" : "border-gray-200"}`}
+      className={`relative rounded-xl border p-3 shadow-sm transition-all duration-300 hover:shadow-md
+      ${highlight ? "border-red-200 bg-red-50" : "border-gray-200 bg-white"}`}
     >
-      <h3 className="text-3xl font-semibold text-gray-800">
-        {value || "-"}
-      </h3>
-
-      <p className="text-sm text-gray-500 mt-1">{title}</p>
-
-      {subtitle && (
-        <p className="text-xs text-red-500 mt-2">{subtitle}</p>
+      {/* Icon */}
+      {Icon && (
+        <div
+          className={`h-10 w-10 rounded-full flex items-center justify-center mb-3 ${iconBg}`}
+        >
+          <Icon className={`text-xl ${iconColor}`} />
+        </div>
       )}
+
+      {/* Value */}
+      <h3 className="text-2xl font-bold text-gray-800">{value || "-"}</h3>
+
+      {/* Title */}
+      <p className="text-[13px] text-gray-500">{title}</p>
+
+      {/* Subtitle */}
+      {subtitle && <p className="mt-3 text-xs text-red-500">{subtitle}</p>}
     </div>
   );
 };
 
-const ActivityRow = ({
-  type,
-  message,
-  moderator,
-  time,
-}) => {
+const ActivityRow = ({ type, message, moderator, time }) => {
   const styles = {
     Ban: "bg-orange-600 text-white",
     Hide: "bg-gray-200 text-gray-700",
@@ -49,8 +68,8 @@ const ActivityRow = ({
   };
 
   return (
-    <div className="flex items-center justify-between py-4 border-b">
-      <div className="flex items-center gap-4">
+    <div className="flex lg:flex-row flex-col lg:items-center items-start justify-between py-3 border-b">
+      <div className="flex lg:flex-row flex-col lg:items-center items-start lg:gap-4 gap-2">
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${
             styles[type]
@@ -59,9 +78,7 @@ const ActivityRow = ({
           {type}
         </span>
 
-        <span className="text-gray-800">
-          {message}
-        </span>
+        <span className="text-gray-800 text-sm">{message}</span>
       </div>
 
       <div className="text-sm text-gray-500">
@@ -76,31 +93,68 @@ const AdminDashboard = () => {
     <>
       <div>
         <div className="space-y-6">
-
           {/* Top Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 lg:gap-4 gap-2">
-            <StatCard title="Total Users" value="5,284" />
-            <StatCard title="Active" value="4,210" />
-            <StatCard title="Muted" value="36" />
-            <StatCard title="Banned" value="58" />
-            <StatCard title="New this week" value="214" />
+          <div className="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-6 gap-2">
+            <StatCard
+              title="Total Users"
+              value="5,284"
+              icon={FaUsers}
+              iconBg="bg-blue-100"
+              iconColor="text-blue-600"
+            />
+
+            <StatCard
+              title="Active"
+              value="4,210"
+              icon={FaUserCheck}
+              iconBg="bg-green-100"
+              iconColor="text-green-600"
+            />
+
+            <StatCard
+              title="Muted"
+              value="36"
+              icon={FaUserSlash}
+              iconBg="bg-yellow-100"
+              iconColor="text-yellow-600"
+            />
+
+            <StatCard
+              title="Banned"
+              value="58"
+              icon={FaBan}
+              iconBg="bg-red-100"
+              iconColor="text-red-600"
+            />
+
+            <StatCard
+              title="New this week"
+              value="214"
+              icon={FaUserPlus}
+              iconBg="bg-purple-100"
+              iconColor="text-purple-600"
+            />
 
             <StatCard
               title="Pending DPDP Consent"
               value="-"
               subtitle="Blocked: consent not modeled"
+              icon={FaClipboardCheck}
+              iconBg="bg-orange-100"
+              iconColor="text-orange-600"
+              highlight
             />
           </div>
 
           {/* Middle Section */}
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-5 gap-2">
             {/* Moderation Snapshot */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 uppercase tracking-wide">
+            <div className="lg:col-span-2">
+              <h2 className="lg:text-lg text-md font-semibold lg:mb-4 mb-2 uppercase tracking-wide">
                 Moderation Snapshot
               </h2>
 
-              <div className="grid md:grid-cols-3 lg:gap-4 gap-2">
+              <div className="grid md:grid-cols-3 gap-2">
                 <StatCard
                   title="Pending Flags"
                   value="27"
@@ -115,12 +169,12 @@ const AdminDashboard = () => {
             </div>
 
             {/* Content & Community */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 uppercase tracking-wide">
+            <div className="lg:col-span-3">
+              <h2 className="lg:text-lg text-md font-semibold lg:mb-4 mb-2 uppercase tracking-wide">
                 Content & Community
               </h2>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 lg:gap-4 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                 <StatCard title="Posts" value="12.4k" />
                 <StatCard title="Polls" value="318" />
                 <StatCard title="Comments" value="41k" />
@@ -133,7 +187,7 @@ const AdminDashboard = () => {
           {/* Activity Table */}
           <div className="bg-white rounded-lg border">
             <div className="p-4 border-b">
-              <h2 className="text-xl font-semibold uppercase">
+              <h2 className="lg:text-lg text-md font-semibold uppercase">
                 Recent Moderation Activity
               </h2>
             </div>

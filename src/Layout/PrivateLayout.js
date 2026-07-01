@@ -18,6 +18,16 @@ export default function PrivateLayout({ children }) {
     { path: "/banned-users", title: "Banned Users" },
     { path: "/circle-moderator", title: "Circle Moderators" },
     { path: "/user/:id", title: "View User" },
+    { path: "/tribes", title: "Tribes" },
+    { path: "/sub-tribes", title: "Sub-Tribes" },
+    { path: "/app-banner", title: "App Banner" },
+    { path: "/roles", title: "Roles" },
+    { path: "/role", title: "Create Role" },
+    { path: "/role/:id", title: "Edit Role" },
+    { path: "/staff", title: "Staff" },
+    { path: "/modules", title: "Modules" },
+    { path: "/tiers", title: "Tiers" },
+    { path: "/flagged-keywords", title: "Flagged Keywords" },
   ];
 
   const pageTitle =

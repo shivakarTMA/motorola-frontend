@@ -54,7 +54,7 @@ const CustomDataTable = ({
   //   height = "500px",
 }) => {
   return (
-    <div className="bg-white rounded-xl border">
+    <div className="bg-white rounded-xl border overflow-hidden">
       <DataTable
         columns={columns}
         data={data}
@@ -62,7 +62,7 @@ const CustomDataTable = ({
         responsive
         // highlightOnHover
         // striped
-        pointerOnHover
+        // pointerOnHover
         pagination={pagination}
         paginationPerPage={rowsPerPage}
         onChangePage={(page) => setCurrentPage(page)}
@@ -71,6 +71,10 @@ const CustomDataTable = ({
         }}
         selectableRows={selectableRows}
         fixedHeader={fixedHeader}
+        persistTableHead
+        noDataComponent={
+          <div className="py-8 text-gray-500 text-sm">No data found.</div>
+        }
         // fixedHeaderScrollHeight={height}
         customStyles={customTableStyles}
       />

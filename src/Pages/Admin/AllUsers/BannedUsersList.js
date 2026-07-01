@@ -8,25 +8,43 @@ import { toast } from "react-toastify";
 import { FiDownload } from "react-icons/fi";
 import { customStyles } from "../../../Helper/helper";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
-import { Menu, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import { FiEye, FiSlash, FiUserCheck, FiUserX } from "react-icons/fi";
+import Tooltip from "../../../Components/Common/Tooltip";
 import {
-  FiEye,
-  FiSlash,
-  FiUserCheck,
-  FiUserX,
-  FiMoreVertical,
-} from "react-icons/fi";
+  FaUserCheck,
+  FaUserTimes,
+  FaUserSlash,
+  FaBan,
+  FaClipboardCheck,
+} from "react-icons/fa";
 
-const StatCard = ({ title, value, highlight = false, subtitle }) => {
+const StatCard = ({
+  title,
+  value,
+  highlight = false,
+  subtitle,
+  icon: Icon,
+  iconColor = "text-blue-600",
+  iconBg = "bg-blue-100",
+}) => {
   return (
     <div
-      className={`rounded-lg border p-4 bg-white min-h-[95px]
+      className={`rounded-lg border p-3 bg-white min-h-[95px]
       ${highlight ? "border-red-200 bg-red-50" : "border-gray-200"}`}
     >
-      <h3 className="text-3xl font-semibold text-gray-800">{value || "-"}</h3>
+      <div className="flex items-start justify-between">
+        <h3 className="text-2xl font-semibold text-gray-800">{value || "-"}</h3>
 
-      <p className="text-sm text-gray-500 mt-1">{title}</p>
+        {Icon && (
+          <div
+            className={`h-9 w-9 rounded-full flex items-center justify-center ${iconBg}`}
+          >
+            <Icon className={`text-lg ${iconColor}`} />
+          </div>
+        )}
+      </div>
+
+      <p className="text-[14px] text-gray-500 mt-1">{title}</p>
 
       {subtitle && <p className="text-xs text-red-500 mt-2">{subtitle}</p>}
     </div>
@@ -609,80 +627,55 @@ const BannedUsersList = () => {
     {
       name: "ACTIONS",
       center: true,
-      width: "120px",
-      cell: (row, index) => {
-        const pageStart = (currentPage - 1) * rowsPerPage;
-        const absoluteIndex = pageStart + index;
+      width: "160px",
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-[1px]">
+          {getActionItems(row.status).map((item) => {
+            const Icon = item.icon;
 
-        const pageEnd = Math.min(pageStart + rowsPerPage, users.length);
+            if (item.action === "view") {
+              return (
+                <Tooltip
+                  id={`tooltip-view-${row.id}`}
+                  content={item.label}
+                  place="left"
+                >
+                  <Link
+                    key={item.action}
+                    to={`/user/${row.id}`}
+                    title={item.label}
+                    className="p-2 rounded-md border text-gray-600 hover:bg-gray-100 transition block"
+                  >
+                    <Icon size={16} />
+                  </Link>
+                </Tooltip>
+              );
+            }
 
-        const isLastTwoRows = absoluteIndex >= pageEnd - 3;
-
-        return (
-          <Menu as="div" className="relative inline-block text-left">
-            <Menu.Button className="h-9 w-9 flex items-center justify-center rounded-lg border hover:bg-gray-100">
-              <FiMoreVertical size={18} />
-            </Menu.Button>
-
-            <Transition
-              as={Fragment}
-              enter="transition duration-100 ease-out"
-              enterFrom="transform scale-95 opacity-0"
-              enterTo="transform scale-100 opacity-100"
-              leave="transition duration-75 ease-in"
-              leaveFrom="transform scale-100 opacity-100"
-              leaveTo="transform scale-95 opacity-0"
-            >
-              <Menu.Items
-                className={`absolute right-0 w-44 rounded-lg border bg-white shadow-lg z-50 ${
-                  isLastTwoRows
-                    ? "bottom-full mb-2 origin-bottom-right"
-                    : "top-full mt-2 origin-top-right"
-                }`}
+            return (
+              <Tooltip
+                id={`tooltip-view-${row.id}`}
+                content={item.label}
+                place="left"
               >
-                {getActionItems(row.status).map((item) => {
-                  const Icon = item.icon;
-
-                  if (item.action === "view") {
-                    return (
-                      <Menu.Item key={item.action}>
-                        {({ active }) => (
-                          <Link
-                            to={`/user/${row.id}`} // your route
-                            className={`border-b flex w-full items-center gap-3 px-4 py-2 text-sm transition
-                            ${active ? "bg-gray-100" : ""}
-                            text-gray-700`}
-                          >
-                            <Icon size={16} />
-                            <span>{item.label}</span>
-                          </Link>
-                        )}
-                      </Menu.Item>
-                    );
-                  }
-
-                  return (
-                    <Menu.Item key={item.action}>
-                      {({ active }) => (
-                        <button
-                          type="button"
-                          onClick={() => console.log(item.action, row)}
-                          className={`border-b flex w-full items-center gap-3 px-4 py-2 text-sm transition
-                          ${active ? "bg-gray-100" : ""}
-                          ${item.danger ? "text-red-600 hover:bg-red-50" : "text-gray-700"}`}
-                        >
-                          <Icon size={16} />
-                          <span>{item.label}</span>
-                        </button>
-                      )}
-                    </Menu.Item>
-                  );
-                })}
-              </Menu.Items>
-            </Transition>
-          </Menu>
-        );
-      },
+                <button
+                  key={item.action}
+                  type="button"
+                  title={item.label}
+                  onClick={() => console.log(item.action, row)}
+                  className={`p-2 rounded-md border transition ${
+                    item.danger
+                      ? "text-red-600 hover:bg-red-50"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon size={16} />
+                </button>
+              </Tooltip>
+            );
+          })}
+        </div>
+      ),
     },
   ];
 
@@ -710,16 +703,50 @@ const BannedUsersList = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 lg:gap-4 gap-2">
-          <StatCard title="Active" value="4,210" />
-          <StatCard title="Inactive" value="980" />
-          <StatCard title="Suspended" value="36" />
-          <StatCard title="Banned" value="58" />
-          <StatCard title="Pending DPDP Consent" value="412" />
+          <StatCard
+            title="Active"
+            value="4,210"
+            icon={FaUserCheck}
+            iconColor="text-green-600"
+            iconBg="bg-green-100"
+          />
+
+          <StatCard
+            title="Inactive"
+            value="980"
+            icon={FaUserTimes}
+            iconColor="text-gray-600"
+            iconBg="bg-gray-100"
+          />
+
+          <StatCard
+            title="Suspended"
+            value="36"
+            icon={FaUserSlash}
+            iconColor="text-yellow-600"
+            iconBg="bg-yellow-100"
+          />
+
+          <StatCard
+            title="Banned"
+            value="58"
+            icon={FaBan}
+            iconColor="text-red-600"
+            iconBg="bg-red-100"
+          />
+
+          <StatCard
+            title="Pending DPDP Consent"
+            value="412"
+            icon={FaClipboardCheck}
+            iconColor="text-orange-600"
+            iconBg="bg-orange-100"
+          />
         </div>
 
         <div className="bg-white rounded-lg border p-4 mt-3">
           <div className="grid xl:grid-cols-6 lg:grid-cols-2 md:grid-cols-2 gap-3">
-              {/* Status */}
+            {/* Status */}
             {/* <div className="">
               <Select
                 styles={customStyles}

@@ -1,10 +1,9 @@
-
 table tbody > tr:first-child > td {
-    border-top: 0;
+  border-top: 0;
 }
 
 table tbody > tr:last-child > td {
-    border-bottom: 0;
+  border-bottom: 0;
 }
 
 .logo--login {
@@ -57,10 +56,15 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 
 .custom--input {
   border: 1px solid #c5c5c5;
-  padding: 10px 15px;
+  padding: 5px 15px;
   border-radius: 5px;
-  font-size: 15px;
-  line-height: normal;
+  font-size: 14px;
+  min-height: 40px;
+
+  @media (max-width: 992px) {
+    min-height: 33px;
+    font-size: 13px;
+  }
 }
 
 .custom--date .react-datepicker-wrapper {
@@ -122,17 +126,17 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
     height: 22px;
     width: 22px;
     background-color: #fff;
-    border: 1px solid #D4D4D4;
+    border: 1px solid #d4d4d4;
     border-radius: 5px;
 
     &:after {
       content: "";
       position: absolute;
       display: none;
-          left: 7px;
-    top: 2.5px;
-    width: 6px;
-    height: 11px;
+      left: 7px;
+      top: 2.5px;
+      width: 6px;
+      height: 11px;
       border: solid white;
       border-width: 0 3px 3px 0;
       transform: rotate(45deg);
@@ -171,17 +175,17 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
     height: 25px;
     width: 25px;
     background-color: #fff;
-    border: 1px solid #D4D4D4;
+    border: 1px solid #d4d4d4;
     border-radius: 5px;
 
     &:after {
       content: "";
       position: absolute;
       display: none;
-          left: 7px;
-    top: 2.5px;
-    width: 6px;
-    height: 11px;
+      left: 7px;
+      top: 2.5px;
+      width: 6px;
+      height: 11px;
       border: solid white;
       border-width: 0 3px 3px 0;
       transform: rotate(45deg);
@@ -204,21 +208,21 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 
 /* Track */
 .custom--overflow::-webkit-scrollbar-track {
-  background: #f1f1f1; 
+  background: #f1f1f1;
 }
- 
+
 /* Handle */
 .custom--overflow::-webkit-scrollbar-thumb {
-  background: #888; 
+  background: #888;
 }
 
 /* Handle on hover */
 .custom--overflow::-webkit-scrollbar-thumb:hover {
-  background: #555; 
+  background: #555;
 }
 
-.custom--shodow{
-  box-shadow: 0px 2px 4px 0px #0000001A;
+.custom--shodow {
+  box-shadow: 0px 2px 4px 0px #0000001a;
 }
 
 .input--icon {
@@ -236,25 +240,25 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   border-radius: 5px;
   min-height: 40px;
 
-  @media(max-width:992px){
+  @media (max-width: 992px) {
     min-height: 36px;
     font-size: 13px;
   }
 }
 
 .DateRangePicker .pagination--button {
-    position: absolute;
-    top: 15px;
-    cursor: pointer;
-    z-index: 1;
+  position: absolute;
+  top: 15px;
+  cursor: pointer;
+  z-index: 1;
 }
 
 .DateRangePicker .pagination--button.pagination--prev {
-    left: 15px;
+  left: 15px;
 }
 
 .DateRangePicker .pagination--button.pagination--next {
-    right: 15px;
+  right: 15px;
 }
 
 .pagination--button {
@@ -265,34 +269,35 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   transform: scale(1.1);
 }
 
-.inner--shadow{
-  box-shadow: 0px 4px 4px 0px #0000001A inset;
+.inner--shadow {
+  box-shadow: 0px 4px 4px 0px #0000001a inset;
 }
 
-.loader-new{
+.loader-new {
   width: 100%;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #00000099;
-    height: 100%;
-    z-index: 99999;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #00000099;
+  height: 100%;
+  z-index: 99999;
 }
 
 .custom--btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--black);
-    color: var(--white);
-    padding: 8px 15px;
-    border-radius: 5px;
-    font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--black);
+  color: var(--white);
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-size: 14px;
+  border: 1px solid var(--black);
 }
 .custom--date .react-datepicker-wrapper {
-    width: 100%;
+  width: 100%;
 }
-.custom--date .react-datepicker-popper{
+.custom--date .react-datepicker-popper {
   z-index: 99;
 }

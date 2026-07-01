@@ -4,7 +4,7 @@ import Logo from "../../Assests/Images/logo.png";
 import { useSelector } from "react-redux";
 import { FaAngleDown, FaCircle } from "react-icons/fa";
 import dashboardIcon from "../../Assests/Images/icons/dashboard.svg";
-import { MdDashboard } from "react-icons/md";
+import { MdControlCamera, MdDashboard, MdFormatListBulleted, MdManageAccounts, MdTextFormat } from "react-icons/md";
 import { HiUsers } from "react-icons/hi";
 import {
   MdGroups,
@@ -14,6 +14,7 @@ import {
   MdBadge,
   MdSettings,
 } from "react-icons/md";
+import { IoIosGift } from "react-icons/io";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
   const location = useLocation();
@@ -50,8 +51,8 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
           <img
             src={Logo}
             alt="logo"
-            width="122"
-            height="120"
+          width="112"
+            height="100"
             className="mx-auto"
           />
         </Link>
@@ -61,7 +62,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
         <p className="text-[#949494] text-uppercase menu--head mb-3 px-[17px]">
           Overview
         </p>
-        <div className="space-y-1 menu--list">
+        <div className="space-y-0 menu--list">
           <Link
             to="/"
             className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
@@ -112,13 +113,42 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             </div>
           )}
 
-          <Link
-            to="/circles"
-            className={`nav-link ${location.pathname === "/circles" ? "active" : ""}`}
+          <div
+            className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
+            onClick={() => toggleMenu("circles")}
+            style={{ cursor: "pointer" }}
           >
-            <MdGroups className="menu--icon" />
-            <span className="nav-text">Circles</span>
-          </Link>
+            <div className="flex items-center">
+              <MdGroups className="menu--icon" />
+              <span className="nav-text">Tribes</span>
+            </div>
+            <FaAngleDown
+              className={`downmenu transition ${
+                dropdownToggles["circles"] ? "rotate-[180deg]" : ""
+              }`}
+            />
+          </div>
+
+          {dropdownToggles["circles"] && (
+            <div className="pl-[40px] relative dropdown--menu--nav">
+              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
+              <Link
+                to="/tribes"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <FaCircle className="menu--icon !text-[10px]" />
+                <span className="nav-text">Tribes</span>
+              </Link>
+              <Link
+                to="/sub-tribes"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <FaCircle className="menu--icon !text-[10px]" />
+                <span className="nav-text">Sub-Tribes</span>
+              </Link>
+            </div>
+          )}
+
 
           <Link
             to="/app-banner"
@@ -150,6 +180,38 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
           >
             <MdBadge className="menu--icon" />
             <span className="nav-text">Staff</span>
+          </Link>
+
+          <Link
+            to="/roles"
+            className={`nav-link ${location.pathname === "/roles" ? "active" : ""}`}
+          >
+            <MdManageAccounts className="menu--icon" />
+            <span className="nav-text">Roles</span>
+          </Link>
+
+          <Link
+            to="/modules"
+            className={`nav-link ${location.pathname === "/modules" ? "active" : ""}`}
+          >
+            <MdControlCamera className="menu--icon" />
+            <span className="nav-text">Modules</span>
+          </Link>
+
+          <Link
+            to="/tiers"
+            className={`nav-link ${location.pathname === "/tiers" ? "active" : ""}`}
+          >
+            <IoIosGift className="menu--icon" />
+            <span className="nav-text">Tiers</span>
+          </Link>
+
+          <Link
+            to="/flagged-keywords"
+            className={`nav-link ${location.pathname === "/flagged-keywords" ? "active" : ""}`}
+          >
+            <MdTextFormat className="menu--icon" />
+            <span className="nav-text">Flagged Keywords</span>
           </Link>
 
           <Link

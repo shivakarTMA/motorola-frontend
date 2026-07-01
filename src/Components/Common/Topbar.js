@@ -32,17 +32,17 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
       <section className="top--bar p-3 border-b border-b-[#D4D4D4]">
         <div className="inner--container flex lg:flex-nowrap flex-wrap justify-between gap-3">
           {/* Left Section */}
-          <div className="topbar--left flex items-center gap-3 lg:w-[45%] w-[45%] order-1">
-            <div className="toggle--bar w-[32px]" onClick={handleToggleMenu}>
+          <div className="topbar--left flex items-center gap-2 lg:w-[45%] w-[47%] order-1">
+            <div className="toggle--bar lg:w-[32px] w-[25px]" onClick={handleToggleMenu}>
               <img src={ToggleMenu} className="cursor-pointer w-8" />
             </div>
-            <h2 className="font-semibold lg:text-2xl text-lg">{pageTitle}</h2>
+            <h2 className="font-semibold lg:text-xl text-sm">{pageTitle}</h2>
           </div>
 
           <div className="search--global flex w-full lg:order-2 order-3">
             <form onSubmit={handleSubmit} className="flex items-center gap-0 w-full">
               <div className="w-full relative">
-                <span className="absolute left-[15px] top-[50%] translate-y-[-50%]">
+                <span className="absolute lg:left-[15px] left-[10px] top-[50%] translate-y-[-50%]">
                   <IoIosSearch className="text-xl" />
                 </span>
                 <input
@@ -50,7 +50,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
                   value={searchItem}
                   onChange={(e) => setSearchItem(e.target.value)}
                   placeholder="Search users, circles & posts — name, mobile, or ID"
-                  className="outline-none py-1 min-h-[45px] w-full bg-white rounded-[10px] px-3 pl-[45px]"
+                  className="outline-none py-1 lg:min-h-[45px] min-h-[40px] w-full bg-gray-100 rounded-[10px] px-3 lg:pl-[45px] pl-[35px] lg:text-sm text-[12px]"
                 />
               </div>
 
