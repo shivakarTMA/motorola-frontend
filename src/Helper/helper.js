@@ -90,7 +90,7 @@ export const formatRole = (role) => {
     .join(" ");
 };
 
-export function formatDate(dateString) {
+export function formatViewDate(dateString) {
   if (!dateString) return "";
 
   const date = new Date(dateString);
@@ -98,7 +98,7 @@ export function formatDate(dateString) {
   const month = String(date.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
   const year = date.getFullYear();
 
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 }
 
 export function formatCapitalText(status) {

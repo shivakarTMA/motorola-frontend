@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdModeEdit } from "react-icons/md";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
@@ -7,58 +7,17 @@ import { Link } from "react-router-dom";
 import Select from "react-select";
 import { customStyles } from "../../../Helper/helper";
 import CreateNewStaff from "./CreateNewStaff";
+import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
+import { authAxios } from "../../../Config/config";
 
-const users = [
-  {
-    id: 1,
-    name: "Ankush Goyal",
-    email: "admin2@example.com",
-    mobile: "9540787532",
-    role: "Administrator",
-    status: "ACTIVE",
-  },
-  {
-    id: 2,
-    name: "Rahul Sharma",
-    email: "rahul@example.com",
-    mobile: "9876543210",
-    role: "Manager",
-    status: "ACTIVE",
-  },
-  {
-    id: 3,
-    name: "Priya Verma",
-    email: "priya@example.com",
-    mobile: "9123456789",
-    role: "Support Executive",
-    status: "INACTIVE",
-  },
-  {
-    id: 4,
-    name: "Neha Singh",
-    email: "neha@example.com",
-    mobile: "9988776655",
-    role: "Content Editor",
-    status: "ACTIVE",
-  },
-  {
-    id: 5,
-    name: "Amit Kumar",
-    email: "amit@example.com",
-    mobile: "9090909090",
-    role: "Viewer",
-    status: "INACTIVE",
-  },
-];
-
-const roleOptions = [
-  { value: "user", label: "User" },
-  { value: "moderator", label: "Moderator" },
-  { value: "admin", label: "Admin" },
-];
-
-const StaffList = () => {
+const StaffList = (props) => {
+  const { setLoading } = props;
+  const [users, setUsers] = useState([]);
+  const [roleOptions, setRoleOptions] = useState([]);
   const [role, setRole] = useState(null);
+  const [editStaffId, setEditStaffId] = useState(null);
+
+  const [pagination, setPagination] = useState(null);
   const [createStaff, setCreateStaff] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
@@ -82,7 +41,7 @@ const StaffList = () => {
     },
     {
       name: "Role",
-      selector: (row) => row.role,
+      selector: (row) => row.role?.name ?? "--",
       center: true,
       sortable: true,
     },
@@ -109,7 +68,10 @@ const StaffList = () => {
         <div className="flex items-center justify-center gap-[1px]">
           <Tooltip id={`tooltip-edit-${row.id}`} content="Edit" place="left">
             <button
-              onClick={() => handleEdit(row)}
+              onClick={() => {
+                setEditStaffId(row.id);
+                setCreateStaff(true);
+              }}
               className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
             >
               <MdModeEdit size={18} />
@@ -133,6 +95,63 @@ const StaffList = () => {
     },
   ];
 
+  const handleFetchStaff = async (page = 1) => {
+    try {
+      setLoading(true);
+
+      // Fetch staff data from API
+      const response = await authAxios().get("/staff", {
+        params: {
+          page,
+          limit: rowsPerPage,
+        },
+      });
+      const resData = response?.data;
+      if (resData?.success) {
+        setUsers(resData.data.items || []);
+        setPagination(resData.data.pagination);
+      } else {
+        console.error("Failed to fetch staff data:", resData?.message);
+      }
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchRoles = async () => {
+    try {
+      const response = await authAxios().get("/role", {
+        params: {
+          page: 1,
+          limit: 100,
+        },
+      });
+
+      const resData = response?.data;
+
+      if (resData?.success) {
+        const options = resData.data.items.map((item) => ({
+          value: item.id,
+          label: item.name,
+        }));
+
+        setRoleOptions(options);
+      }
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleFetchRoles();
+  }, []);
+
+  useEffect(() => {
+    handleFetchStaff(currentPage);
+  }, [currentPage]);
+
   const handleEdit = (row) => {
     console.log("Edit:", row);
     // Open edit modal
@@ -149,7 +168,7 @@ const StaffList = () => {
     <>
       <div className="space-y-6">
         <div className="flex justify-between items-center gap-4">
-          <div className="">
+          <div className="min-w-[150px]">
             {/* Role */}
             <Select
               styles={customStyles}
@@ -158,9 +177,14 @@ const StaffList = () => {
               onChange={setRole}
               isSearchable={false}
               placeholder="Select Role"
+              className="w-full"
             />
           </div>
-          <button type="button" className="custom--btn" onClick={() => setCreateStaff(true)}>
+          <button
+            type="button"
+            className="custom--btn"
+            onClick={() => setCreateStaff(true)}
+          >
             <FiPlus />
             <span>New Staff</span>
           </button>
@@ -173,18 +197,22 @@ const StaffList = () => {
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
+            totalPages={pagination?.totalPages}
           />
         </div>
       </div>
       <CreateNewStaff
         open={createStaff}
-        onClose={() => setCreateStaff(false)}
-        onSuccess={() => {
-          // TODO: refetch circleGroups from API after a successful create
+        onClose={() => {
+          setCreateStaff(false);
+          setEditStaffId(null);
         }}
+        editId={editStaffId}
+        roleOptions={roleOptions}
+        onSuccess={() => handleFetchStaff(currentPage)}
       />
     </>
   );
 };
 
-export default StaffList;
+export default IsLoadingHOC(StaffList);

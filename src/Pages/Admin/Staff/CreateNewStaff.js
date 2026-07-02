@@ -14,6 +14,7 @@ import {
 } from "../../../Helper/Inputhelpers";
 import { RiImageAddLine } from "react-icons/ri";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { authAxios } from "../../../Config/config";
 // import { authAxios } from "../../../config/config";
 
 const statusOptions = [
@@ -21,18 +22,12 @@ const statusOptions = [
   { value: "INACTIVE", label: "Inactive" },
 ];
 
-const roleOptions = [
-  { value: 1, label: "Administrator" },
-  { value: 2, label: "Manager" },
-  { value: 3, label: "Support Executive" },
-  { value: 4, label: "Content Editor" },
-  { value: 5, label: "Viewer" },
-];
-
-const CreateNewStaff = ({ open, onClose, onSuccess }) => {
+const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const isEdit = !!editId;
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       name: "",
       email: "",
@@ -52,9 +47,15 @@ const CreateNewStaff = ({ open, onClose, onSuccess }) => {
         .matches(/^[0-9]{10}$/, "Mobile must be 10 digits")
         .required("Mobile is required"),
 
-      password: Yup.string()
-        .min(6, "Password must be at least 6 characters")
-        .required("Password is required"),
+      password: Yup.string().when([], {
+        is: () => !isEdit,
+        then: (schema) =>
+          schema
+            .min(6, "Password must be at least 6 characters")
+            .required("Password is required"),
+        otherwise: (schema) =>
+          schema.min(6, "Password must be at least 6 characters").notRequired(),
+      }),
 
       role_id: Yup.object().nullable().required("Role is required"),
 
@@ -66,16 +67,19 @@ const CreateNewStaff = ({ open, onClose, onSuccess }) => {
           name: values.name,
           email: values.email.trim(),
           mobile: values.mobile,
-          password: values.password,
           role_id: values.role_id.value,
           status: values.status.value,
+          ...(values.password ? { password: values.password } : {}),
         };
 
         console.log(payload);
-
-        // await authAxios().post("/staff/create", payload);
-
-        toast.success("Staff Created Successfully");
+        if (isEdit) {
+          await authAxios().put(`/staff/${editId}`, payload);
+          toast.success("Staff Updated Successfully");
+        } else {
+          await authAxios().post("/staff/register", payload);
+          toast.success("Staff Created Successfully");
+        }
 
         onSuccess?.();
         resetForm();
@@ -86,6 +90,40 @@ const CreateNewStaff = ({ open, onClose, onSuccess }) => {
       }
     },
   });
+
+  useEffect(() => {
+    if (!editId) {
+      formik.resetForm();
+    }
+  }, [editId]);
+
+  useEffect(() => {
+    const fetchStaffById = async () => {
+      if (!editId) return;
+
+      try {
+        const res = await authAxios().get(`/staff/${editId}`);
+        const data = res?.data?.data;
+
+        if (res?.data?.success && data) {
+          formik.setValues({
+            name: data.name || "",
+            email: data.email || "",
+            mobile: data.mobile || "",
+            role_id:
+              roleOptions?.find((opt) => opt.value === data.role_id) || null,
+            status: data.status
+              ? { value: data.status, label: data.status }
+              : null,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load staff:", err);
+      }
+    };
+
+    fetchStaffById();
+  }, [editId]);
 
   const handleClose = () => {
     formik.resetForm();
@@ -209,7 +247,8 @@ const CreateNewStaff = ({ open, onClose, onSuccess }) => {
 
                   <div>
                     <label className="block mb-2 text-sm font-medium">
-                      Password <span className="text-red-600">*</span>
+                      {isEdit ? "Change Password" : "Password"}{" "}
+                      {!isEdit && <span className="text-red-600">*</span>}
                     </label>
 
                     <div className="relative">
@@ -220,7 +259,7 @@ const CreateNewStaff = ({ open, onClose, onSuccess }) => {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full pr-12"
-                        placeholder="Enter Password"
+                        placeholder={isEdit ? "Leave blank to keep current password" : "Enter Password"}
                       />
 
                       <button
@@ -293,7 +332,7 @@ const CreateNewStaff = ({ open, onClose, onSuccess }) => {
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="px-5 py-2 rounded-lg border"
+                      className="custom--btn !bg-white !border !border-black !text-black"
                     >
                       Cancel
                     </button>

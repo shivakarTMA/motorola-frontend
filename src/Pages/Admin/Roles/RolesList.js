@@ -1,51 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdModeEdit } from "react-icons/md";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { Link } from "react-router-dom";
 import Select from "react-select";
-import { customStyles } from "../../../Helper/helper";
+import { customStyles, formatViewDate } from "../../../Helper/helper";
+import { authAxios } from "../../../Config/config";
+import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 
-const roles = [
-  {
-    id: 1,
-    name: "Administrator",
-    description: "Full access to all modules and system settings.",
-    created_at: "15 Jan 2025",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Manager",
-    description: "Can manage users, roles, and reports.",
-    created_at: "20 Jan 2025",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Support Executive",
-    description: "Handles customer queries and support tickets.",
-    created_at: "05 Feb 2025",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    name: "Content Editor",
-    description: "Can create and update website content.",
-    created_at: "12 Feb 2025",
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "Viewer",
-    description: "Read-only access to dashboard and reports.",
-    created_at: "25 Feb 2025",
-    status: "Inactive",
-  },
-];
-
-const RolesList = () => {
+const RolesList = (props) => {
+  const { setLoading } = props;
+  const [rolesList, setRolesList] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -62,7 +29,7 @@ const RolesList = () => {
     },
     {
       name: "Created At",
-      selector: (row) => row.created_at,
+      selector: (row) => formatViewDate(row.created_at),
       center: true,
       sortable: true,
     },
@@ -96,6 +63,36 @@ const RolesList = () => {
     },
   ];
 
+  const handleFetchRoles = async (page = 1) => {
+    try {
+      setLoading(true);
+
+      const response = await authAxios().get("/role", {
+        params: {
+          page,
+          limit: rowsPerPage,
+        },
+      });
+
+      const resData = response?.data;
+
+      if (resData?.success) {
+        setRolesList(resData.data.items || []);
+        setPagination(resData.data.pagination);
+      } else {
+        console.error("Failed to fetch role data:", resData?.message);
+      }
+    } catch (error) {
+      console.error("Error fetching role:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    handleFetchRoles(currentPage);
+  }, [currentPage]);
+
   const handleEdit = (row) => {
     console.log("Edit:", row);
     // Open edit modal
@@ -121,10 +118,11 @@ const RolesList = () => {
         <div className="mt-3">
           <CustomDataTable
             columns={columns}
-            data={roles}
+            data={rolesList}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
+            totalPages={pagination?.totalPages}
           />
         </div>
       </div>
@@ -132,4 +130,4 @@ const RolesList = () => {
   );
 };
 
-export default RolesList;
+export default IsLoadingHOC(RolesList);
