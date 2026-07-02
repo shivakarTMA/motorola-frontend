@@ -30,8 +30,6 @@ const roleOptions = [
 ];
 
 const CreateNewStaff = ({ open, onClose, onSuccess }) => {
-  const [coverPreview, setCoverPreview] = useState(null);
-  const [iconPreview, setIconPreview] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const formik = useFormik({
