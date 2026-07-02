@@ -17,7 +17,6 @@ const ViewUser = () => {
     ["Email", "Not Set"],
     ["Gender", "Male"],
     ["Date of Birth", "05 Aug 1995"],
-    ["City / Pincode", "Mumbai / 400001"],
   ];
 
   const accountInfo = [
@@ -65,20 +64,17 @@ const ViewUser = () => {
                   <InfoCard title="Basic Information" rows={basicInfo} />
                   <div className="grid gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-2">
-                      <InfoCard title="Account & Consent" rows={accountInfo} />
+                      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        Community Activity
+                      </h2>
+                      <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
+                        <StatCard title="Posts" value="34" />
+                        <StatCard title="Replies" value="88" />
+                        <StatCard title="Reactions" value="210" />
+                        <StatCard title="Last Active" value="2h ago" />
+                      </div>
                     </div>
                     <ModerationCard />
-                  </div>
-                  <div>
-                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
-                      Community Activity
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                      <StatCard title="Posts" value="34" />
-                      <StatCard title="Replies" value="88" />
-                      <StatCard title="Reactions" value="210" />
-                      <StatCard title="Last Active" value="2h ago" />
-                    </div>
                   </div>
                 </div>
               </TabPanel>

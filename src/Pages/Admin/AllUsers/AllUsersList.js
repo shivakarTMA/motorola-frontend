@@ -97,10 +97,9 @@ const cityOptions = [
   { value: "Pune", label: "Pune" },
 ];
 
-const roleOptions = [
-  { value: "user", label: "User" },
-  { value: "moderator", label: "Moderator" },
-  { value: "admin", label: "Admin" },
+const circleModeratorOption = [
+  { value: "users", label: "Users" },
+  { value: "moderator", label: "Moderator" }
 ];
 
 const users = [
@@ -681,8 +680,7 @@ const AllUsersList = () => {
 
   const [status, setStatus] = useState(null);
   const [consent, setConsent] = useState(null);
-  const [city, setCity] = useState(null);
-  const [role, setRole] = useState(null);
+  const [moderatorFilter, setModeratorFilter] = useState(null);
 
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
@@ -783,28 +781,15 @@ const AllUsersList = () => {
                 />
               </div>
             </div>
-
             <div className="">
-              {/* City */}
+              {/* circleModeratorOption */}
               <Select
                 styles={customStyles}
-                options={cityOptions}
-                value={city}
-                onChange={setCity}
-                isSearchable
-                placeholder="Select City"
-              />
-            </div>
-
-            <div className="">
-              {/* Role */}
-              <Select
-                styles={customStyles}
-                options={roleOptions}
-                value={role}
-                onChange={setRole}
+                options={circleModeratorOption}
+                value={moderatorFilter}
+                onChange={setModeratorFilter}
                 isSearchable={false}
-                placeholder="Select Role"
+                placeholder="Select Option"
               />
             </div>
           </div>

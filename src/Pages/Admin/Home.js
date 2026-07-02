@@ -154,7 +154,7 @@ const AdminDashboard = () => {
                 Moderation Snapshot
               </h2>
 
-              <div className="grid md:grid-cols-3 gap-2">
+              <div className="grid md:grid-cols-2 gap-2">
                 <StatCard
                   title="Pending Flags"
                   value="27"
@@ -163,8 +163,6 @@ const AdminDashboard = () => {
                 />
 
                 <StatCard title="Actions Taken Today" value="8" />
-
-                <StatCard title="Auto-hidden Today" value="3" />
               </div>
             </div>
 
@@ -174,12 +172,11 @@ const AdminDashboard = () => {
                 Content & Community
               </h2>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <StatCard title="Posts" value="12.4k" />
                 <StatCard title="Polls" value="318" />
                 <StatCard title="Comments" value="41k" />
                 <StatCard title="Active Circles" value="46" />
-                <StatCard title="Loyalty Pts" value="1.2M" />
               </div>
             </div>
           </div>

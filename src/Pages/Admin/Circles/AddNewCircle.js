@@ -41,6 +41,7 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
       icon_image: null,
       position: "",
       status: "",
+      feature_tribe: false,
     },
     validationSchema: Yup.object({
       name: Yup.string().trim().required("Name is required"),
@@ -62,6 +63,7 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
           return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
         }),
       status: Yup.string().trim().required("Status is required"),
+      feature_tribe: Yup.boolean().oneOf([true], "Please select Feature Tribe"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
@@ -72,6 +74,7 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
         formData.append("bio", sanitizeFreeText(values.bio));
         formData.append("position", values.position);
         formData.append("status", values.status);
+        formData.append("feature_tribe", values.feature_tribe);
 
         formData.append("cover_image", values.cover_image);
 
@@ -394,6 +397,33 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
                       </p>
                     )}
                   </div>
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="feature_tribe"
+                      name="feature_tribe"
+                      type="checkbox"
+                      checked={formik.values.feature_tribe}
+                      onChange={(e) =>
+                        formik.setFieldValue("feature_tribe", e.target.checked)
+                      }
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+
+                    <label
+                      htmlFor="feature_tribe"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Feature Tribe
+                    </label>
+                  </div>
+
+                  {formik.touched.feature_tribe &&
+                    formik.errors.feature_tribe && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.feature_tribe}
+                      </p>
+                    )}
 
                   <div className="flex justify-end gap-3 pt-4 border-t">
                     <button

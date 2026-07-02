@@ -70,48 +70,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             <MdDashboard className="menu--icon" />
             <span className="nav-text">Dashboard</span>
           </Link>
-          <div
-            className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
-            onClick={() => toggleMenu("users")}
-            style={{ cursor: "pointer" }}
+          <Link
+            to="/all-users"
+            className={`nav-link ${location.pathname === "/all-users" ? "active" : ""}`}
           >
-            <div className="flex items-center">
-              <HiUsers className="menu--icon" />
-              <span className="nav-text">Users</span>
-            </div>
-            <FaAngleDown
-              className={`downmenu transition ${
-                dropdownToggles["users"] ? "rotate-[180deg]" : ""
-              }`}
-            />
-          </div>
-
-          {dropdownToggles["users"] && (
-            <div className="pl-[40px] relative dropdown--menu--nav">
-              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
-              <Link
-                to="/all-users"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">All Users</span>
-              </Link>
-              <Link
-                to="/banned-users"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Banned Users</span>
-              </Link>
-              <Link
-                to="/circle-moderator"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Circle Moderators</span>
-              </Link>
-            </div>
-          )}
+            <HiUsers className="menu--icon" />
+            <span className="nav-text">Users</span>
+          </Link>
 
           <div
             className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"

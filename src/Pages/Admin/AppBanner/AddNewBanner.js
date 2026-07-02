@@ -15,16 +15,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 const linkTypeOptions = [
-  { value: "NONE", label: "None" },
-  { value: "PRODUCT", label: "Product" },
-  { value: "CATEGORY", label: "Category" },
-  { value: "URL", label: "URL" },
-];
-
-const placementOptions = [
-  { value: "HOME_TOP", label: "Home Top" },
-  { value: "HOME_MIDDLE", label: "Home Middle" },
-  { value: "HOME_BOTTOM", label: "Home Bottom" },
+  { value: "INTERNAL", label: "Internal" },
+  { value: "EXTERNAL", label: "External" },
 ];
 
 const statusOptions = [
@@ -190,9 +182,10 @@ const AddNewBanner = ({ open, formik, onClose }) => {
                         value={linkTypeOptions.find(
                           (item) => item.value === formik.values.link_type,
                         )}
-                        onChange={(option) =>
-                          formik.setFieldValue("link_type", option.value)
-                        }
+                        onChange={(option) => {
+                          formik.setFieldValue("link_type", option.value);
+                          formik.setFieldValue("link_value", ""); // Clear previous value
+                        }}
                       />
 
                       {formik.touched.link_type && formik.errors.link_type && (
@@ -204,25 +197,47 @@ const AddNewBanner = ({ open, formik, onClose }) => {
 
                     <div>
                       <label className="block mb-2 text-sm font-medium">
-                        Placement<span className="text-red-600">*</span>
+                        {formik.values.link_type === "INTERNAL"
+                          ? "Post ID"
+                          : "External URL"}
+
+                        <span className="text-red-600">*</span>
                       </label>
 
-                      <Select
-                        styles={customStyles}
-                        options={placementOptions}
-                        value={placementOptions.find(
-                          (item) => item.value === formik.values.placement,
-                        )}
-                        onChange={(option) =>
-                          formik.setFieldValue("placement", option.value)
-                        }
-                      />
-
-                      {formik.touched.placement && formik.errors.placement && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.placement}
-                        </p>
+                      {formik.values.link_type === "INTERNAL" ? (
+                        <input
+                          type="number"
+                          name="link_value"
+                          value={formik.values.link_value}
+                          onKeyDown={blockOnlyNumericKeys}
+                          onChange={(e) => {
+                            const cleaned = sanitizePositiveInteger(
+                              e.target.value,
+                            );
+                            formik.setFieldValue("link_value", cleaned);
+                          }}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full number--appearance-none"
+                          placeholder="Enter Post ID"
+                        />
+                      ) : (
+                        <input
+                          type="url"
+                          name="link_value"
+                          value={formik.values.link_value}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className="custom--input w-full"
+                          placeholder="https://example.com"
+                        />
                       )}
+
+                      {formik.touched.link_value &&
+                        formik.errors.link_value && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formik.errors.link_value}
+                          </p>
+                        )}
                     </div>
 
                     <div>

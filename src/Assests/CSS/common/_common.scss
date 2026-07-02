@@ -309,3 +309,9 @@ input:-webkit-autofill:focus,
 input:-webkit-autofill:active{
     -webkit-box-shadow: 0 0 0 30px white inset !important;
 }
+
+input.number--appearance-none[type="number"]::-webkit-inner-spin-button,
+input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

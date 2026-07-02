@@ -12,8 +12,6 @@ import Login from "../Components/Common/Login";
 import AdminDashboard from "../Pages/Admin/Home";
 import AllUsersList from "../Pages/Admin/AllUsers/AllUsersList";
 import ViewUser from "../Components/UserDetails/ViewUser";
-import BannedUsersList from "../Pages/Admin/AllUsers/BannedUsersList";
-import CircleModeratorsList from "../Pages/Admin/AllUsers/CircleModeratorsList";
 import CirclesList from "../Pages/Admin/Circles/CirclesList";
 import AppBannerList from "../Pages/Admin/AppBanner/AppBannerList";
 import CirclesGroupList from "../Pages/Admin/Circles/CirclesGroupList";
@@ -63,22 +61,7 @@ export default function Routing() {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/banned-users"
-          element={
-            <PrivateRoute>
-              <BannedUsersList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/circle-moderator"
-          element={
-            <PrivateRoute>
-              <CircleModeratorsList />
-            </PrivateRoute>
-          }
-        />
+        
         <Route
           path="/tribes"
           element={

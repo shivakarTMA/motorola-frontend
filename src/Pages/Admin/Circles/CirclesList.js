@@ -12,6 +12,7 @@ const circles = [
     name: "Sub-Tribes 1",
     group_name: "Tribes 1",
     position: 0,
+    feature_tribe: true,
     status: "Inactive",
   },
   {
@@ -19,6 +20,7 @@ const circles = [
     name: "Sub-Tribes 2",
     group_name: "Tribes 2",
     position: 1,
+    feature_tribe: false,
     status: "Active",
   },
 ];
@@ -87,6 +89,23 @@ const CirclesList = () => {
       ),
       width: "120px",
     },
+    {
+  name: "Feature Tribe",
+  selector: (row) => row.feature_tribe,
+  center: true,
+  cell: (row) => (
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${
+        row.feature_tribe
+          ? "bg-blue-100 text-blue-700"
+          : "bg-gray-100 text-gray-600"
+      }`}
+    >
+      {row.feature_tribe ? "Yes" : "No"}
+    </span>
+  ),
+  width: "150px",
+},
     {
       name: "Actions",
       // width: "120px",

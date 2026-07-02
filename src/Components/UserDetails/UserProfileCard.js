@@ -13,11 +13,7 @@ export default function UserProfileCard() {
         <h2 className="mt-5 text-xl font-semibold">
           Aarav Sharma
         </h2>
-
-        <p className="text-sm text-gray-500">
-          MOT100482
-        </p>
-
+        
         <span className="mt-3 rounded-full bg-gray-100 px-4 py-1 text-xs font-semibold">
           Circle Moderator
         </span>
