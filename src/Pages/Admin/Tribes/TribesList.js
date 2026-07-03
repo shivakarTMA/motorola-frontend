@@ -309,12 +309,11 @@ const TribesList = (props) => {
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
             <DialogTitle className="text-lg font-semibold text-gray-900">
-              Delete Tribe Group
+              Delete Tribe
             </DialogTitle>
 
             <p className="mt-3 text-sm text-gray-600">
-              Are you sure you want to delete this tribe group? This action
-              cannot be undone.
+              Are you sure you want to delete this tribe?
             </p>
 
             <div className="mt-6 flex justify-end gap-3">
