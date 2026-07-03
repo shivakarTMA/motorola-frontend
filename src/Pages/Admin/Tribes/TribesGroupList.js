@@ -1,56 +1,27 @@
 import React, { useState } from "react";
 import { MdModeEdit } from "react-icons/md";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
-import AddNewGroup from "./AddNewGroup";
-import AddNewCircle from "./AddNewCircle";
+import AddNewTribesGroup from "./AddNewTribesGroup";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 
 const circles = [
   {
     id: 1,
-    name: "Sub-Tribes 1",
-    group_name: "Tribes 1",
+    name: "Tribes 1",
     position: 0,
-    feature_tribe: true,
     status: "Inactive",
   },
   {
     id: 2,
-    name: "Sub-Tribes 2",
-    group_name: "Tribes 2",
+    name: "Tribes 2",
     position: 1,
-    feature_tribe: false,
     status: "Active",
   },
 ];
 
-const circleGroups = [
-  {
-    id: 1,
-    name: "Battery & Charging",
-    owner: "Aarav Sharma",
-    members: "1,204",
-    posts: 340,
-    polls: 22,
-    interactions: "5.1k",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Camera & Photos",
-    owner: "Ananya Rao",
-    members: 980,
-    posts: 268,
-    polls: 14,
-    interactions: "3.8k",
-    status: "Active",
-  },
-];
-
-const CirclesList = () => {
-  const [addNewGroup, setAddNewGroup] = useState(false);
-  const [addNewCircle, setAddNewCircle] = useState(false);
+const TribesGroupList = () => {
+  const [addNewTribeGroup, setAddNewTribeGroup] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -59,19 +30,13 @@ const CirclesList = () => {
       name: "Name",
       selector: (row) => row.name,
       sortable: true,
-     
-    },
-    {
-      name: "Circle Group",
-      selector: (row) => row.group_name,
-      center: true,
-      
+      // grow: 2,
     },
     {
       name: "Position",
       selector: (row) => row.position,
       center: true,
-     
+      // width: "120px",
     },
     {
       name: "Status",
@@ -89,23 +54,6 @@ const CirclesList = () => {
       ),
       width: "120px",
     },
-    {
-  name: "Feature Tribe",
-  selector: (row) => row.feature_tribe,
-  center: true,
-  cell: (row) => (
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${
-        row.feature_tribe
-          ? "bg-blue-100 text-blue-700"
-          : "bg-gray-100 text-gray-600"
-      }`}
-    >
-      {row.feature_tribe ? "Yes" : "No"}
-    </span>
-  ),
-  width: "150px",
-},
     {
       name: "Actions",
       // width: "120px",
@@ -151,9 +99,9 @@ const CirclesList = () => {
     <>
       <div className="space-y-6">
         <div className="flex justify-end gap-4">
-          <button className="custom--btn" onClick={() => setAddNewCircle(true)}>
+          <button className="custom--btn" onClick={() => setAddNewTribeGroup(true)}>
             <FiPlus />
-            <span>New Sub-Tribes</span>
+            <span>New Tribes</span>
           </button>
         </div>
 
@@ -168,10 +116,9 @@ const CirclesList = () => {
         </div>
       </div>
 
-      <AddNewCircle
-        open={addNewCircle}
-        onClose={() => setAddNewCircle(false)}
-        groups={circleGroups}
+      <AddNewTribesGroup
+        open={addNewTribeGroup}
+        onClose={() => setAddNewTribeGroup(false)}
         onSuccess={() => {
           // TODO: refetch circleGroups from API after a successful create
         }}
@@ -180,4 +127,4 @@ const CirclesList = () => {
   );
 };
 
-export default CirclesList;
+export default TribesGroupList;

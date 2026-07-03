@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../../Assests/Images/logo.png";
 import { useSelector } from "react-redux";
-import { FaAngleDown, FaCircle } from "react-icons/fa";
+import { FaAngleDown, FaCircle, FaLayerGroup } from "react-icons/fa";
 import dashboardIcon from "../../Assests/Images/icons/dashboard.svg";
 import { MdControlCamera, MdDashboard, MdFormatListBulleted, MdManageAccounts, MdTextFormat } from "react-icons/md";
 import { HiUsers } from "react-icons/hi";
@@ -15,6 +15,7 @@ import {
   MdSettings,
 } from "react-icons/md";
 import { IoIosGift } from "react-icons/io";
+import { TbSitemapFilled } from "react-icons/tb";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
   const location = useLocation();
@@ -78,7 +79,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             <span className="nav-text">Users</span>
           </Link>
 
-          <div
+          {/* <div
             className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
             onClick={() => toggleMenu("circles")}
             style={{ cursor: "pointer" }}
@@ -112,7 +113,23 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
                 <span className="nav-text">Sub-Tribes</span>
               </Link>
             </div>
-          )}
+          )} */}
+
+          <Link
+            to="/tribes-groups"
+            className={`nav-link ${location.pathname === "/tribes-groups" ? "active" : ""}`}
+          >
+            <FaLayerGroup className="menu--icon" />
+            <span className="nav-text">Tribes Groups</span>
+          </Link>
+
+          <Link
+            to="/tribes"
+            className={`nav-link ${location.pathname === "/tribes" ? "active" : ""}`}
+          >
+            <TbSitemapFilled className="menu--icon" />
+            <span className="nav-text">Tribes</span>
+          </Link>
 
 
           <Link

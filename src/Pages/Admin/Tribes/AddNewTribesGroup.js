@@ -20,7 +20,7 @@ const statusOptions = [
   { value: "INACTIVE", label: "Inactive" },
 ];
 
-const AddNewGroup = ({ open, onClose, onSuccess }) => {
+const AddNewTribesGroup = ({ open, onClose, onSuccess }) => {
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -202,4 +202,4 @@ const AddNewGroup = ({ open, onClose, onSuccess }) => {
   );
 };
 
-export default AddNewGroup;
+export default AddNewTribesGroup;

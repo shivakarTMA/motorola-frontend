@@ -12,9 +12,9 @@ import Login from "../Components/Common/Login";
 import AdminDashboard from "../Pages/Admin/Home";
 import AllUsersList from "../Pages/Admin/AllUsers/AllUsersList";
 import ViewUser from "../Components/UserDetails/ViewUser";
-import CirclesList from "../Pages/Admin/Circles/CirclesList";
+import TribesList from "../Pages/Admin/Tribes/TribesList";
 import AppBannerList from "../Pages/Admin/AppBanner/AppBannerList";
-import CirclesGroupList from "../Pages/Admin/Circles/CirclesGroupList";
+import TribesGroupList from "../Pages/Admin/Tribes/TribesGroupList";
 import RolesList from "../Pages/Admin/Roles/RolesList";
 import CreateNewRole from "../Pages/Admin/Roles/CreateNewRole";
 import StaffList from "../Pages/Admin/Staff/StaffList";
@@ -63,18 +63,18 @@ export default function Routing() {
         />
         
         <Route
-          path="/tribes"
+          path="/tribes-groups"
           element={
             <PrivateRoute>
-              <CirclesGroupList />
+              <TribesGroupList />
             </PrivateRoute>
           }
         />
         <Route
-          path="/sub-tribes"
+          path="/tribes"
           element={
             <PrivateRoute>
-              <CirclesList />
+              <TribesList />
             </PrivateRoute>
           }
         />
