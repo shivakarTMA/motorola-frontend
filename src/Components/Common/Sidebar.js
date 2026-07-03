@@ -116,11 +116,11 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
           )} */}
 
           <Link
-            to="/tribes-groups"
-            className={`nav-link ${location.pathname === "/tribes-groups" ? "active" : ""}`}
+            to="/tribe-groups"
+            className={`nav-link ${location.pathname === "/tribe-groups" ? "active" : ""}`}
           >
             <FaLayerGroup className="menu--icon" />
-            <span className="nav-text">Tribes Groups</span>
+            <span className="nav-text">Tribe Groups</span>
           </Link>
 
           <Link

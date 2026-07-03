@@ -32,7 +32,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
       <section className="top--bar p-3 border-b border-b-[#D4D4D4]">
         <div className="inner--container flex lg:flex-nowrap flex-wrap justify-between gap-3">
           {/* Left Section */}
-          <div className="topbar--left flex items-center gap-2 lg:w-[45%] w-[47%] order-1">
+          <div className="topbar--left flex items-center gap-2 lg:w-[40%] w-[47%] order-1">
             <div className="toggle--bar lg:w-[32px] w-[25px]" onClick={handleToggleMenu}>
               <img src={ToggleMenu} className="cursor-pointer w-8" />
             </div>
@@ -64,7 +64,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
           </div>
 
           {/* Right Section */}
-          <div className="top--bar--menu flex items-center gap-3 lg:w-[30%] w-[45%] justify-end lg:order-3 order-2">
+          <div className="top--bar--menu flex items-center gap-3 lg:w-[40%] w-[45%] justify-end lg:order-3 order-2">
             <div className="flex gap-2 items-center">
               <p className="text-sm text-right leading-none">
                 <span className="text-black font-semibold">{user?.name}</span>

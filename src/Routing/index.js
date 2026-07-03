@@ -63,7 +63,7 @@ export default function Routing() {
         />
         
         <Route
-          path="/tribes-groups"
+          path="/tribe-groups"
           element={
             <PrivateRoute>
               <TribesGroupList />

@@ -142,3 +142,11 @@ export function formatText(status) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 }
+
+export const filterActiveItems = (data) => {
+  if (!Array.isArray(data)) return [];
+
+  return data.filter(
+    (item) => String(item?.status || "").toUpperCase() === "ACTIVE",
+  );
+};

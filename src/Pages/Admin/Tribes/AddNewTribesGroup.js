@@ -1,18 +1,17 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import Select from "react-select";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
-import {
-  customStyles
-} from "../../../Helper/helper";
+import { customStyles } from "../../../Helper/helper";
 import {
   blockOnlyTextKeys,
   sanitizeOnlyText,
   blockOnlyNumericKeys,
   sanitizePositiveInteger,
 } from "../../../Helper/Inputhelpers";
+import { authAxios } from "../../../Config/config";
 // import { authAxios } from "../../../config/config";
 
 const statusOptions = [
@@ -20,7 +19,9 @@ const statusOptions = [
   { value: "INACTIVE", label: "Inactive" },
 ];
 
-const AddNewTribesGroup = ({ open, onClose, onSuccess }) => {
+const AddNewTribesGroup = ({ open, onClose, onSuccess, editId }) => {
+  const isEdit = !!editId;
+
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -39,13 +40,18 @@ const AddNewTribesGroup = ({ open, onClose, onSuccess }) => {
     onSubmit: async (values, { resetForm }) => {
       try {
         const payload = {
-          name: sanitizeOnlyText(values.name),
+          name: values.name,
           position: values.position,
           status: values.status?.value,
         };
 
-        // await authAxios().post("/circlegroup/create", payload);
-        toast.success("Tribes Created Successfully");
+        if (isEdit) {
+          await authAxios().put(`/tribe-group/${editId}`, payload);
+          toast.success("Tribe Group Updated Successfully");
+        } else {
+          await authAxios().post("/tribe-group", payload);
+          toast.success("Tribe Group Created Successfully");
+        }
 
         onSuccess?.();
         resetForm();
@@ -56,6 +62,37 @@ const AddNewTribesGroup = ({ open, onClose, onSuccess }) => {
       }
     },
   });
+
+  useEffect(() => {
+    if (!editId) {
+      formik.resetForm();
+    }
+  }, [editId]);
+
+  useEffect(() => {
+    const fetchTribesGroupById = async () => {
+      if (!editId) return;
+
+      try {
+        const res = await authAxios().get(`/tribe-group/${editId}`);
+        const data = res?.data?.data;
+
+        if (res?.data?.success && data) {
+          formik.setValues({
+            name: data.name || "",
+            position: data.position || "",
+            status: data.status
+              ? { value: data.status, label: data.status }
+              : null,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load tribes group:", err);
+      }
+    };
+
+    fetchTribesGroupById();
+  }, [editId]);
 
   const handleClose = () => {
     formik.resetForm();
@@ -92,7 +129,7 @@ const AddNewTribesGroup = ({ open, onClose, onSuccess }) => {
               <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
                 <div className="border-b px-6 py-4">
                   <Dialog.Title className="text-lg font-semibold">
-                    Add New Tribes
+                    Add New Tribe Group
                   </Dialog.Title>
                 </div>
 
@@ -179,7 +216,7 @@ const AddNewTribesGroup = ({ open, onClose, onSuccess }) => {
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="px-5 py-2 rounded-lg border"
+                      className="custom--btn !bg-white !border !border-black !text-black"
                     >
                       Cancel
                     </button>

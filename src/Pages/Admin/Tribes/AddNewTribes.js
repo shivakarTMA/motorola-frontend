@@ -13,6 +13,7 @@ import {
   sanitizeFreeText,
 } from "../../../Helper/Inputhelpers";
 import { RiImageAddLine } from "react-icons/ri";
+import { authAxios } from "../../../Config/config";
 // import { authAxios } from "../../../config/config";
 
 const statusOptions = [
@@ -20,11 +21,33 @@ const statusOptions = [
   { value: "INACTIVE", label: "Inactive" },
 ];
 
-const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
+const AddNewCircle = ({
+  open,
+  onClose,
+  editId,
+  groups = [],
+  onSuccess,
+  tribeParents = [],
+}) => {
+  const isEdit = !!editId;
+
+  console.log("groups in AddNewCircle:", groups);
+  console.log("tribeParents in AddNewCircle:", tribeParents);
+
   const groupOptions = groups.map((group) => ({
     value: group.id,
     label: group.name,
   }));
+
+  const parentOptions = [
+    { value: 0, label: "-- No Parent --" },
+    ...tribeParents
+      .filter((tribe) => tribe.id !== editId)
+      .map((tribe) => ({
+        value: tribe.id,
+        label: tribe.name,
+      })),
+  ];
 
   // Object URLs for live image previews. Kept in separate state (not
   // formik) since these are derived/display-only and must be revoked
@@ -35,18 +58,19 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
   const formik = useFormik({
     initialValues: {
       name: "",
-      circleGroup: null,
+      circle_group_id: null,
       bio: "",
       cover_image: null,
       icon_image: null,
       position: "",
       status: "",
-      feature_tribe: false,
+      is_featured: false,
+      parent_id: null,
     },
     validationSchema: Yup.object({
-      name: Yup.string().trim().required("Name is required"),
-      circleGroup: Yup.object().nullable().required("Tribes is required"),
-      bio: Yup.string().trim().required("Bio is required"),
+      name: Yup.string().required("Name is required"),
+      circle_group_id: Yup.object().nullable().required("Tribes is required"),
+      bio: Yup.string().required("Bio is required"),
       position: Yup.number()
         .typeError("Position must be a number")
         .required("Position is required"),
@@ -62,33 +86,42 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
           if (!value || typeof value === "string") return true;
           return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
         }),
-      status: Yup.string().trim().required("Status is required"),
-      feature_tribe: Yup.boolean().oneOf([true], "Please select Feature Tribe"),
+      status: Yup.string().required("Status is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();
 
-        formData.append("name", sanitizeOnlyText(values.name));
-        formData.append("circle_group_id", values.circleGroup?.value); // changed
-        formData.append("bio", sanitizeFreeText(values.bio));
+        formData.append("name", values.name);
+        formData.append("circle_group_id", values.circle_group_id.value);
+        formData.append("parent_id", values.parent_id?.value ?? 0);
+        formData.append("bio", values.bio);
         formData.append("position", values.position);
         formData.append("status", values.status);
-        formData.append("feature_tribe", values.feature_tribe);
+        formData.append("is_featured", values.is_featured);
 
-        formData.append("cover_image", values.cover_image);
+        if (values.cover_image instanceof File) {
+          formData.append("cover_image", values.cover_image);
+        }
 
-        if (values.icon_image) {
+        if (values.icon_image instanceof File) {
           formData.append("icon_image", values.icon_image);
         }
 
-        // await authAxios().post("/circle/create", formData, {
-        //   headers: {
-        //     "Content-Type": "multipart/form-data",
-        //   },
-        // });
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
 
-        toast.success("Sub-Tribes Created Successfully");
+        if (isEdit) {
+          await authAxios().put(`/tribe/${editId}`, formData, config);
+          toast.success("Tribe updated successfully");
+        } else {
+          await authAxios().post("/tribe", formData, config);
+          toast.success("Tribe created successfully");
+        }
+
         onSuccess?.();
         resetForm();
         onClose();
@@ -105,8 +138,15 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
       setCoverPreview(null);
       return;
     }
+
+    if (typeof formik.values.cover_image === "string") {
+      setCoverPreview(formik.values.cover_image);
+      return;
+    }
+
     const url = URL.createObjectURL(formik.values.cover_image);
     setCoverPreview(url);
+
     return () => URL.revokeObjectURL(url);
   }, [formik.values.cover_image]);
 
@@ -116,10 +156,74 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
       setIconPreview(null);
       return;
     }
+
+    if (typeof formik.values.icon_image === "string") {
+      setIconPreview(formik.values.icon_image);
+      return;
+    }
+
     const url = URL.createObjectURL(formik.values.icon_image);
     setIconPreview(url);
+
     return () => URL.revokeObjectURL(url);
   }, [formik.values.icon_image]);
+
+  useEffect(() => {
+    if (!editId) {
+      formik.resetForm();
+    }
+  }, [editId]);
+
+  useEffect(() => {
+    const fetchTribesGroupById = async () => {
+      if (!editId) return;
+
+      try {
+        const res = await authAxios().get(`/tribe/${editId}`);
+        const data = res?.data?.data;
+
+        if (res?.data?.success && data) {
+          formik.setValues({
+            name: data.name || "",
+            circle_group_id: data.circle_group_id
+              ? {
+                  value: data.circle_group_id,
+                  label:
+                    groups.find((item) => item.id === data.circle_group_id)
+                      ?.name || "",
+                }
+              : null,
+            parent_id:
+              data.parent_id === 0
+                ? {
+                    value: 0,
+                    label: "-- No Parent --",
+                  }
+                : {
+                    value: data.parent_id,
+                    label:
+                      tribeParents.find((item) => item.id === data.parent_id)
+                        ?.name || "",
+                  },
+            bio: data.bio || "",
+            cover_image: data.cover_image_url || null,
+            icon_image: data.icon_url || null,
+            position: data.position ?? "",
+            status: data.status || "",
+            is_featured: data.is_featured ?? false,
+          });
+
+          // Existing image preview
+          setCoverPreview(data.cover_image_url || null);
+          setIconPreview(data.icon_url || null);
+        }
+      } catch (err) {
+        console.error("Failed to load tribe:", err);
+      }
+    };
+
+    fetchTribesGroupById();
+  }, [editId, groups]);
 
   const handleClose = () => {
     formik.resetForm();
@@ -156,7 +260,7 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
               <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
                 <div className="border-b px-6 py-4">
                   <Dialog.Title className="text-lg font-semibold">
-                    Add New Sub-Tribes
+                    Add New Tribes
                   </Dialog.Title>
                 </div>
 
@@ -187,29 +291,49 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
                     )}
                   </div>
 
-                  {/* Circle Group */}
+                  {/* Tribe Group */}
                   <div>
                     <label className="block mb-2 text-sm font-medium">
-                      Select Tribes<span className="text-red-600">*</span>
+                      Tribe Group<span className="text-red-600">*</span>
                     </label>
                     <Select
-                      name="circleGroup"
+                      name="circle_group_id"
                       styles={customStyles}
                       options={groupOptions}
-                      value={formik.values.circleGroup}
+                      value={formik.values.circle_group_id}
                       onChange={(option) =>
-                        formik.setFieldValue("circleGroup", option)
+                        formik.setFieldValue("circle_group_id", option)
                       }
-                      onBlur={() => formik.setFieldTouched("circleGroup", true)}
-                      placeholder="Select Tribes"
+                      onBlur={() =>
+                        formik.setFieldTouched("circle_group_id", true)
+                      }
+                      placeholder="Tribe Group"
                     />
 
-                    {formik.touched.circleGroup &&
-                      formik.errors.circleGroup && (
+                    {formik.touched.circle_group_id &&
+                      formik.errors.circle_group_id && (
                         <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.circleGroup}
+                          {formik.errors.circle_group_id}
                         </p>
                       )}
+                  </div>
+
+                  {/* Parent Tribe */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium">
+                      Parent Tribe
+                    </label>
+                    <Select
+                      name="parent_id"
+                      styles={customStyles}
+                      options={parentOptions}
+                      value={formik.values.parent_id}
+                      onChange={(option) =>
+                        formik.setFieldValue("parent_id", option)
+                      }
+                      onBlur={() => formik.setFieldTouched("parent_id", true)}
+                      placeholder="Parent Tribe"
+                    />
                   </div>
 
                   {/* Bio */}
@@ -384,9 +508,11 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
                       name="status"
                       styles={customStyles}
                       options={statusOptions}
-                      value={formik.values.status}
+                      value={statusOptions.find(
+                        (item) => item.value === formik.values.status,
+                      )}
                       onChange={(option) =>
-                        formik.setFieldValue("status", option)
+                        formik.setFieldValue("status", option.value)
                       }
                       onBlur={() => formik.setFieldTouched("status", true)}
                     />
@@ -400,36 +526,35 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
 
                   <div className="flex items-center gap-3">
                     <input
-                      id="feature_tribe"
-                      name="feature_tribe"
+                      id="is_featured"
+                      name="is_featured"
                       type="checkbox"
-                      checked={formik.values.feature_tribe}
+                      checked={formik.values.is_featured}
                       onChange={(e) =>
-                        formik.setFieldValue("feature_tribe", e.target.checked)
+                        formik.setFieldValue("is_featured", e.target.checked)
                       }
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
 
                     <label
-                      htmlFor="feature_tribe"
+                      htmlFor="is_featured"
                       className="text-sm font-medium text-gray-700"
                     >
                       Feature Tribe
                     </label>
                   </div>
 
-                  {formik.touched.feature_tribe &&
-                    formik.errors.feature_tribe && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.feature_tribe}
-                      </p>
-                    )}
+                  {formik.touched.is_featured && formik.errors.is_featured && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formik.errors.is_featured}
+                    </p>
+                  )}
 
                   <div className="flex justify-end gap-3 pt-4 border-t">
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="px-5 py-2 rounded-lg border"
+                      className="custom--btn !bg-white !border !border-black !text-black"
                     >
                       Cancel
                     </button>
@@ -439,7 +564,7 @@ const AddNewCircle = ({ open, onClose, groups = [], onSuccess }) => {
                       disabled={formik.isSubmitting}
                       className="custom--btn disabled:opacity-60"
                     >
-                      Save Circle
+                      Submit
                     </button>
                   </div>
                 </form>
