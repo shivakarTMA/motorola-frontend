@@ -7,313 +7,19 @@ import Tooltip from "../../../Components/Common/Tooltip";
 import { authAxios } from "../../../Config/config";
 import { toast } from "react-toastify";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
-import { useFormik } from "formik";
-import * as Yup from "yup";
 import { formatText, formatWithTimeDate } from "../../../Helper/helper";
-
-const bannersList = [
-  {
-    id: 1,
-    image: "https://picsum.photos/200/100?random=1",
-    title: "Summer Sale",
-    link_type: "NONE",
-    link_target: null,
-    starts_at: "2026-06-01T10:00:00.000Z",
-    ends_at: "2026-06-30T10:00:00.000Z",
-    position: 0,
-    status: "ACTIVE",
-  },
-  {
-    id: 2,
-    image: "https://picsum.photos/200/100?random=2",
-    title: "New Launch",
-    link_type: "PRODUCT",
-    link_target: "101",
-    starts_at: "2026-06-02T10:00:00.000Z",
-    ends_at: "2026-07-02T10:00:00.000Z",
-    position: 1,
-    status: "INACTIVE",
-  },
-  {
-    id: 3,
-    image: "https://picsum.photos/200/100?random=3",
-    title: "Monsoon Offer",
-    link_type: "CATEGORY",
-    link_target: "Mobiles",
-    starts_at: "2026-06-03T10:00:00.000Z",
-    ends_at: "2026-07-03T10:00:00.000Z",
-    position: 2,
-    status: "ACTIVE",
-  },
-  {
-    id: 4,
-    image: "https://picsum.photos/200/100?random=4",
-    title: "Weekend Deal",
-    link_type: "NONE",
-    link_target: null,
-    starts_at: "2026-06-04T10:00:00.000Z",
-    ends_at: "2026-07-04T10:00:00.000Z",
-    position: 3,
-    status: "ACTIVE",
-  },
-  {
-    id: 5,
-    image: "https://picsum.photos/200/100?random=5",
-    title: "Accessories",
-    link_type: "PRODUCT",
-    link_target: "102",
-    starts_at: "2026-06-05T10:00:00.000Z",
-    ends_at: "2026-07-05T10:00:00.000Z",
-    position: 4,
-    status: "ACTIVE",
-  },
-  {
-    id: 6,
-    image: "https://picsum.photos/200/100?random=6",
-    title: "Gaming Phones",
-    link_type: "CATEGORY",
-    link_target: "Gaming",
-    starts_at: "2026-06-06T10:00:00.000Z",
-    ends_at: "2026-07-06T10:00:00.000Z",
-    position: 5,
-    status: "INACTIVE",
-  },
-  {
-    id: 7,
-    image: "https://picsum.photos/200/100?random=7",
-    title: "Festival Offer",
-    link_type: "NONE",
-    link_target: null,
-    starts_at: "2026-06-07T10:00:00.000Z",
-    ends_at: "2026-07-07T10:00:00.000Z",
-    position: 6,
-    status: "ACTIVE",
-  },
-  {
-    id: 8,
-    image: "https://picsum.photos/200/100?random=8",
-    title: "Camera Promo",
-    link_type: "PRODUCT",
-    link_target: "103",
-    starts_at: "2026-06-08T10:00:00.000Z",
-    ends_at: "2026-07-08T10:00:00.000Z",
-    position: 7,
-    status: "ACTIVE",
-  },
-  {
-    id: 9,
-    image: "https://picsum.photos/200/100?random=9",
-    title: "Travel Deals",
-    link_type: "CATEGORY",
-    link_target: "Travel",
-    starts_at: "2026-06-09T10:00:00.000Z",
-    ends_at: "2026-07-09T10:00:00.000Z",
-    position: 8,
-    status: "ACTIVE",
-  },
-  {
-    id: 10,
-    image: "https://picsum.photos/200/100?random=10",
-    title: "Power Bank",
-    link_type: "PRODUCT",
-    link_target: "104",
-    starts_at: "2026-06-10T10:00:00.000Z",
-    ends_at: "2026-07-10T10:00:00.000Z",
-    position: 9,
-    status: "INACTIVE",
-  },
-  {
-    id: 11,
-    image: "https://picsum.photos/200/100?random=11",
-    title: "Wireless Audio",
-    link_type: "NONE",
-    link_target: null,
-    starts_at: "2026-06-11T10:00:00.000Z",
-    ends_at: "2026-07-11T10:00:00.000Z",
-    position: 10,
-    status: "ACTIVE",
-  },
-  {
-    id: 12,
-    image: "https://picsum.photos/200/100?random=12",
-    title: "Flagship Phones",
-    link_type: "CATEGORY",
-    link_target: "Flagship",
-    starts_at: "2026-06-12T10:00:00.000Z",
-    ends_at: "2026-07-12T10:00:00.000Z",
-    position: 11,
-    status: "ACTIVE",
-  },
-  {
-    id: 13,
-    image: "https://picsum.photos/200/100?random=13",
-    title: "Smart Watches",
-    link_type: "PRODUCT",
-    link_target: "105",
-    starts_at: "2026-06-13T10:00:00.000Z",
-    ends_at: "2026-07-13T10:00:00.000Z",
-    position: 12,
-    status: "ACTIVE",
-  },
-  {
-    id: 14,
-    image: "https://picsum.photos/200/100?random=14",
-    title: "Fitness Deals",
-    link_type: "NONE",
-    link_target: null,
-    starts_at: "2026-06-14T10:00:00.000Z",
-    ends_at: "2026-07-14T10:00:00.000Z",
-    position: 13,
-    status: "INACTIVE",
-  },
-  {
-    id: 15,
-    image: "https://picsum.photos/200/100?random=15",
-    title: "Bluetooth Speakers",
-    link_type: "PRODUCT",
-    link_target: "106",
-    starts_at: "2026-06-15T10:00:00.000Z",
-    ends_at: "2026-07-15T10:00:00.000Z",
-    position: 14,
-    status: "ACTIVE",
-  },
-  {
-    id: 16,
-    image: "https://picsum.photos/200/100?random=16",
-    title: "Headphones",
-    link_type: "CATEGORY",
-    link_target: "Audio",
-    starts_at: "2026-06-16T10:00:00.000Z",
-    ends_at: "2026-07-16T10:00:00.000Z",
-    position: 15,
-    status: "ACTIVE",
-  },
-  {
-    id: 17,
-    image: "https://picsum.photos/200/100?random=17",
-    title: "Laptop Deals",
-    link_type: "PRODUCT",
-    link_target: "107",
-    starts_at: "2026-06-17T10:00:00.000Z",
-    ends_at: "2026-07-17T10:00:00.000Z",
-    position: 16,
-    status: "ACTIVE",
-  },
-  {
-    id: 18,
-    image: "https://picsum.photos/200/100?random=18",
-    title: "Back to School",
-    link_type: "CATEGORY",
-    link_target: "Education",
-    starts_at: "2026-06-18T10:00:00.000Z",
-    ends_at: "2026-07-18T10:00:00.000Z",
-    position: 17,
-    status: "INACTIVE",
-  },
-  {
-    id: 19,
-    image: "https://picsum.photos/200/100?random=19",
-    title: "Clearance Sale",
-    link_type: "NONE",
-    link_target: null,
-    starts_at: "2026-06-19T10:00:00.000Z",
-    ends_at: "2026-07-19T10:00:00.000Z",
-    position: 18,
-    status: "ACTIVE",
-  },
-  {
-    id: 20,
-    image: "https://picsum.photos/200/100?random=20",
-    title: "Smart Home",
-    link_type: "PRODUCT",
-    link_target: "108",
-    starts_at: "2026-06-20T10:00:00.000Z",
-    ends_at: "2026-07-20T10:00:00.000Z",
-    position: 19,
-    status: "ACTIVE",
-  },
-  {
-    id: 21,
-    image: "https://picsum.photos/200/100?random=21",
-    title: "Wearables",
-    link_type: "CATEGORY",
-    link_target: "Wearables",
-    starts_at: "2026-06-21T10:00:00.000Z",
-    ends_at: "2026-07-21T10:00:00.000Z",
-    position: 20,
-    status: "ACTIVE",
-  },
-  {
-    id: 22,
-    image: "https://picsum.photos/200/100?random=22",
-    title: "Flash Sale",
-    link_type: "NONE",
-    link_target: null,
-    starts_at: "2026-06-22T10:00:00.000Z",
-    ends_at: "2026-07-22T10:00:00.000Z",
-    position: 21,
-    status: "INACTIVE",
-  },
-  {
-    id: 23,
-    image: "https://picsum.photos/200/100?random=23",
-    title: "Premium Phones",
-    link_type: "PRODUCT",
-    link_target: "109",
-    starts_at: "2026-06-23T10:00:00.000Z",
-    ends_at: "2026-07-23T10:00:00.000Z",
-    position: 22,
-    status: "ACTIVE",
-  },
-  {
-    id: 24,
-    image: "https://picsum.photos/200/100?random=24",
-    title: "Tablet Offer",
-    link_type: "CATEGORY",
-    link_target: "Tablets",
-    starts_at: "2026-06-24T10:00:00.000Z",
-    ends_at: "2026-07-24T10:00:00.000Z",
-    position: 23,
-    status: "ACTIVE",
-  },
-  {
-    id: 25,
-    image: "https://picsum.photos/200/100?random=25",
-    title: "Mega Discount",
-    link_type: "NONE",
-    link_target: null,
-    starts_at: "2026-06-25T10:00:00.000Z",
-    ends_at: "2026-07-25T10:00:00.000Z",
-    position: 24,
-    status: "ACTIVE",
-  },
-];
-
-const formatDate = (date) => {
-  if (!date) return "";
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  const hour = String(date.getHours()).padStart(2, "0");
-  const minute = String(date.getMinutes()).padStart(2, "0");
-
-  return `${year}-${month}-${day}T${hour}:${minute}`;
-};
+import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
 const AppBannerList = (props) => {
   const { setLoading } = props;
+  const [banners, setBanners] = useState([]);
+  const [editBannerId, setEditBannerId] = useState(null);
   const [addNewBanner, setAddNewBanner] = useState(false);
 
-  const [banners, setBanners] = useState(bannersList);
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    limit: 10,
-    totalPages: 1,
-  });
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
+  const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -335,6 +41,7 @@ const AppBannerList = (props) => {
       name: "Title",
       selector: (row) => row.title,
       sortable: true,
+      width: "160px",
     },
     {
       name: "Link Type",
@@ -381,7 +88,10 @@ const AppBannerList = (props) => {
         <div className="flex items-center justify-center gap-[1px]">
           <Tooltip id={`tooltip-edit-${row.id}`} content="Edit" place="left">
             <button
-              onClick={() => handleEdit(row)}
+              onClick={() => {
+                setEditBannerId(row.id);
+                setAddNewBanner(true);
+              }}
               className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
             >
               <MdModeEdit size={18} />
@@ -394,7 +104,10 @@ const AppBannerList = (props) => {
             place="left"
           >
             <button
-              onClick={() => handleDelete(row.id)}
+              onClick={() => {
+                setDeleteId(row.id);
+                setDeleteModal(true);
+              }}
               className="text-red-500 bg-red-100 w-[30px] h-[30px] flex items-center justify-center rounded-r-md"
             >
               <FiTrash2 size={18} />
@@ -406,15 +119,15 @@ const AppBannerList = (props) => {
   ];
 
   const fetchBanners = async (page = 1) => {
-    setLoading(true);
-
     try {
-      const response = await authAxios().get(
-        `/api/crm/app-banner?page=${page}&limit=${rowsPerPage}`,
-      );
-
+      setLoading(true);
+      const response = await authAxios().get("/app-banner", {
+        params: {
+          page,
+          limit: rowsPerPage,
+        },
+      });
       const resData = response.data;
-
       if (resData.success) {
         setBanners(resData.data.items);
         setPagination(resData.data.pagination);
@@ -432,88 +145,26 @@ const AppBannerList = (props) => {
     fetchBanners(currentPage);
   }, [currentPage]);
 
-  const formik = useFormik({
-    initialValues: {
-      image: null,
-      title: "",
-      link_type: "",
-      link_value: "",
-      starts_at: null,
-      ends_at: null,
-      position: "",
-      status: "",
-    },
-    validationSchema: Yup.object({
-      image: Yup.mixed()
-        .required("Image is required")
-        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
-          if (!value || typeof value === "string") return true;
-          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
-        }),
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
 
-      title: Yup.string().trim().required("Title is required"),
+      const response = await authAxios().delete(`/app-banner/${deleteId}`);
 
-      link_type: Yup.string().required("Link type is required"),
+      if (response.data.success) {
+        setDeleteModal(false);
+        setDeleteId(null);
 
-      link_value: Yup.string().when("link_type", {
-        is: "INTERNAL",
-        then: (schema) =>
-          schema
-            .required("Post ID is required")
-            .matches(/^\d+$/, "Post ID must be numeric"),
-
-        otherwise: (schema) =>
-          schema.required("URL is required").url("Enter a valid URL"),
-      }),
-
-      starts_at: Yup.string().required("Start date is required"),
-
-      ends_at: Yup.string().required("End date is required"),
-
-      position: Yup.number()
-        .typeError("Position must be a number")
-        .required("Position is required"),
-
-      status: Yup.string().required("Status is required"),
-    }),
-    onSubmit: async (values, { resetForm }) => {
-      try {
-        const formData = new FormData();
-
-        formData.append("image", values.image);
-        formData.append("title", values.title);
-        formData.append("link_type", values.link_type);
-        formData.append("starts_at", formatDate(values.starts_at));
-        formData.append("ends_at", formatDate(values.ends_at));
-        formData.append("position", values.position);
-        formData.append("status", values.status);
-
-        // await authAxios().post("/api/crm/app-banner", formData, {
-        //   headers: {
-        //     "Content-Type": "multipart/form-data",
-        //   },
-        // });
-
-        toast.success("Banner created successfully");
-
-        resetForm();
+        // Refresh list
         fetchBanners(currentPage);
-        setAddNewBanner(false);
-      } catch (err) {
-        toast.error(err?.response?.data?.message || "Something went wrong");
+      } else {
+        alert(response.data.message);
       }
-    },
-  });
-
-  const handleEdit = (row) => {
-    console.log("Edit:", row);
-    // Open edit modal
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this group?")) {
-      console.log("Delete:", id);
-      // Call delete API
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete tribe group.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -534,19 +185,61 @@ const AppBannerList = (props) => {
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
-            totalRows={pagination.total}
           />
         </div>
       </div>
 
       <AddNewBanner
         open={addNewBanner}
-        onClose={() => setAddNewBanner(false)}
-        formik={formik}
-        onSuccess={() => {
-          // TODO: refetch circleGroups from API after a successful create
+        onClose={() => {
+          setAddNewBanner(false);
+          setEditBannerId(null);
         }}
+        editId={editBannerId}
+        onSuccess={() => fetchBanners(currentPage)}
       />
+
+      <Dialog
+        open={deleteModal}
+        onClose={() => setDeleteModal(false)}
+        className="relative z-50"
+      >
+        {/* Backdrop */}
+        <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+
+        {/* Modal */}
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              Delete Tribe Group
+            </DialogTitle>
+
+            <p className="mt-3 text-sm text-gray-600">
+              Are you sure you want to delete this tribe group? This action
+              cannot be undone.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setDeleteModal(false);
+                  setDeleteId(null);
+                }}
+                className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDelete}
+                className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
     </>
   );
 };

@@ -3,6 +3,8 @@ import { Fragment, useEffect, useState } from "react";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { customStyles } from "../../../Helper/helper";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import {
   blockOnlyTextKeys,
   sanitizeOnlyText,
@@ -13,8 +15,10 @@ import {
 import { RiImageAddLine } from "react-icons/ri";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { authAxios } from "../../../Config/config";
 
 const linkTypeOptions = [
+  { value: "NONE", label: "None" },
   { value: "INTERNAL", label: "Internal" },
   { value: "EXTERNAL", label: "External" },
 ];
@@ -24,9 +28,108 @@ const statusOptions = [
   { value: "INACTIVE", label: "Inactive" },
 ];
 
-const AddNewBanner = ({ open, formik, onClose }) => {
+const formatDate = (date) => {
+  if (!date || !(date instanceof Date)) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hour}:${minute}:00`;
+};
+
+const AddNewBanner = ({ open, onClose, onSuccess, editId }) => {
+  const isEdit = !!editId;
   const [coverPreview, setCoverPreview] = useState(null);
   const [iconPreview, setIconPreview] = useState(null);
+
+  const formik = useFormik({
+    initialValues: {
+      image: null,
+      title: "",
+      link_type: "",
+      link_target: "",
+      starts_at: null,
+      ends_at: null,
+      position: "",
+      status: "",
+    },
+    validationSchema: Yup.object({
+      image: Yup.mixed()
+        .required("Image is required")
+        .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+          if (!value || typeof value === "string") return true;
+          return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+        }),
+
+      title: Yup.string().trim().required("Title is required"),
+
+      link_type: Yup.string().required("Link type is required"),
+
+      link_target: Yup.string().when("link_type", ([linkType], schema) => {
+        if (linkType === "INTERNAL") {
+          return schema
+            .required("Post ID is required")
+            .matches(/^\d+$/, "Post ID must be numeric");
+        }
+
+        if (linkType === "EXTERNAL") {
+          return schema.required("URL is required");
+        }
+
+        return schema.notRequired().nullable();
+      }),
+
+      starts_at: Yup.date().nullable().required("Start date is required"),
+
+      ends_at: Yup.date().nullable().required("End date is required"),
+
+      position: Yup.number()
+        .typeError("Position must be a number")
+        .required("Position is required"),
+
+      status: Yup.string().required("Status is required"),
+    }),
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const formData = new FormData();
+
+        formData.append("title", values.title);
+        formData.append("link_type", values.link_type);
+        formData.append("link_target", values.link_target);
+        formData.append("starts_at", formatDate(values.starts_at));
+        formData.append("ends_at", formatDate(values.ends_at));
+        formData.append("position", values.position);
+        formData.append("status", values.status);
+
+        if (values.image instanceof File) {
+          formData.append("image", values.image);
+        }
+
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
+
+        if (isEdit) {
+          await authAxios().put(`/app-banner/${editId}`, formData, config);
+          toast.success("Banner updated successfully");
+        } else {
+          await authAxios().post("/app-banner", formData, config);
+          toast.success("Banner created successfully");
+        }
+
+        onSuccess?.();
+        resetForm();
+        onClose();
+      } catch (err) {
+        toast.error(err?.response?.data?.message || "Something went wrong");
+      }
+    },
+  });
 
   // Build/revoke the cover image preview URL whenever the file changes
   useEffect(() => {
@@ -34,21 +137,59 @@ const AddNewBanner = ({ open, formik, onClose }) => {
       setCoverPreview(null);
       return;
     }
+
+    if (typeof formik.values.image === "string") {
+      setCoverPreview(formik.values.image);
+      return;
+    }
+
     const url = URL.createObjectURL(formik.values.image);
     setCoverPreview(url);
+
     return () => URL.revokeObjectURL(url);
   }, [formik.values.image]);
 
-  // Build/revoke the icon image preview URL whenever the file changes
   useEffect(() => {
-    if (!formik.values.icon_image) {
-      setIconPreview(null);
-      return;
+    if (!editId) {
+      formik.resetForm();
     }
-    const url = URL.createObjectURL(formik.values.icon_image);
-    setIconPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [formik.values.icon_image]);
+  }, [editId]);
+
+  useEffect(() => {
+    const fetchTribesGroupById = async () => {
+      if (!editId) return;
+
+      try {
+        const res = await authAxios().get(`/app-banner/${editId}`);
+        const data = res?.data?.data;
+
+        if (res?.data?.success && data) {
+          formik.setValues({
+            image: data.image || null,
+            title: data.title || "",
+            link_type: data.link_type || "",
+            link_target: data.link_target || "",
+            starts_at: data.starts_at
+              ? new Date(data.starts_at.replace(" ", "T"))
+              : null,
+
+            ends_at: data.ends_at
+              ? new Date(data.ends_at.replace(" ", "T"))
+              : null,
+            position: data.position || "",
+            status: data.status || "",
+          });
+
+          // Existing image preview
+          setCoverPreview(data.image || null);
+        }
+      } catch (err) {
+        console.error("Failed to load banner:", err);
+      }
+    };
+
+    fetchTribesGroupById();
+  }, [editId]);
 
   const handleClose = () => {
     formik.resetForm();
@@ -134,7 +275,9 @@ const AddNewBanner = ({ open, formik, onClose }) => {
 
                     {formik.values.image && (
                       <p className="text-xs text-black mt-1 truncate">
-                        {formik.values.image.name}
+                        {typeof formik.values.image === "string"
+                          ? "Current Banner Image"
+                          : formik.values.image.name}
                       </p>
                     )}
 
@@ -184,7 +327,12 @@ const AddNewBanner = ({ open, formik, onClose }) => {
                         )}
                         onChange={(option) => {
                           formik.setFieldValue("link_type", option.value);
-                          formik.setFieldValue("link_value", ""); // Clear previous value
+
+                          if (option.value === "NONE") {
+                            formik.setFieldValue("link_target", "");
+                          } else {
+                            formik.setFieldValue("link_target", "");
+                          }
                         }}
                       />
 
@@ -195,50 +343,50 @@ const AddNewBanner = ({ open, formik, onClose }) => {
                       )}
                     </div>
 
-                    <div>
-                      <label className="block mb-2 text-sm font-medium">
-                        {formik.values.link_type === "INTERNAL"
-                          ? "Post ID"
-                          : "External URL"}
+                    {formik.values.link_type !== "NONE" && (
+                      <div>
+                        <label className="block mb-2 text-sm font-medium">
+                          {formik.values.link_type === "INTERNAL"
+                            ? "Post ID"
+                            : "External URL"}
 
-                        <span className="text-red-600">*</span>
-                      </label>
+                          <span className="text-red-600">*</span>
+                        </label>
 
-                      {formik.values.link_type === "INTERNAL" ? (
-                        <input
-                          type="number"
-                          name="link_value"
-                          value={formik.values.link_value}
-                          onKeyDown={blockOnlyNumericKeys}
-                          onChange={(e) => {
-                            const cleaned = sanitizePositiveInteger(
-                              e.target.value,
-                            );
-                            formik.setFieldValue("link_value", cleaned);
-                          }}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full number--appearance-none"
-                          placeholder="Enter Post ID"
-                        />
-                      ) : (
-                        <input
-                          type="url"
-                          name="link_value"
-                          value={formik.values.link_value}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className="custom--input w-full"
-                          placeholder="https://example.com"
-                        />
-                      )}
-
-                      {formik.touched.link_value &&
-                        formik.errors.link_value && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {formik.errors.link_value}
-                          </p>
+                        {formik.values.link_type === "INTERNAL" ? (
+                          <input
+                            type="number"
+                            name="link_target"
+                            value={formik.values.link_target}
+                            onKeyDown={blockOnlyNumericKeys}
+                            onChange={(e) => {
+                              const cleaned = sanitizePositiveInteger(
+                                e.target.value,
+                              );
+                              formik.setFieldValue("link_target", cleaned);
+                            }}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            name="link_target"
+                            value={formik.values.link_target}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className="custom--input w-full"
+                          />
                         )}
-                    </div>
+
+                        {formik.touched.link_target &&
+                          formik.errors.link_target && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {formik.errors.link_target}
+                            </p>
+                          )}
+                      </div>
+                    )}
 
                     <div>
                       <label className="block mb-2 text-sm font-medium">
@@ -378,7 +526,7 @@ const AddNewBanner = ({ open, formik, onClose }) => {
                     <button
                       type="button"
                       onClick={handleClose}
-                      className="px-5 py-2 rounded-lg border"
+                      className="custom--btn !bg-white !border !border-black !text-black"
                     >
                       Cancel
                     </button>
