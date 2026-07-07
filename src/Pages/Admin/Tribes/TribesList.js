@@ -6,7 +6,7 @@ import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { authAxios } from "../../../Config/config";
-import { filterActiveItems, formatViewDate } from "../../../Helper/helper";
+import { filterActiveItems, formatText, formatViewDate } from "../../../Helper/helper";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
 const TribesList = (props) => {
@@ -26,88 +26,76 @@ const TribesList = (props) => {
 
   const columns = [
     {
-      name: "Icon",
+      name: "",
       cell: (row) => (
-        <div className="p-1">
+        <div className="p-0">
           <img
             src={row.icon_url}
             alt={row.name}
-            className="w-12 h-12 rounded-full object-cover object-center"
+            className="w-7 h-7 rounded-full object-cover object-center"
           />
         </div>
       ),
+      width: "60px",
     },
     {
       name: "Name",
       selector: (row) => row.name,
       sortable: true,
-      width: "150px",
     },
     {
       name: "Parent",
       selector: (row) => row.parent?.name ?? "--",
       center: true,
-      width: "150px",
     },
     {
       name: "Tribe Group",
       selector: (row) => row.circleGroup?.name ?? "--",
       center: true,
-      width: "120px",
     },
-    {
-      name: "Position",
-      selector: (row) => row.position,
-      center: true,
-      width: "120px",
-    },
+
     {
       name: "Users",
       selector: (row) => row.users_count,
       center: true,
-      width: "120px",
     },
     {
       name: "Posts",
       selector: (row) => row.posts_count,
       center: true,
-      width: "120px",
     },
     {
       name: "Polls",
       selector: (row) => row.polls_count,
       center: true,
-      width: "120px",
     },
     {
       name: "Interactions",
       selector: (row) => row.interactions_count,
       center: true,
-      width: "120px",
     },
     {
       name: "Status",
       center: true,
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${
+          className={`px-3 py-1 rounded-full text-xs font-medium ${
             row.status === "ACTIVE"
               ? "bg-green-100 text-green-700"
               : "bg-gray-100 text-gray-600"
           }`}
         >
-          {row.status}
+          {formatText(row.status)}
         </span>
       ),
-      width: "120px",
     },
     {
-      name: "Feature Tribe",
+      name: "Is Feature",
       selector: (row) => row.is_featured,
       center: true,
       cell: (row) => (
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${
+          className={`px-3 py-1 rounded-full text-xs font-medium ${
             row.is_featured
               ? "bg-green-100 text-green-700"
               : "bg-gray-100 text-gray-600"
@@ -116,17 +104,24 @@ const TribesList = (props) => {
           {row.is_featured ? "Yes" : "No"}
         </span>
       ),
-      width: "150px",
     },
     {
       name: "Created At",
       selector: (row) => formatViewDate(row.created_at),
       center: true,
-      width: "150px",
+    },
+    {
+      name: "Created by",
+      selector: (row) => row.staff?.name,
+      center: true,
+    },
+    {
+      name: "Position",
+      selector: (row) => row.position,
+      center: true,
     },
     {
       name: "Actions",
-      // width: "120px",
       center: true,
       cell: (row) => (
         <div className="flex items-center justify-center gap-[1px]">
@@ -173,7 +168,7 @@ const TribesList = (props) => {
       const resData = response?.data;
       if (resData?.success) {
         setTribeList(resData.data.items || []);
-        console.log("Fetched tribe data:", resData.data.items);
+        // console.log("Fetched tribe data:", resData.data.items);
         setPagination(resData.data.pagination);
       } else {
         console.error("Failed to fetch tribe data:", resData?.message);
@@ -227,7 +222,10 @@ const TribesList = (props) => {
         setParentTribeList(resData.data || []);
         console.log("Fetched parent tribe parents data:", resData.data);
       } else {
-        console.error("Failed to fetch parent tribe parents data:", resData?.message);
+        console.error(
+          "Failed to fetch parent tribe parents data:",
+          resData?.message,
+        );
       }
     } catch (error) {
       console.error("Error fetching parent tribe parents data:", error);

@@ -7,6 +7,7 @@ import Tooltip from "../../../Components/Common/Tooltip";
 import { authAxios } from "../../../Config/config";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
+import { formatWithTimeDate } from "../../../Helper/helper";
 
 const TribesGroupList = (props) => {
   const { setLoading } = props;
@@ -31,6 +32,18 @@ const TribesGroupList = (props) => {
     {
       name: "Position",
       selector: (row) => row.position,
+      center: true,
+      // width: "120px",
+    },
+    {
+      name: "Created by",
+      selector: (row) => row.staff?.name,
+      center: true,
+      // width: "120px",
+    },
+    {
+      name: "Created at",
+      selector: (row) => formatWithTimeDate(row.created_at),
       center: true,
       // width: "120px",
     },
@@ -99,7 +112,7 @@ const TribesGroupList = (props) => {
       const resData = response?.data;
       if (resData?.success) {
         setTribeGroupList(resData.data.items || []);
-        console.log("Fetched tribe group data:", resData.data.items);
+        // console.log("Fetched tribe group data:", resData.data.items);
         setPagination(resData.data.pagination);
       } else {
         console.error("Failed to fetch tribe group data:", resData?.message);

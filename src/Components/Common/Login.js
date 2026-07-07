@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { MdEmail } from "react-icons/md";
-import { RiLockPasswordFill } from "react-icons/ri";
+import React, { useState, useEffect, useRef } from "react";
+import { RiLoginBoxLine } from "react-icons/ri";
+import { HiOutlineMail, HiOutlinePhone } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import IsLoadingHOC from "./IsLoadingHOC";
@@ -13,50 +13,132 @@ import {
 } from "../../Redux/Reducers/authSlice";
 import Logo from "../../Assests/Images/logo.png";
 import { apiAxios } from "../../Config/config";
-import { FiEye, FiEyeOff } from "react-icons/fi";
+import { blockOnlyNumericKeys, sanitizeOnlyNumeric } from "../../Helper/Inputhelpers";
 
-const Login = ({ setLoading }) => {
+
+const OTP_LENGTH = 6;
+const PHONE_LENGTH = 10;
+
+const Login = (props) => {
+  const { setLoading } = props;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { accessToken } = useSelector((state) => state.auth);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const [data, setData] = useState({
-    email: "",
-    password: "",
-  });
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
+  const [step, setStep] = useState(1);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const otpRefs = useRef([]);
 
   useEffect(() => {
     if (accessToken) {
       navigate("/");
     }
-  }, [accessToken, navigate]);
+  }, [accessToken]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const isPhoneValid = /^\d{10}$/.test(phone);
+  const otpValue = otp.join("");
+  const isOtpValid = /^\d{6}$/.test(otpValue);
 
-    setData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handlePhoneChange = (e) => {
+    const sanitized = sanitizeOnlyNumeric(e.target.value).slice(
+      0,
+      PHONE_LENGTH,
+    );
+    setPhone(sanitized);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleOtpChange = (index, e) => {
+    const rawValue = e.target.value;
+    const digit = sanitizeOnlyNumeric(rawValue).slice(-1); // keep last typed digit only
 
+    setOtp((prev) => {
+      const next = [...prev];
+      next[index] = digit;
+      return next;
+    });
+
+    if (digit && index < OTP_LENGTH - 1) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    // Enforce numeric-only typing (reuses your shared helper)
+    blockOnlyNumericKeys(e);
+
+    if (e.key === "Backspace") {
+      if (!otp[index] && index > 0) {
+        otpRefs.current[index - 1]?.focus();
+        setOtp((prev) => {
+          const next = [...prev];
+          next[index - 1] = "";
+          return next;
+        });
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = sanitizeOnlyNumeric(e.clipboardData.getData("text")).slice(
+      0,
+      OTP_LENGTH,
+    );
+    if (!pasted) return;
+
+    const next = Array(OTP_LENGTH).fill("");
+    pasted.split("").forEach((char, i) => {
+      next[i] = char;
+    });
+    setOtp(next);
+
+    const focusIndex = Math.min(pasted.length, OTP_LENGTH - 1);
+    otpRefs.current[focusIndex]?.focus();
+  };
+
+  const handleSendOtp = async () => {
     try {
       setLoading(true);
+      const response = await apiAxios().post("/auth/send-otp", {
+        mobile: phone,
+      });
 
+      if (response.data.success) {
+        setCurrentUser({ mobile: phone });
+        toast.success(response.data.message || "OTP sent successfully");
+        setStep(2);
+        setTimeout(() => otpRefs.current[0]?.focus(), 50);
+      } else {
+        toast.error(response.data.message || "Failed to send OTP");
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Invalid phone number or email",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      setLoading(true);
       const response = await apiAxios().post("/auth/login", {
-        email: data.email,
-        password: data.password,
+        mobile: currentUser.mobile,
+        otp: otpValue,
       });
 
       if (response.data.success) {
         const { token, staff } = response.data.data;
 
         dispatch(setAccessToken(token));
-
         dispatch(
           setUser({
             id: staff.id,
@@ -65,7 +147,6 @@ const Login = ({ setLoading }) => {
             role: staff.role_id,
           }),
         );
-
         dispatch(setUserType(staff.role_id));
         dispatch(setIsAuthenticated(true));
 
@@ -75,91 +156,138 @@ const Login = ({ setLoading }) => {
         toast.error(response.data.message || "Login failed");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Invalid email or password");
+      toast.error(error.response?.data?.message || "Invalid OTP");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (step === 1) {
+      if (!isPhoneValid) {
+        toast.error("Enter a valid 10-digit phone number");
+        return;
+      }
+      handleSendOtp();
+    } else {
+      if (!isOtpValid) {
+        toast.error("Enter the complete 6-digit OTP");
+        return;
+      }
+      handleVerifyOtp();
+    }
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    setOtp(Array(OTP_LENGTH).fill(""));
+    setCurrentUser(null);
+  };
+
   return (
-    <div className="min-h-screen bg-white flex lg:flex-row flex-col relative overflow-hidden justify-center">
-      <div className="w-full flex items-center justify-center">
-        <div className="lg:p-2 p-5 transform transition-all duration-300 max-w-[450px] w-full">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center mb-4">
-              <img src={Logo} alt="logo" width={150} height={30} />
-            </div>
+    <div className="min-h-screen w-full relative flex items-center justify-center overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-white px-4 py-10">
+      {/* Decorative cloud blobs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/40 rounded-full blur-3xl" />
+        <div className="absolute top-10 right-0 w-96 h-96 bg-white/50 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-full h-64 bg-white/60 rounded-full blur-3xl" />
+      </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome Back
-            </h2>
+      {/* Logo top-left */}
+      <div className="absolute top-6 left-6 flex items-center gap-2 z-10">
+        <img src={Logo} alt="logo" width={50} height={50} className="rounded-lg" />
+      </div>
 
-            <p className="text-gray-600">Sign in to continue to your account</p>
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-[440px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl p-6 sm:p-10">
+        {/* Icon badge */}
+        <div className="flex justify-center mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-white/80 shadow-sm flex items-center justify-center">
+            <RiLoginBoxLine className="w-6 h-6 text-gray-700" />
           </div>
-
-          <form className="space-y-3" onSubmit={handleSubmit}>
-            {/* Email */}
-            <div className="space-y-2">
-              <div className="relative flex items-center bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <span className="flex items-center justify-center w-12 h-14 text-gray-500 pl-2">
-                  <MdEmail className="w-5 h-5" />
-                </span>
-
-                <input
-                  type="email"
-                  name="email"
-                  value={data.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter your email"
-                  className="flex-1 h-14 px-2 focus:outline-none"
-                  autoComplete="off"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="space-y-2">
-              <div className="relative flex items-center bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <span className="flex items-center justify-center w-12 h-14 text-gray-500 pl-2">
-                  <RiLockPasswordFill className="w-5 h-5" />
-                </span>
-
-                <div className="relative w-full">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={data.password}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter your password"
-                    className="flex-1 h-14 px-2 focus:outline-none w-full"
-                    autoComplete="off"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                  >
-                    {showPassword ? (
-                      <FiEyeOff size={20} />
-                    ) : (
-                      <FiEye size={20} />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full h-14 bg-[var(--primarycolor)] text-white font-semibold rounded-xl"
-            >
-              Login
-            </button>
-          </form>
         </div>
+
+        {/* Heading */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl sm:text-[26px] font-bold text-gray-900 mb-2">
+            {step === 1 ? "Sign in with phone" : "Enter OTP"}
+          </h2>
+          <p className="text-sm text-gray-500 leading-relaxed px-2">
+            {step === 1
+              ? "Make a new doc to bring your words, data, and teams together. For free."
+              : `We've sent a 6-digit code to ${currentUser?.mobile || "your phone"}`}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {step === 1 && (
+            <div
+              className={`flex items-center bg-white/70 rounded-xl border transition-colors px-3 h-14 ${
+                isPhoneValid
+                  ? "border-blue-400"
+                  : "border-gray-200 focus-within:border-gray-400"
+              }`}
+            >
+              <HiOutlinePhone className="w-6 h-6 text-gray-400 mr-2 rotate-0" />
+              {/* Static +91 prefix — remove if not needed */}
+              <span className="text-black text-md mr-2 select-none">+91</span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                value={phone}
+                onChange={handlePhoneChange}
+                onKeyDown={blockOnlyNumericKeys}
+                placeholder="Enter 10-digit phone number"
+                maxLength={PHONE_LENGTH}
+                className="flex-1 bg-transparent focus:outline-none text-gray-900 placeholder:text-gray-400"
+                required
+              />
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="flex justify-center gap-2 sm:gap-3">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => (otpRefs.current[index] = el)}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  onPaste={handleOtpPaste}
+                  className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg font-semibold rounded-xl border bg-white/70 focus:outline-none transition-colors ${
+                    digit
+                      ? "border-blue-400"
+                      : "border-gray-200 focus:border-gray-400"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={step === 1 ? !isPhoneValid : !isOtpValid}
+            className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-white font-semibold rounded-xl"
+          >
+            {step === 1 ? "Get Started" : "Verify & Login"}
+          </button>
+
+          {step === 2 && (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="w-full text-sm text-gray-500 hover:text-gray-700 font-medium"
+            >
+              ← Change phone number
+            </button>
+          )}
+        </form>
       </div>
     </div>
   );

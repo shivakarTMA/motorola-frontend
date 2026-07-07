@@ -28,6 +28,9 @@ export default function PrivateLayout({ children }) {
     { path: "/modules", title: "Modules" },
     { path: "/tiers", title: "Tiers" },
     { path: "/flagged-keywords", title: "Flagged Keywords" },
+    { path: "/hot-take", title: "Hot Take" },
+    { path: "/deep-dive", title: "Deep Dive" },
+    { path: "/vibe-check", title: "Vibe Check" },
   ];
 
   const pageTitle =

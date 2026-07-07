@@ -35,13 +35,11 @@ const AppBannerList = (props) => {
           />
         </div>
       ),
-      width: "120px",
     },
     {
       name: "Title",
       selector: (row) => row.title,
       sortable: true,
-      width: "160px",
     },
     {
       name: "Link Type",
@@ -57,18 +55,15 @@ const AppBannerList = (props) => {
       name: "Start Date",
       selector: (row) => formatWithTimeDate(row.starts_at),
       center: true,
-      width: "170px",
     },
     {
       name: "End Date",
       selector: (row) => formatWithTimeDate(row.ends_at),
       center: true,
-      width: "170px",
     },
     {
       name: "Status",
       center: true,
-      width: "120px",
       cell: (row) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${
@@ -185,6 +180,7 @@ const AppBannerList = (props) => {
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
+            paginationTotalRows={pagination?.total}
           />
         </div>
       </div>

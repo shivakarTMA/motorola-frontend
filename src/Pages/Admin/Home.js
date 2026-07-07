@@ -17,13 +17,9 @@ import {
   FaUserPlus,
   FaClipboardCheck,
 } from "react-icons/fa";
-
-const filterOptions = [
-  { value: "today", label: "Today" },
-  { value: "last_7_days", label: "Last 7 days" },
-  { value: "month_till_date", label: "Month till date" },
-  { value: "custom", label: "Custom Date" },
-];
+import DateRangeFilter from "../../Components/Common/DateRangePickerField";
+import { format } from "date-fns";
+import IsLoadingHOC from "../../Components/Common/IsLoadingHOC";
 
 const StatCard = ({
   title,
@@ -49,7 +45,7 @@ const StatCard = ({
       )}
 
       {/* Value */}
-      <h3 className="text-2xl font-bold text-gray-800">{value || "-"}</h3>
+      <h3 className="text-2xl font-bold text-gray-800">{value || 0}</h3>
 
       {/* Title */}
       <p className="text-[13px] text-gray-500">{title}</p>
@@ -88,16 +84,68 @@ const ActivityRow = ({ type, message, moderator, time }) => {
   );
 };
 
-const AdminDashboard = () => {
+const AdminDashboard = (props) => {
+  const { setLoading } = props;
+  const [allDashboardData, setAllDashboardData] = useState({});
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  const fetchDashboardList = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+
+      // if (startDate && endDate) {
+      //   params.date_from = format(startDate, "yyyy-MM-dd");
+      //   params.date_to = format(endDate, "yyyy-MM-dd");
+      //   params.date_filter_field = "created_at";
+      // }
+
+      const response = await authAxios().get("/dashboard", {
+        params,
+      });
+
+      const resData = response.data?.data;
+
+      if (response.data?.success) {
+        setAllDashboardData(resData[0] || {});
+      } else {
+        toast.error(response.data?.message);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // useEffect(() => {
+  //   fetchDashboardList();
+  // }, [startDate, endDate]);
+  useEffect(() => {
+    fetchDashboardList();
+  }, []);
+
   return (
     <>
       <div>
         <div className="space-y-6">
+          <div className="max-w-[200px] w-full">
+            <DateRangeFilter
+              onChange={({ startDate, endDate }) =>
+                console.log(startDate, endDate)
+              }
+              defaultPreset="Today"
+              panelOffsetTop={100} 
+              panelOffsetLeft={0}
+            />
+          </div>
           {/* Top Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-6 gap-2">
             <StatCard
               title="Total Users"
-              value="5,284"
+              value={allDashboardData?.total_users_count}
               icon={FaUsers}
               iconBg="bg-blue-100"
               iconColor="text-blue-600"
@@ -112,8 +160,8 @@ const AdminDashboard = () => {
             />
 
             <StatCard
-              title="Muted"
-              value="36"
+              title="Suspended"
+              value={allDashboardData?.total_muted_users_count}
               icon={FaUserSlash}
               iconBg="bg-yellow-100"
               iconColor="text-yellow-600"
@@ -121,7 +169,7 @@ const AdminDashboard = () => {
 
             <StatCard
               title="Banned"
-              value="58"
+              value={allDashboardData?.total_banned_users_count}
               icon={FaBan}
               iconBg="bg-red-100"
               iconColor="text-red-600"
@@ -173,10 +221,10 @@ const AdminDashboard = () => {
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <StatCard title="Posts" value="12.4k" />
-                <StatCard title="Polls" value="318" />
-                <StatCard title="Comments" value="41k" />
-                <StatCard title="Active Circles" value="46" />
+                <StatCard title="Hot Take" value={allDashboardData?.posts_count} />
+                <StatCard title="Vibe Check" value={allDashboardData?.polls_count} />
+                <StatCard title="Comments" value={allDashboardData?.comments_count} />
+                <StatCard title="Active Tribes" value={allDashboardData?.active_tribes_count} />
               </div>
             </div>
           </div>
@@ -232,4 +280,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default IsLoadingHOC(AdminDashboard);

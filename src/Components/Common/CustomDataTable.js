@@ -10,7 +10,7 @@ const customTableStyles = {
 
   headRow: {
     style: {
-      minHeight: "45px",
+      minHeight: "40px",
       backgroundColor: "#fafafa",
       borderBottom: "1px solid #e5e7eb",
       fontWeight: 600,
@@ -20,7 +20,7 @@ const customTableStyles = {
 
   rows: {
     style: {
-      minHeight: "50px",
+      minHeight: "45px",
       fontSize: "13px",
       borderBottom: "1px solid #f1f1f1",
       "&:hover": {
@@ -51,27 +51,36 @@ const CustomDataTable = ({
   selectableRows = false,
   pagination = true,
   fixedHeader = true,
+  paginationTotalRows,
   //   height = "500px",
 }) => {
+  // 👇 automatically apply allowOverflow to every column
+  const enhancedColumns = columns.map((col) => ({
+    allowOverflow: true,
+    ...col, // any column-specific override still wins
+  }));
+
   return (
     <div className="bg-white rounded-xl border overflow-hidden">
       <DataTable
-        columns={columns}
+        columns={enhancedColumns}
         data={data}
         progressPending={loading}
         responsive
         // highlightOnHover
         // striped
         // pointerOnHover
-        pagination={pagination}
+        pagination
+        paginationServer
+        paginationTotalRows={paginationTotalRows}
         paginationPerPage={rowsPerPage}
-        onChangePage={(page) => setCurrentPage(page)}
-        paginationComponentOptions={{
-          noRowsPerPage: true,
-        }}
+        onChangePage={setCurrentPage}
         selectableRows={selectableRows}
         fixedHeader={fixedHeader}
         persistTableHead
+        paginationComponentOptions={{
+          noRowsPerPage: true, // 👈 hides the dropdown
+        }}
         noDataComponent={
           <div className="py-8 text-gray-500 text-sm">No data found.</div>
         }

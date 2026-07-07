@@ -31,8 +31,8 @@ const AddNewCircle = ({
 }) => {
   const isEdit = !!editId;
 
-  console.log("groups in AddNewCircle:", groups);
-  console.log("tribeParents in AddNewCircle:", tribeParents);
+  // console.log("groups in AddNewCircle:", groups);
+  // console.log("tribeParents in AddNewCircle:", tribeParents);
 
   const groupOptions = groups.map((group) => ({
     value: group.id,

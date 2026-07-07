@@ -236,12 +236,12 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 .custom--date .react-datepicker-wrapper input {
   width: 100%;
   border: 1px solid #c5c5c5;
-  padding: 7px 15px;
+  // padding: 7px 15px;
   border-radius: 5px;
-  min-height: 40px;
+  // min-height: 40px;
 
   @media (max-width: 992px) {
-    min-height: 36px;
+    // min-height: 36px;
     font-size: 13px;
   }
 }
@@ -314,4 +314,69 @@ input.number--appearance-none[type="number"]::-webkit-inner-spin-button,
 input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.article--content h1,
+.article--content h2,
+.article--content h3,
+.article--content h4,
+.article--content h5,
+.article--content h6{
+  font-weight: bold;
+}
+
+.article--content h1 {
+  font-size: 2rem; /* was 2.25rem */
+  line-height: 1.2;
+}
+
+.article--content h2 {
+  font-size: 1.625rem; /* was 1.875rem */
+  line-height: 1.25;
+}
+
+.article--content h3 {
+  font-size: 1.375rem; /* was 1.5rem */
+  line-height: 1.3;
+}
+
+.article--content h4 {
+  font-size: 1.125rem; /* was 1.25rem */
+  line-height: 1.35;
+}
+
+.article--content h5 {
+  font-size: 1rem; /* was 1.125rem */
+  line-height: 1.4;
+}
+
+.article--content h6 {
+  font-size: 0.9375rem; /* was 1rem */
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .article--content h1 {
+    font-size: 1.5rem; /* was 1.75rem */
+  }
+
+  .article--content h2 {
+    font-size: 1.25rem; /* was 1.5rem */
+  }
+
+  .article--content h3 {
+    font-size: 1.125rem; /* was 1.25rem */
+  }
+
+  .article--content h4 {
+    font-size: 1rem; /* was 1.125rem */
+  }
+
+  .article--content h5 {
+    font-size: 0.9375rem; /* was 1rem */
+  }
+
+  .article--content h6 {
+    font-size: 0.875rem; /* unchanged (already small) */
+  }
 }

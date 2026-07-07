@@ -16,6 +16,7 @@ import {
 } from "react-icons/md";
 import { IoIosGift } from "react-icons/io";
 import { TbSitemapFilled } from "react-icons/tb";
+import { RiArticleFill } from "react-icons/ri";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
   const location = useLocation();
@@ -157,6 +158,28 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
           </Link>
 
           <Link
+            to="/hot-take"
+            className={`nav-link ${location.pathname === "/hot-take" ? "active" : ""}`}
+          >
+            <RiArticleFill className="menu--icon" />
+            <span className="nav-text">Hot Take</span>
+          </Link>
+          <Link
+            to="/deep-dive"
+            className={`nav-link ${location.pathname === "/deep-dive" ? "active" : ""}`}
+          >
+            <RiArticleFill className="menu--icon" />
+            <span className="nav-text">Deep Dive</span>
+          </Link>
+          <Link
+            to="/vibe-check"
+            className={`nav-link ${location.pathname === "/vibe-check" ? "active" : ""}`}
+          >
+            <RiArticleFill className="menu--icon" />
+            <span className="nav-text">Vibe Check</span>
+          </Link>
+
+          <Link
             to="/staff"
             className={`nav-link ${location.pathname === "/staff" ? "active" : ""}`}
           >
@@ -196,13 +219,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             <span className="nav-text">Flagged Keywords</span>
           </Link>
 
-          <Link
+          {/* <Link
             to="/settings"
             className={`nav-link ${location.pathname === "/settings" ? "active" : ""}`}
           >
             <MdSettings className="menu--icon" />
             <span className="nav-text">Settings</span>
-          </Link>
+          </Link> */}
         </div>
       </div>
     </div>

@@ -21,6 +21,9 @@ import StaffList from "../Pages/Admin/Staff/StaffList";
 import ModulesList from "../Pages/Admin/Modules/ModulesList";
 import TiersList from "../Pages/Admin/Tiers/TiersList";
 import FlaggedKeywordsList from "../Pages/Admin/FlaggedKeywords/FlaggedKeywordsList";
+import HotTakeList from "../Pages/Admin/PostArticles/HotTakeList";
+import DeepDiveList from "../Pages/Admin/PostArticles/DeepDiveList";
+import VibeCheckList from "../Pages/Admin/PostArticles/VibeCheckList";
 
 
 export default function Routing() {
@@ -152,6 +155,30 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <FlaggedKeywordsList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/hot-take"
+          element={
+            <PrivateRoute>
+              <HotTakeList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/deep-dive"
+          element={
+            <PrivateRoute>
+              <DeepDiveList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/vibe-check"
+          element={
+            <PrivateRoute>
+              <VibeCheckList />
             </PrivateRoute>
           }
         />

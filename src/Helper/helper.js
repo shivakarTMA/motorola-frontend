@@ -16,6 +16,14 @@ export const customStyles = {
       // zIndex: 2,
     };
   },
+  // placeholder: (provided) => ({
+  //   ...provided,
+  //   color: "#000000", // Your placeholder color
+  // }),
+  // singleValue: (base) => ({
+  //   ...base,
+  //   color: "#000000", // Selected value color
+  // }),
   multiValue: (base) => ({
     ...base,
     backgroundColor: "#000000",

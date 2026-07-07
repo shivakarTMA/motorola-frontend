@@ -49,7 +49,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
                   type="text"
                   value={searchItem}
                   onChange={(e) => setSearchItem(e.target.value)}
-                  placeholder="Search users, circles & posts — name, mobile, or ID"
+                  placeholder="Search users — name, mobile, or ID"
                   className="outline-none py-1 lg:min-h-[45px] min-h-[40px] w-full bg-gray-100 rounded-[10px] px-3 lg:pl-[45px] pl-[35px] lg:text-sm text-[12px]"
                 />
               </div>

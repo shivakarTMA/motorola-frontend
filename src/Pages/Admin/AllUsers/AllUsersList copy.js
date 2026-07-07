@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react"; // Import React hooks
 import Select from "react-select"; // Import react-select for dropdowns
+import DatePicker from "react-datepicker"; // Import datepicker for custom date selection
+import "react-datepicker/dist/react-datepicker.css"; // Import default datepicker styles
 import { Link } from "react-router-dom";
 import { LuCalendar } from "react-icons/lu";
 import { toast } from "react-toastify";
@@ -24,7 +26,7 @@ import {
 import { authAxios } from "../../../Config/config";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { format } from "date-fns";
-import DateRangePicker from "../../../Components/Common/DateRangePickerField";
+import { IoMdCloseCircle } from "react-icons/io";
 
 const StatCard = ({
   title,
@@ -103,33 +105,86 @@ const getActionItems = (status) => {
   switch (status) {
     case "ACTIVE":
       return [
-        { label: "View", action: "view", icon: FiEye },
-        { label: "Suspend", action: "suspend", icon: FiSlash },
-        { label: "Ban", action: "ban", icon: FiUserX, danger: true },
+        {
+          label: "View",
+          action: "view",
+          icon: FiEye,
+        },
+        {
+          label: "Suspend",
+          action: "suspend",
+          icon: FiSlash,
+        },
+        {
+          label: "Ban",
+          action: "ban",
+          icon: FiUserX,
+          danger: true,
+        },
       ];
 
     case "MUTED":
       return [
-        { label: "View", action: "view", icon: FiEye },
-        { label: "Suspend", action: "suspend", icon: FiSlash },
-        { label: "Ban", action: "ban", icon: FiUserX, danger: true },
+        {
+          label: "View",
+          action: "view",
+          icon: FiEye,
+        },
+        {
+          label: "Suspend",
+          action: "suspend",
+          icon: FiSlash,
+        },
+        {
+          label: "Ban",
+          action: "ban",
+          icon: FiUserX,
+          danger: true,
+        },
       ];
 
     case "Suspended":
       return [
-        { label: "View", action: "view", icon: FiEye },
-        { label: "Reinstate", action: "reinstate", icon: FiUserCheck },
-        { label: "Ban", action: "ban", icon: FiUserX, danger: true },
+        {
+          label: "View",
+          action: "view",
+          icon: FiEye,
+        },
+        {
+          label: "Reinstate",
+          action: "reinstate",
+          icon: FiUserCheck,
+        },
+        {
+          label: "Ban",
+          action: "ban",
+          icon: FiUserX,
+          danger: true,
+        },
       ];
 
     case "BANNED":
       return [
-        { label: "View", action: "view", icon: FiEye },
-        { label: "Reinstate", action: "reinstate", icon: FiUserCheck },
+        {
+          label: "View",
+          action: "view",
+          icon: FiEye,
+        },
+        {
+          label: "Reinstate",
+          action: "reinstate",
+          icon: FiUserCheck,
+        },
       ];
 
     default:
-      return [{ label: "View", action: "view", icon: FiEye }];
+      return [
+        {
+          label: "View",
+          action: "view",
+          icon: FiEye,
+        },
+      ];
   }
 };
 
@@ -141,8 +196,6 @@ const AllUsersList = (props) => {
   const [consent, setConsent] = useState(null);
   const [moderatorFilter, setModeratorFilter] = useState(null);
 
-  // These now only change when the DateRangePicker's Apply/Clear fires,
-  // so no fetch happens mid-selection anymore.
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
@@ -351,10 +404,14 @@ const AllUsersList = (props) => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
+    // If only one date is selected, do nothing.
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+      return;
+    }
+
     fetchAllUsers(currentPage, debouncedSearch);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearch, startDate, endDate]);
 
   useEffect(() => {
@@ -369,12 +426,6 @@ const AllUsersList = (props) => {
   useEffect(() => {
     setCurrentPage(1);
   }, [startDate, endDate]);
-
-  // Called only when DateRangePicker's Apply or Clear button is clicked.
-  const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
-    setStartDate(newStart);
-    setEndDate(newEnd);
-  };
 
   return (
     <>
@@ -455,9 +506,53 @@ const AllUsersList = (props) => {
               />
             </div>
 
-            <div className="col-span-2">
-              {/* Registered date range — replaces the two react-datepicker fields */}
-              <DateRangePicker onChange={handleDateRangeChange} defaultPreset="Today" panelOffsetTop={100} panelOffsetLeft={-100} />
+            <div className="col-span-2 grid grid-cols-2 gap-3">
+              <div className="custom--date relative">
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => {
+                    setStartDate(date);
+
+                    if (endDate && date > endDate) {
+                      setEndDate(null);
+                    }
+                  }}
+                  placeholderText="Registered Start Date"
+                  dateFormat="dd MMM yyyy"
+                  className="w-full border rounded-lg px-3 h-[40px] text-sm"
+                  // isClearable
+                />
+              </div>
+
+              <div className="custom--date relative">
+                <div className="flex gap-1">
+                  <div className="flex-1">
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date) => setEndDate(date)}
+                      minDate={startDate}
+                      disabled={!startDate}
+                      placeholderText="Registered End Date"
+                      dateFormat="dd MMM yyyy"
+                      className="w-full border rounded-lg px-3 h-[40px] text-sm"
+                      // isClearable
+                    />
+                  </div>
+                  {startDate && endDate && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStartDate(null);
+                        setEndDate(null);
+                        setCurrentPage(1);
+                      }}
+                      className="custom--btnd"
+                    >
+                      <IoMdCloseCircle />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
