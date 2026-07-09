@@ -16,6 +16,7 @@ import DatePicker from "react-datepicker"; // Import datepicker for custom date 
 import "react-datepicker/dist/react-datepicker.css"; // Import default datepicker styles
 import { format } from "date-fns";
 import ViewArticleDetails from "./ViewArticleDetails";
+import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 
 const DeepDiveList = (props) => {
   const { setLoading } = props;
@@ -178,56 +179,23 @@ const DeepDiveList = (props) => {
     fetchHotTakeList(currentPage);
   }, [currentPage, startDate, endDate]);
 
+  const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  };
+
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between gap-4">
-          <div className="col-span-2 grid grid-cols-2 gap-3">
-            <div className="custom--date relative">
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => {
-                  setStartDate(date);
-
-                  if (endDate && date > endDate) {
-                    setEndDate(null);
-                  }
-                }}
-                placeholderText="Registered Start Date"
-                dateFormat="dd MMM yyyy"
-                className="w-full border rounded-lg px-3 h-[40px] text-sm"
-                // isClearable
+        <div className="flex justify-between gap-4 relative">
+          <div className="w-full max-w-[180px]">
+            <div className="custom--date">
+              <DateRangePicker
+                onChange={handleDateRangeChange}
+                defaultPreset="Today"
+                panelOffsetTop={100}
+                panelOffsetLeft={0}
               />
-            </div>
-
-            <div className="custom--date relative">
-              <div className="flex gap-1">
-                <div className="flex-1">
-                  <DatePicker
-                    selected={endDate}
-                    onChange={(date) => setEndDate(date)}
-                    minDate={startDate}
-                    disabled={!startDate}
-                    placeholderText="Registered End Date"
-                    dateFormat="dd MMM yyyy"
-                    className="w-full border rounded-lg px-3 h-[40px] text-sm"
-                    // isClearable
-                  />
-                </div>
-                {startDate && endDate && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStartDate(null);
-                      setEndDate(null);
-                      setCurrentPage(1);
-                    }}
-                    className="custom--btnd"
-                  >
-                    <IoMdCloseCircle />
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>

@@ -1,23 +1,39 @@
-export default function UserProfileCard() {
+import { FaUser } from "react-icons/fa";
+
+const formatDOB = (dob) => {
+  if (!dob) return "";
+
+  return new Date(dob).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+export default function UserProfileCard({ basicInfoUser }) {
   return (
     <div className="rounded-xl bg-white p-6 shadow">
-
       <div className="flex flex-col items-center">
 
-        <div className="h-28 w-28 rounded-full bg-gray-200" />
+        {basicInfoUser?.profile_picture ? (
+          <img
+            src={basicInfoUser.profile_picture}
+            alt={basicInfoUser.name}
+            className="w-[150px] h-[150px] rounded-full object-cover object-center"
+          />
+        ) : (
+          <div className="w-[150px] h-[150px] rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-5xl text-gray-500">
+              <FaUser />
+            </span>
+          </div>
+        )}
 
-        <button className="mt-4 rounded border border-red-400 px-4 py-2 text-sm text-red-500 hover:bg-red-50">
-          Remove Photo
-        </button>
+        <h2 className="mt-5 text-xl font-semibold">{basicInfoUser?.name}</h2>
 
-        <h2 className="mt-5 text-xl font-semibold">
-          Aarav Sharma
-        </h2>
-        
         <span className="mt-3 rounded-full bg-gray-100 px-4 py-1 text-xs font-semibold">
-          Circle Moderator
+          {basicInfoUser?.username}
         </span>
-
       </div>
 
       <div className="mt-8">
@@ -39,10 +55,9 @@ export default function UserProfileCard() {
 
         <div className="flex justify-between">
           <span>Registered On</span>
-          <span>12 Jan 2026</span>
+          <span>{formatDOB(basicInfoUser?.created_at)}</span>
         </div>
       </div>
-
     </div>
   );
 }

@@ -16,6 +16,7 @@ import DatePicker from "react-datepicker"; // Import datepicker for custom date 
 import "react-datepicker/dist/react-datepicker.css"; // Import default datepicker styles
 import { format } from "date-fns";
 import ViewPollDetails from "./ViewPollDetails";
+import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 
 const VibeCheckList = (props) => {
   const { setLoading } = props;
@@ -43,7 +44,7 @@ const VibeCheckList = (props) => {
       selector: (row) => (row.allows_multiple_votes ? "Yes" : "No"),
       // center: true,
     },
-    
+
     {
       name: "End Date",
       selector: (row) => formatViewDate(row.poll_ends_at),
@@ -178,12 +179,25 @@ const VibeCheckList = (props) => {
     setCurrentPage(1);
   }, [startDate, endDate]);
 
+  const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  };
+
   return (
     <>
       <div className="space-y-6">
         <div>
-          <div className="grid lg:grid-cols-4 grid-cols-2 lg:gap-3 gap-2 lg:w-[65%] w-full">
-            <div className="col-span-2">
+          <div className="flex md:flex-row flex-col-reverse lg:gap-3 gap-2 lg:w-[65%] w-full relative">
+            <div className="md:max-w-[200px] w-full">
+              <DateRangePicker
+                onChange={handleDateRangeChange}
+                defaultPreset="Today"
+                panelOffsetTop={100}
+                panelOffsetLeft={0}
+              />
+            </div>
+            <div className="flex-1">
               {/* Search */}
               <input
                 type="text"
@@ -192,52 +206,6 @@ const VibeCheckList = (props) => {
                 onChange={(e) => setSearch(e.target.value)}
                 className="custom--input w-full"
               />
-            </div>
-            <div className="custom--date relative">
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => {
-                  setStartDate(date);
-
-                  if (endDate && date > endDate) {
-                    setEndDate(null);
-                  }
-                }}
-                placeholderText="Registered Start Date"
-                dateFormat="dd MMM yyyy"
-                className="custom--input"
-                // isClearable
-              />
-            </div>
-
-            <div className="custom--date relative">
-              <div className="flex gap-1">
-                <div className="flex-1">
-                  <DatePicker
-                    selected={endDate}
-                    onChange={(date) => setEndDate(date)}
-                    minDate={startDate}
-                    disabled={!startDate}
-                    placeholderText="Registered End Date"
-                    dateFormat="dd MMM yyyy"
-                    className="custom--input"
-                    // isClearable
-                  />
-                </div>
-                {startDate && endDate && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStartDate(null);
-                      setEndDate(null);
-                      setCurrentPage(1);
-                    }}
-                    className="custom--btnd"
-                  >
-                    <IoMdCloseCircle />
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>

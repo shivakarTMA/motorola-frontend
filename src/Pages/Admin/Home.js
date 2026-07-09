@@ -20,6 +20,7 @@ import {
 import DateRangeFilter from "../../Components/Common/DateRangePickerField";
 import { format } from "date-fns";
 import IsLoadingHOC from "../../Components/Common/IsLoadingHOC";
+import DateRangePicker from "../../Components/Common/DateRangePickerField";
 
 const StatCard = ({
   title,
@@ -96,11 +97,10 @@ const AdminDashboard = (props) => {
 
       const params = {};
 
-      // if (startDate && endDate) {
-      //   params.date_from = format(startDate, "yyyy-MM-dd");
-      //   params.date_to = format(endDate, "yyyy-MM-dd");
-      //   params.date_filter_field = "created_at";
-      // }
+      if (startDate && endDate) {
+        params.date_from = format(startDate, "yyyy-MM-dd");
+        params.date_to = format(endDate, "yyyy-MM-dd");
+      }
 
       const response = await authAxios().get("/dashboard", {
         params,
@@ -119,27 +119,31 @@ const AdminDashboard = (props) => {
       setLoading(false);
     }
   };
-  
-  // useEffect(() => {
-  //   fetchDashboardList();
-  // }, [startDate, endDate]);
+
   useEffect(() => {
     fetchDashboardList();
-  }, []);
+  }, [startDate, endDate]);
+
+  // Called only when DateRangePicker's Apply or Clear button is clicked.
+  const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  };
+
 
   return (
     <>
       <div>
         <div className="space-y-6">
-          <div className="max-w-[200px] w-full">
-            <DateRangeFilter
-              onChange={({ startDate, endDate }) =>
-                console.log(startDate, endDate)
-              }
-              defaultPreset="Today"
-              panelOffsetTop={100} 
-              panelOffsetLeft={0}
-            />
+          <div className="w-full relative">
+            <div className="max-w-[200px] w-full">
+              <DateRangePicker
+                onChange={handleDateRangeChange}
+                defaultPreset="Today"
+                panelOffsetTop={100}
+                panelOffsetLeft={0}
+              />
+            </div>
           </div>
           {/* Top Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-6 gap-2">
@@ -221,10 +225,22 @@ const AdminDashboard = (props) => {
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <StatCard title="Hot Take" value={allDashboardData?.posts_count} />
-                <StatCard title="Vibe Check" value={allDashboardData?.polls_count} />
-                <StatCard title="Comments" value={allDashboardData?.comments_count} />
-                <StatCard title="Active Tribes" value={allDashboardData?.active_tribes_count} />
+                <StatCard
+                  title="Hot Take"
+                  value={allDashboardData?.posts_count}
+                />
+                <StatCard
+                  title="Vibe Check"
+                  value={allDashboardData?.polls_count}
+                />
+                <StatCard
+                  title="Comments"
+                  value={allDashboardData?.comments_count}
+                />
+                <StatCard
+                  title="Active Tribes"
+                  value={allDashboardData?.active_tribes_count}
+                />
               </div>
             </div>
           </div>

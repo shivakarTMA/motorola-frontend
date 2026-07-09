@@ -221,6 +221,7 @@ export default function DateRangePicker({
   align = "left", // "left" | "right" — which side of the trigger the panel hangs from
   panelOffsetTop = 10, // gap between trigger and panel, in px
   panelOffsetLeft = 0, // extra horizontal nudge, in px (added to left, or subtracted on the right side)
+  panelOffsetRight = 0,
 }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const presets = useMemo(() => getPresets(today), [today]);
@@ -339,8 +340,8 @@ export default function DateRangePicker({
     align === "right"
       ? {
           top: `${panelOffsetTop}%`,
-          right: `${panelOffsetLeft}%`,
-          left: "auto",
+          right: `${panelOffsetRight}%`,
+          // left: `${panelOffsetLeft}%`,
         }
       : { top: `${panelOffsetTop}%`, left: `${panelOffsetLeft}%` };
 
@@ -484,7 +485,7 @@ export default function DateRangePicker({
           --accent-soft: #4279bd1c;
           --border: #ccc;
 
-          position: relative;
+          // position: relative;
           display: inline-flex;
           align-items: center;
           color: var(--ink);
@@ -541,7 +542,7 @@ export default function DateRangePicker({
         .drp-panel {
           position: absolute;
           top: calc(100% + 10px);
-          left: 0;
+          // left: 0;
           z-index: 50;
           display: flex;
           background: var(--canvas);
@@ -742,6 +743,67 @@ export default function DateRangePicker({
         .drp-btn--solid:disabled {
           background: var(--slate-soft);
           cursor: not-allowed;
+        }
+
+        @media(max-width:992px){
+          .drp-panel, .drp-body{
+            width:100%
+          }
+            .drp-panel{
+            flex-direction:column;
+            }
+            .drp-month{
+            flex:1
+            }
+            .drp-sidebar {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .drp-sidebar .drp-sidebar-label {grid-column: 1 / 3;}
+
+            .drp-calendars {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .drp-body {
+                padding: 15px;
+            }
+
+            .drp-weekday {
+                font-size: 10px;
+                padding: 3px 0 5px;
+            }
+
+            .drp-num {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+            }
+
+            .drp-grid {
+                grid-template-columns: repeat(8, 1fr);
+            }
+
+            .drp-preset {
+                padding: 5px 10px;
+                font-size: 12px;
+                border-radius: 5px;
+            }
+
+            .drp-cell {
+                height: 28px;
+            }
+            .drp-trigger-text {
+                font-size: 12px;
+            }
+
+            .drp-trigger {
+                padding: 7px 10px;
+                height: auto;
+            }
         }
       `}</style>
     </div>

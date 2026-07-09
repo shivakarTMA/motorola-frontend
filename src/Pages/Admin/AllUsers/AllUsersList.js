@@ -74,10 +74,9 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const ConsentBadge = ({ consent, date }) => {
-  return consent ? (
+const ConsentBadge = ({ consent }) =>
+  consent ? (
     <span className="bg-green-50 text-green-700 rounded-full px-3 py-1 text-xs">
-      {/* {consent} • {formatViewDate(date)} */}
       Given
     </span>
   ) : (
@@ -85,18 +84,23 @@ const ConsentBadge = ({ consent, date }) => {
       Pending
     </span>
   );
-};
 
 const statusOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "suspended", label: "Suspended" },
-  { value: "banned", label: "Banned" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "DEACTIVATED", label: "Inactive" },
+  { value: "SUSPENDED", label: "Suspended" },
+  { value: "BANNED", label: "Banned" },
 ];
 
 const consentOptions = [
-  { value: "given", label: "Given" },
-  { value: "pending", label: "Pending" },
+  {
+    value: true,
+    label: "Given",
+  },
+  {
+    value: false,
+    label: "Pending",
+  },
 ];
 
 const getActionItems = (status) => {
@@ -231,12 +235,7 @@ const AllUsersList = (props) => {
     {
       name: "DPDP CONSENT",
       width: "180px",
-      cell: (row) => (
-        <ConsentBadge
-          consent={row.LatestConsent?.channel}
-          date={row.LatestConsent?.created_at}
-        />
-      ),
+      cell: (row) => <ConsentBadge consent={row.has_consent} />,
     },
 
     {
@@ -327,6 +326,14 @@ const AllUsersList = (props) => {
         params.search = searchText;
       }
 
+      if (status?.value) {
+        params.status = status?.value;
+      }
+
+      if (consent !== null) {
+        params.user_consent = consent.value;
+      }
+
       if (startDate && endDate) {
         params.date_from = format(startDate, "yyyy-MM-dd");
         params.date_to = format(endDate, "yyyy-MM-dd");
@@ -351,11 +358,10 @@ const AllUsersList = (props) => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchAllUsers(currentPage, debouncedSearch);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, debouncedSearch, startDate, endDate]);
+  }, [currentPage, debouncedSearch, startDate, endDate, status, consent]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -429,7 +435,7 @@ const AllUsersList = (props) => {
         </div>
 
         <div className="bg-white rounded-lg border p-4 mt-3">
-          <div className="grid xl:grid-cols-4 lg:grid-cols-2 md:grid-cols-2 gap-3">
+          <div className="grid xl:grid-cols-4 lg:grid-cols-2 md:grid-cols-2 gap-3 relative">
             <div className="">
               {/* Status */}
               <Select
@@ -450,14 +456,20 @@ const AllUsersList = (props) => {
                 value={consent}
                 onChange={setConsent}
                 isSearchable={false}
-                placeholder="Select DPDP Consent"
+                placeholder="Select Consent"
                 isClearable
               />
             </div>
 
             <div className="col-span-2">
               {/* Registered date range — replaces the two react-datepicker fields */}
-              <DateRangePicker onChange={handleDateRangeChange} defaultPreset="Today" panelOffsetTop={100} panelOffsetLeft={-100} />
+              <DateRangePicker
+                onChange={handleDateRangeChange}
+                defaultPreset="Today"
+                panelOffsetTop={100}
+                panelOffsetRight={0}
+                align="right"
+              />
             </div>
           </div>
         </div>

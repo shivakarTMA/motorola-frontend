@@ -4,6 +4,7 @@ import Select from "react-select";
 import { toast } from "react-toastify";
 import { customStyles } from "../../../Helper/helper";
 import { authAxios } from "../../../Config/config";
+import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 
 const statusOptions = [
   { value: "PUBLISHED", label: "Published" },
@@ -12,6 +13,22 @@ const statusOptions = [
   { value: "DELETED", label: "Deleted" },
   { value: "BANNED", label: "Banned" },
 ];
+
+const delta = {
+  ops: [
+    {
+      insert: "My app is ",
+    },
+    {
+      insert: {
+        atomicLink: '{"text":"Moto","url":"https://moto.com"}',
+      },
+    },
+    {
+      insert: " \n",
+    },
+  ],
+};
 
 const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
   const isEdit = !!editId;
@@ -22,8 +39,8 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
   const [selectedStatus, setSelectedStatus] = useState(null);
 
   const filteredStatusOptions = statusOptions.filter(
-    (opt) => opt.value !== postDetails?.status
-    );
+    (opt) => opt.value !== postDetails?.status,
+  );
 
   useEffect(() => {
     if (!editId || !open) return;
@@ -80,6 +97,39 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
     setSelectedStatus(null);
     onClose();
   };
+
+  const getHtmlContent = () => {
+    if (!postDetails?.content) return "";
+
+    try {
+      const ops = JSON.parse(postDetails.content);
+
+      const convertedOps = ops.flatMap((op) => {
+        if (op.insert?.atomicLink) {
+          const link = JSON.parse(op.insert.atomicLink);
+
+          return [
+            {
+              insert: link.text,
+              attributes: {
+                link: link.url,
+              },
+            },
+          ];
+        }
+
+        return [op];
+      });
+
+      const converter = new QuillDeltaToHtmlConverter(convertedOps, {});
+      return converter.convert();
+    } catch (err) {
+      console.error(err);
+      return postDetails.content;
+    }
+  };
+
+  const html = getHtmlContent();
 
   return (
     <Transition appear show={open} as={Fragment}>
@@ -170,7 +220,11 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
                     </label>
 
                     <div className="custom--input min-h-[120px] bg-gray-50 whitespace-pre-wrap">
-                      {postDetails?.content || "-"}
+                      {/* {postDetails?.content || "-"} */}
+                      <div
+                        className="ql-editor p-0"
+                        dangerouslySetInnerHTML={{ __html: html }}
+                      />
                     </div>
                   </div>
 

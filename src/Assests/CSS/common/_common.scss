@@ -380,3 +380,8 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
     font-size: 0.875rem; /* unchanged (already small) */
   }
 }
+
+.ql-editor a {
+    text-decoration: underline;
+    color: var(--primarycolor);
+}
