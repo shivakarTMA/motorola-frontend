@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react"; // Import React hooks
 import Highcharts from "highcharts"; // Import Highcharts
 import HighchartsReact from "highcharts-react-official"; // Import React wrapper for Highcharts
+import "highcharts/modules/no-data-to-display";
 import Select from "react-select"; // Import react-select for dropdowns
 import DatePicker from "react-datepicker"; // Import datepicker for custom date selection
 import "react-datepicker/dist/react-datepicker.css"; // Import default datepicker styles
@@ -143,18 +144,6 @@ const activitiData = [
   },
 ];
 
-// ---- Dummy data for the two Highcharts charts (API call removed) ----
-const DUMMY_CONTENT_CHART_DATA = {
-  hot_takes: 128,
-  deep_dives: 76,
-  vibe_checks: 154,
-};
-
-const DUMMY_ENGAGEMENT_CHART_DATA = {
-  likes: 3420,
-  comments: 980,
-  followers: 512,
-};
 
 const AdminDashboard = (props) => {
   const { setLoading } = props;
@@ -176,9 +165,28 @@ const AdminDashboard = (props) => {
   const [recentActions, setRecentActions] = useState([]);
 
   // Static dummy data for the charts - no API call
-  const [contentChartData] = useState(DUMMY_CONTENT_CHART_DATA);
-  const [engagementChartData] = useState(DUMMY_ENGAGEMENT_CHART_DATA);
 
+  const [contentChartData, setContentChartData] = useState({
+    hot_takes: 0,
+    deep_dives: 0,
+    vibe_checks: 0,
+  });
+  const [engagementChartData, setEngagementChartData] = useState({
+    likes: 0,
+    comments: 0,
+    followers: 0,
+  });
+
+  const hasContentData =
+    (contentChartData.hot_takes || 0) +
+      (contentChartData.deep_dives || 0) +
+      (contentChartData.vibe_checks || 0) > 0;
+
+  const hasEngagementData =
+    (engagementChartData.likes || 0) +
+      (engagementChartData.comments || 0) +
+      (engagementChartData.followers || 0) > 0;
+    
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -293,9 +301,59 @@ const AdminDashboard = (props) => {
     }
   };
 
+  const fetchChartAnalytics = async () => {
+    try {
+      const params = {};
+
+      if (startDate && endDate) {
+        params.date_from = format(startDate, "yyyy-MM-dd");
+        params.date_to = format(endDate, "yyyy-MM-dd");
+      }
+
+      if (filterTribeGroup?.value) {
+        params.tribe_group_id = filterTribeGroup.value;
+      }
+
+      if (filterTribe?.value) {
+        params.tribe_id = filterTribe.value;
+      }
+
+      const response = await authAxios().get("/dashboard/analytics", { params });
+      const resData = response?.data;
+
+      if (resData?.success) {
+        const analytics = resData.data?.[0] || {};
+        const posts = analytics.posts || {};
+        const interactions = analytics.interactions || {};
+
+        setContentChartData({
+          hot_takes: posts.posts_count || 0,
+          deep_dives: posts.articles_count || 0,
+          vibe_checks: posts.polls_count || 0,
+        });
+
+        setEngagementChartData({
+          likes: interactions.likes_count || 0,
+          comments: interactions.comments_count || 0,
+          followers: interactions.followers_count || 0,
+        });
+      } else {
+        toast.error(resData?.message);
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Unable to load chart analytics"
+      );
+    }
+  };
+
   useEffect(() => {
     fetchDashboardList();
   }, [startDate, endDate]);
+
+  useEffect(() => {
+    fetchChartAnalytics();
+  }, [startDate, endDate, filterTribeGroup, filterTribe]);
 
   // ---- Tribe Group list API (populates filter2 when filter1 = "Tribe Group") ----
   const fetchTribeGroupList = async () => {
@@ -410,6 +468,16 @@ const AdminDashboard = (props) => {
       credits: {
         enabled: false,
       },
+      lang: {
+        noData: "No content data for the selected filters",
+      },
+      noData: {
+        style: {
+          fontWeight: "500",
+          fontSize: "13px",
+          color: "#9ca3af",
+        },
+      },
       xAxis: {
         categories: ["Hot Takes", "Deep Dives", "Vibe Checks"],
       },
@@ -427,15 +495,17 @@ const AdminDashboard = (props) => {
         {
           name: filterTribe?.label || filterTribeGroup?.label || "Content",
           color: "#3774d0",
-          data: [
-            contentChartData?.hot_takes || 0,
-            contentChartData?.deep_dives || 0,
-            contentChartData?.vibe_checks || 0,
-          ],
+          data: hasContentData
+          ? [
+              contentChartData?.hot_takes || 0,
+              contentChartData?.deep_dives || 0,
+              contentChartData?.vibe_checks || 0,
+            ]
+          : [], 
         },
       ],
     }),
-    [contentChartData, filterTribeGroup, filterTribe],
+    [contentChartData, filterTribeGroup, filterTribe, hasContentData],
   );
 
   const engagementChartOptions = useMemo(
@@ -446,6 +516,16 @@ const AdminDashboard = (props) => {
       },
       title: {
         text: "",
+      },
+      lang: {
+        noData: "No content data for the selected filters",
+      },
+      noData: {
+        style: {
+          fontWeight: "500",
+          fontSize: "13px",
+          color: "#9ca3af",
+        },
       },
       credits: {
         enabled: false,
@@ -466,15 +546,17 @@ const AdminDashboard = (props) => {
         {
           name: filterTribe?.label || filterTribeGroup?.label || "Engagement",
           color: "#00A870",
-          data: [
-            engagementChartData?.likes || 0,
-            engagementChartData?.comments || 0,
-            engagementChartData?.followers || 0,
-          ],
+          data: hasEngagementData
+          ? [
+              engagementChartData?.likes || 0,
+              engagementChartData?.comments || 0,
+              engagementChartData?.followers || 0,
+            ]
+          : [],
         },
       ],
     }),
-    [engagementChartData, filterTribeGroup, filterTribe],
+    [engagementChartData, filterTribeGroup, filterTribe,hasEngagementData],
   );
 
   // Called only when DateRangePicker's Apply or Clear button is clicked.
