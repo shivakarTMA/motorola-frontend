@@ -1,105 +1,41 @@
 import React, { useEffect, useState } from "react";
-import { MdModeEdit } from "react-icons/md";
-import { FiPlus, FiTrash2 } from "react-icons/fi";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
-import Tooltip from "../../../Components/Common/Tooltip";
 import { authAxios } from "../../../Config/config";
 import { toast } from "react-toastify";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
-import {
-  formatText,
-  formatViewDate,
-  formatWithTimeDate,
-} from "../../../Helper/helper";
-import { IoMdCloseCircle } from "react-icons/io";
-import DatePicker from "react-datepicker"; // Import datepicker for custom date selection
-import "react-datepicker/dist/react-datepicker.css"; // Import default datepicker styles
+import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 
-const activitiData = [
-  {
-    report_id: "Mod0001",
-    reported_date: "03/07/2026",
-    reported_time: "12:05",
-    item_type: "Comment",
-    reported_user: "@user_x",
-    tribe: "Gaming",
-    post_title: "bvghebqljihq",
-    source: "Keyword auto-flag",
-    reason: "Abuse",
-    action: "Removed",
-    actioned_by: "@nikhil.tma",
-    resolution_time: "12:20",
-    status: "Resolved",
-  },
-  {
-    report_id: "Mod0002",
-    reported_date: "04/07/2026",
-    reported_time: "13:05",
-    item_type: "Hot Take",
-    reported_user: "@nitin.tma",
-    tribe: "Tech",
-    post_title: "bvghebqljihq",
-    source: "User report",
-    reason: "Spam",
-    action: "Approved",
-    actioned_by: "@sara.tma",
-    resolution_time: "13:20",
-    status: "Resolved",
-  },
-  {
-    report_id: "Mod0003",
-    reported_date: "06/07/2026",
-    reported_time: "14:05",
-    item_type: "Vibe Check",
-    reported_user: "@sara.tma",
-    tribe: "Gaming",
-    post_title: "bvghebqljihq",
-    source: "Keyword auto-flag",
-    reason: "Misinformation",
-    action: "Warned",
-    actioned_by: "@nikhil.tma",
-    resolution_time: "14:20",
-    status: "Resolved",
-  },
-  {
-    report_id: "Mod0004",
-    reported_date: "06/07/2026",
-    reported_time: "15:05",
-    item_type: "Comment",
-    reported_user: "@user_y",
-    tribe: "Tech",
-    post_title: "bvghebqljihq",
-    source: "User report",
-    reason: "Abuse",
-    action: "Suspended",
-    actioned_by: "@sara.tma",
-    resolution_time: "15:20",
-    status: "Pending",
-  },
-  {
-    report_id: "Mod0005",
-    reported_date: "07/07/2026",
-    reported_time: "16:05",
-    item_type: "Deep Dive",
-    reported_user: "@arjun.tma",
-    tribe: "Tech",
-    post_title: "bvghebqljihq",
-    source: "User report",
-    reason: "Spam",
-    action: "Dismissed",
-    actioned_by: "@sara.tma",
-    resolution_time: "16:20",
-    status: "Resolved",
-  },
-];
+const ACTION_LABELS = {
+  WARNING: "Warned",
+  HIDE_CONTENT: "Removed",
+  SUSPEND_USER: "Suspended",
+  BAN_USER: "Banned",
+  DEACTIVATE_USER: "Deactivated",
+};
+
+const SOURCE_LABELS = {
+  KEYWORD: "Keyword auto-flag",
+  USER_REPORT: "User report",
+};
+
+const STATUS_LABELS = {
+  PENDING: "Pending",
+  ACTIONED: "Resolved",
+  DISMISSED: "Dismissed",
+};
+
+const CONTENT_TYPE_LABELS = {
+  POST: "Post",
+  POLL: "Poll",
+  COMMENT: "Comment",
+};
 
 const ModerationQueue = (props) => {
   const { setLoading } = props;
-  const [hotTakeList, setHotTakeList] = useState([]);
-  const [viewPostDetails, setViewPostDetails] = useState(false);
-  const [editPostId, setEditPostId] = useState(null);
+
+  const [moderationList, setModerationList] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
@@ -111,91 +47,76 @@ const ModerationQueue = (props) => {
     {
       name: "Report ID",
       selector: (row) => row.report_id,
-      // sortable: true,
-      width: "110px",
     },
     {
       name: "Reported Date",
       selector: (row) => row.reported_date,
       center: true,
-      width: "150px",
     },
     {
       name: "Reported Time",
       selector: (row) => row.reported_time,
       center: true,
-      width: "150px",
     },
     {
       name: "Item Type",
       selector: (row) => row.item_type,
       center: true,
-      width: "110px",
     },
     {
       name: "Reported",
       selector: (row) => row.reported_user,
       center: true,
-      width: "110px",
     },
     {
       name: "Tribe",
       selector: (row) => row.tribe,
       center: true,
-      width: "110px",
     },
     {
       name: "Post Title",
       selector: (row) => row.post_title,
       center: true,
-      width: "150px",
     },
     {
       name: "Source",
       selector: (row) => row.source,
       center: true,
-      width: "150px",
     },
     {
       name: "Reason",
       selector: (row) => row.reason,
       center: true,
-      width: "110px",
     },
     {
       name: "Action",
       selector: (row) => row.action,
       center: true,
-      width: "110px",
     },
     {
       name: "Actioned By",
       selector: (row) => row.actioned_by,
       center: true,
-      width: "110px",
     },
     {
       name: "Resolution Time",
       selector: (row) => row.resolution_time,
       center: true,
-      width: "150px",
     },
     {
       name: "Status",
       selector: (row) => row.status,
       center: true,
-      width: "110px",
     },
   ];
 
-  const fetchHotTakeList = async (page = 1) => {
+  const fetchModerationList = async (page = 1) => {
     try {
       setLoading(true);
 
       const params = {
         page,
         limit: rowsPerPage,
-        type: "ARTICLE",
       };
 
       if (startDate && endDate) {
@@ -204,14 +125,52 @@ const ModerationQueue = (props) => {
         params.date_filter_field = "created_at";
       }
 
-      const response = await authAxios().get("/post", {
-        params,
-      });
-
+      const response = await authAxios().get("/moderation", { params });
       const resData = response.data;
 
       if (resData.success) {
-        setHotTakeList(resData.data.items);
+        const items = (resData.data.items || []).map((item) => {
+          // Latest non-revoked action from the moderationActions array
+          const activeAction =
+            (item.moderationActions || [])
+              .filter((ma) => !ma.is_revoked)
+              .sort(
+                (a, b) => new Date(b.created_at) - new Date(a.created_at),
+              )[0] || null;
+
+          const [datePart, timePart] = (item.created_at || "").split(" ");
+
+          return {
+            report_id: item.report_id || "-",
+            reported_date: datePart
+              ? datePart.split("-").reverse().join("/")
+              : "-",
+            reported_time: timePart?.slice(0, 5) || "-",
+            item_type:
+              CONTENT_TYPE_LABELS[item.content_type] ||
+              item.content_type ||
+              "-",
+            reported_user: item.user?.name || "-",
+            tribe: item.tribe || "-",
+            post_title:
+              item.post?.title ||
+              item.poll?.question ||
+              item.comment?.content?.slice(0, 40) ||
+              "-",
+            source:
+              SOURCE_LABELS[item.flag_source] || item.flag_source || "-",
+            reason: activeAction?.reason || item.reason || "-",
+            action: activeAction
+              ? ACTION_LABELS[activeAction.action] || activeAction.action
+              : "-",
+            actioned_by: activeAction?.moderator?.name || "-",
+            resolution_time:
+              item.reviewed_at?.split(" ")[1]?.slice(0, 5) || "-",
+            status: STATUS_LABELS[item.status] || item.status || "-",
+          };
+        });
+
+        setModerationList(items);
         setPagination(resData.data.pagination);
       } else {
         toast.error(resData.message);
@@ -229,12 +188,13 @@ const ModerationQueue = (props) => {
       return;
     }
 
-    fetchHotTakeList(currentPage);
+    fetchModerationList(currentPage);
   }, [currentPage, startDate, endDate]);
 
   const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
     setStartDate(newStart);
     setEndDate(newEnd);
+    setCurrentPage(1); // reset to first page when the date range changes
   };
 
   return (
@@ -256,7 +216,7 @@ const ModerationQueue = (props) => {
         <div className="mt-3">
           <CustomDataTable
             columns={columns}
-            data={activitiData}
+            data={moderationList}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
