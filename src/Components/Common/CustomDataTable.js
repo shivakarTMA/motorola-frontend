@@ -56,22 +56,26 @@ const CustomDataTable = ({
 }) => {
   // 👇 automatically apply allowOverflow to every column
   const enhancedColumns = columns.map((col) => ({
-    allowOverflow: true,
+    // allowOverflow: true,
     ...col, // any column-specific override still wins
   }));
+
+  const tableData = pagination
+    ? data
+    : data?.slice(-10);
 
   return (
     <div className="bg-white rounded-xl border overflow-hidden">
       <DataTable
         columns={enhancedColumns}
-        data={data}
+        data={tableData}
         progressPending={loading}
         responsive
         // highlightOnHover
         // striped
         // pointerOnHover
-        pagination
-        paginationServer
+        pagination={pagination}
+        paginationServer={pagination}
         paginationTotalRows={paginationTotalRows}
         paginationPerPage={rowsPerPage}
         onChangePage={setCurrentPage}

@@ -31,6 +31,7 @@ export default function PrivateLayout({ children }) {
     { path: "/hot-take", title: "Hot Take" },
     { path: "/deep-dive", title: "Deep Dive" },
     { path: "/vibe-check", title: "Vibe Check" },
+    { path: "/moderation-queue", title: "Moderation Queue" },
   ];
 
   const pageTitle =

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MdModeEdit } from "react-icons/md";
+import { MdImage, MdModeEdit } from "react-icons/md";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import AddNewTribesGroup from "./AddNewTribesGroup";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
@@ -8,12 +8,18 @@ import { authAxios } from "../../../Config/config";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { formatWithTimeDate } from "../../../Helper/helper";
+import { format } from "date-fns";
+import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 
 const TribesGroupList = (props) => {
   const { setLoading } = props;
   const [tribeGroupList, setTribeGroupList] = useState([]);
   const [editTribeGroupId, setEditTribeGroupId] = useState(null);
   const [addNewTribeGroup, setAddNewTribeGroup] = useState(false);
+
+  const [status, setStatus] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -24,28 +30,36 @@ const TribesGroupList = (props) => {
 
   const columns = [
     {
-      name: "Name",
-      selector: (row) => row.name,
-      sortable: true,
-      // grow: 2,
-    },
-    {
-      name: "Position",
-      selector: (row) => row.position,
-      center: true,
-      // width: "120px",
-    },
-    {
-      name: "Created by",
-      selector: (row) => row.staff?.name,
-      center: true,
-      // width: "120px",
+      name: "Photo",
+      width: "80px",
+      cell: (row) =>
+        row?.image ? (
+          <div className="p-1">
+            <img
+              src={row.image}
+              alt={row.name}
+              className="w-10 h-10 rounded-full object-cover object-center"
+            />
+          </div>
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-xs text-gray-500">
+              <MdImage />
+            </span>
+          </div>
+        ),
     },
     {
       name: "Created at",
       selector: (row) => formatWithTimeDate(row.created_at),
       center: true,
       // width: "120px",
+    },
+    {
+      name: "Name",
+      selector: (row) => row.name,
+      sortable: true,
+      // grow: 2,
     },
     {
       name: "Status",
@@ -63,6 +77,25 @@ const TribesGroupList = (props) => {
         </span>
       ),
     },
+    {
+      name: "Position",
+      selector: (row) => row.position,
+      center: true,
+      // width: "120px",
+    },
+    // {
+    //   name: "Created by",
+    //   selector: (row) => row.staff?.name,
+    //   center: true,
+    //   // width: "120px",
+    // },
+    {
+      name: "Tribes",
+      selector: (row) => (row.staff?.sub_tribes ? row.staff?.sub_tribes : 0),
+      center: true,
+      // width: "120px",
+    },
+
     {
       name: "Actions",
       // width: "120px",
@@ -102,13 +135,23 @@ const TribesGroupList = (props) => {
     try {
       setLoading(true);
 
+      const params = {
+        page,
+        limit: rowsPerPage,
+      };
+
+      if (status?.value) {
+        params.status = status?.value;
+      }
+
+      if (startDate && endDate) {
+        params.date_from = format(startDate, "yyyy-MM-dd");
+        params.date_to = format(endDate, "yyyy-MM-dd");
+        params.date_filter_field = "created_at";
+      }
+
       // Fetch tribe-group data from API
-      const response = await authAxios().get("/tribe-group", {
-        params: {
-          page,
-          limit: rowsPerPage,
-        },
-      });
+      const response = await authAxios().get("/tribe-group", { params });
       const resData = response?.data;
       if (resData?.success) {
         setTribeGroupList(resData.data.items || []);
@@ -126,7 +169,7 @@ const TribesGroupList = (props) => {
 
   useEffect(() => {
     handleFetchTribesGroup(currentPage);
-  }, [currentPage]);
+  }, [currentPage, startDate, endDate, status]);
 
   const handleDelete = async () => {
     try {
@@ -151,10 +194,25 @@ const TribesGroupList = (props) => {
     }
   };
 
+  // Called only when DateRangePicker's Apply or Clear button is clicked.
+  const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  };
+
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-end gap-4">
+        <div className="relative flex justify-between gap-4">
+          <div className="max-w-[200px] w-full">
+            <DateRangePicker
+              onChange={handleDateRangeChange}
+              defaultPreset="Today"
+              panelOffsetTop={100}
+              panelOffsetLeft={0}
+            />
+          </div>
+
           <button
             className="custom--btn"
             onClick={() => setAddNewTribeGroup(true)}
@@ -171,6 +229,7 @@ const TribesGroupList = (props) => {
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
+            paginationTotalRows={pagination?.total || 0}
           />
         </div>
       </div>

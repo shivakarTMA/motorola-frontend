@@ -110,9 +110,6 @@ const ViewUser = (props) => {
                 Profile Details
               </Tab>
 
-              <Tab className="rounded-t-lg lg:px-5 px-4 py-2 lg:text-sm text-[12px] font-medium transition outline-none data-[selected]:bg-black data-[selected]:text-white data-[hover]:bg-blue-50">
-                Activity
-              </Tab>
 
               <Tab className="rounded-t-lg lg:px-5 px-4 py-2 lg:text-sm text-[12px] font-medium transition outline-none data-[selected]:bg-black data-[selected]:text-white data-[hover]:bg-blue-50">
                 Moderation History
@@ -121,30 +118,30 @@ const ViewUser = (props) => {
             <TabPanels>
               <TabPanel>
                 <div className="space-y-4">
-                  <NeedsAttention />
+                  {/* <NeedsAttention /> */}
                   <InfoCard title="Basic Information" rows={basicInfo} />
-                  <div className="grid gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2">
+                  <div className="block">
+                    <div>
                       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
                         Community Activity
                       </h2>
-                      <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
-                        <StatCard title="Posts" value={basicInfoUser?.posts_count} />
-                        <StatCard title="Replies" value="88" />
-                        <StatCard title="Reactions" value="210" />
-                        <StatCard title="Last Active" value={timeAgo(basicInfoUser?.last_login_at)}  />
+                      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                        <StatCard title="Hot Takes" value={basicInfoUser?.posts_count} />
+                        <StatCard title="Deep Dives" value="88" />
+                        <StatCard title="Vibe Checks" value="210" />
+                        <StatCard title="Like" value="210" />
+                        <StatCard title="Comments" value="210" />
+                        <StatCard title="Followed Tribes" value="210" />
+                        <StatCard title="Followers" value="210" />
+                        <StatCard title="Following" value="210" />
                       </div>
                     </div>
-                    <ModerationCard />
+                    {/* <ModerationCard /> */}
                   </div>
                 </div>
               </TabPanel>
               {/* end Profile Details */}
 
-              <TabPanel>
-                <ActivityData id={id} />
-              </TabPanel>
-              {/* end Activity Data */}
 
               <TabPanel>
                 <ModerationHistory />

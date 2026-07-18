@@ -343,7 +343,8 @@ const AddNewBanner = ({ open, onClose, onSuccess, editId }) => {
                       )}
                     </div>
 
-                    {formik.values.link_type !== "NONE" && (
+                    {formik.values.link_type === "NONE" ||
+                    formik.values.link_type === "" ? null : (
                       <div>
                         <label className="block mb-2 text-sm font-medium">
                           {formik.values.link_type === "INTERNAL"

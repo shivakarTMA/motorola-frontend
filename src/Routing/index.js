@@ -24,6 +24,7 @@ import FlaggedKeywordsList from "../Pages/Admin/FlaggedKeywords/FlaggedKeywordsL
 import HotTakeList from "../Pages/Admin/PostArticles/HotTakeList";
 import DeepDiveList from "../Pages/Admin/PostArticles/DeepDiveList";
 import VibeCheckList from "../Pages/Admin/PostArticles/VibeCheckList";
+import ModerationQueue from "../Pages/Admin/Moderation/ModerationQueue";
 
 
 export default function Routing() {
@@ -179,6 +180,14 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <VibeCheckList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/moderation-queue"
+          element={
+            <PrivateRoute>
+              <ModerationQueue />
             </PrivateRoute>
           }
         />

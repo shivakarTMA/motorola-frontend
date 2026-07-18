@@ -16,11 +16,14 @@ import {
   FaBan,
   FaUserPlus,
   FaClipboardCheck,
+  FaCircle,
+  FaFlag,
 } from "react-icons/fa";
 import DateRangeFilter from "../../Components/Common/DateRangePickerField";
 import { format } from "date-fns";
 import IsLoadingHOC from "../../Components/Common/IsLoadingHOC";
 import DateRangePicker from "../../Components/Common/DateRangePickerField";
+import CustomDataTable from "../../Components/Common/CustomDataTable";
 
 const StatCard = ({
   title,
@@ -57,32 +60,100 @@ const StatCard = ({
   );
 };
 
-const ActivityRow = ({ type, message, moderator, time }) => {
-  const styles = {
-    Ban: "bg-orange-600 text-white",
-    Hide: "bg-gray-200 text-gray-700",
-    Mute: "bg-yellow-100 text-yellow-700",
-  };
+const chartFilterOptions = [
+  { value: "tribe_group", label: "Tribe Group" },
+  { value: "tribes", label: "Tribes" },
+];
 
-  return (
-    <div className="flex lg:flex-row flex-col lg:items-center items-start justify-between py-3 border-b">
-      <div className="flex lg:flex-row flex-col lg:items-center items-start lg:gap-4 gap-2">
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            styles[type]
-          }`}
-        >
-          {type}
-        </span>
+const activitiData = [
+  {
+    report_id: "Mod0001",
+    reported_date: "03/07/2026",
+    reported_time: "12:05",
+    item_type: "Comment",
+    reported_user: "@user_x",
+    tribe: "Gaming",
+    post_title: "bvghebqljihq",
+    source: "Keyword auto-flag",
+    reason: "Abuse",
+    action: "Removed",
+    actioned_by: "@nikhil.tma",
+    resolution_time: "12:20",
+    status: "Resolved",
+  },
+  {
+    report_id: "Mod0002",
+    reported_date: "04/07/2026",
+    reported_time: "13:05",
+    item_type: "Hot Take",
+    reported_user: "@nitin.tma",
+    tribe: "Tech",
+    post_title: "bvghebqljihq",
+    source: "User report",
+    reason: "Spam",
+    action: "Approved",
+    actioned_by: "@sara.tma",
+    resolution_time: "13:20",
+    status: "Resolved",
+  },
+  {
+    report_id: "Mod0003",
+    reported_date: "06/07/2026",
+    reported_time: "14:05",
+    item_type: "Vibe Check",
+    reported_user: "@sara.tma",
+    tribe: "Gaming",
+    post_title: "bvghebqljihq",
+    source: "Keyword auto-flag",
+    reason: "Misinformation",
+    action: "Warned",
+    actioned_by: "@nikhil.tma",
+    resolution_time: "14:20",
+    status: "Resolved",
+  },
+  {
+    report_id: "Mod0004",
+    reported_date: "06/07/2026",
+    reported_time: "15:05",
+    item_type: "Comment",
+    reported_user: "@user_y",
+    tribe: "Tech",
+    post_title: "bvghebqljihq",
+    source: "User report",
+    reason: "Abuse",
+    action: "Suspended",
+    actioned_by: "@sara.tma",
+    resolution_time: "15:20",
+    status: "Pending",
+  },
+  {
+    report_id: "Mod0005",
+    reported_date: "07/07/2026",
+    reported_time: "16:05",
+    item_type: "Deep Dive",
+    reported_user: "@arjun.tma",
+    tribe: "Tech",
+    post_title: "bvghebqljihq",
+    source: "User report",
+    reason: "Spam",
+    action: "Dismissed",
+    actioned_by: "@sara.tma",
+    resolution_time: "16:20",
+    status: "Resolved",
+  },
+];
 
-        <span className="text-gray-800 text-sm">{message}</span>
-      </div>
+// ---- Dummy data for the two Highcharts charts (API call removed) ----
+const DUMMY_CONTENT_CHART_DATA = {
+  hot_takes: 128,
+  deep_dives: 76,
+  vibe_checks: 154,
+};
 
-      <div className="text-sm text-gray-500">
-        {moderator} · {time}
-      </div>
-    </div>
-  );
+const DUMMY_ENGAGEMENT_CHART_DATA = {
+  likes: 3420,
+  comments: 980,
+  followers: 512,
 };
 
 const AdminDashboard = (props) => {
@@ -90,6 +161,100 @@ const AdminDashboard = (props) => {
   const [allDashboardData, setAllDashboardData] = useState({});
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+
+  const [filterTribeGroup, setFilterTribeGroup] = useState(null);
+  const [filterTribe, setFilterTribe] = useState(null);
+
+  const [tribeGroupOptions, setTribeGroupOptions] = useState([]);
+  const [tribeOptions, setTribeOptions] = useState([]);
+
+  // Static dummy data for the charts - no API call
+  const [contentChartData] = useState(DUMMY_CONTENT_CHART_DATA);
+  const [engagementChartData] = useState(DUMMY_ENGAGEMENT_CHART_DATA);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+
+  const activityCol = [
+    {
+      name: "Report ID",
+      selector: (row) => row.report_id,
+      // sortable: true,
+      width:"110px"
+    },
+    {
+      name: "Reported Date",
+      selector: (row) => row.reported_date,
+      center: true,
+      width:"150px"
+    },
+    {
+      name: "Reported Time",
+      selector: (row) => row.reported_time,
+      center: true,
+      width:"150px"
+    },
+    {
+      name: "Item Type",
+      selector: (row) => row.item_type,
+      center: true,
+      width:"110px"
+    },
+    {
+      name: "Reported",
+      selector: (row) => row.reported_user,
+      center: true,
+      width:"110px"
+    },
+    {
+      name: "Tribe",
+      selector: (row) => row.tribe,
+      center: true,
+      width:"110px"
+    },
+    {
+      name: "Post Title",
+      selector: (row) => row.post_title,
+      center: true,
+      width:"150px"
+    },
+    {
+      name: "Source",
+      selector: (row) => row.source,
+      center: true,
+      width:"150px"
+    },
+    {
+      name: "Reason",
+      selector: (row) => row.reason,
+      center: true,
+      width:"110px"
+    },
+    {
+      name: "Action",
+      selector: (row) => row.action,
+      center: true,
+      width:"110px"
+    },
+    {
+      name: "Actioned By",
+      selector: (row) => row.actioned_by,
+      center: true,
+      width:"110px"
+    },
+    {
+      name: "Resolution Time",
+      selector: (row) => row.resolution_time,
+      center: true,
+      width:"150px"
+    },
+    {
+      name: "Status",
+      selector: (row) => row.status,
+      center: true,
+      width:"110px"
+    },
+  ];
 
   const fetchDashboardList = async () => {
     try {
@@ -124,18 +289,146 @@ const AdminDashboard = (props) => {
     fetchDashboardList();
   }, [startDate, endDate]);
 
+  // ---- Tribe Group list API (populates filter2 when filter1 = "Tribe Group") ----
+  const fetchTribeGroupList = async () => {
+    try {
+      const response = await authAxios().get("/tribe-group");
+      const resData = response?.data;
+
+      if (resData?.success) {
+        const options = (resData.data.items || []).map((group) => ({
+          value: group.id,
+          label: group.name,
+        }));
+        console.log(options, "options");
+        setTribeGroupOptions(options);
+      } else {
+        toast.error(response.data?.message);
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Unable to load tribe groups",
+      );
+    }
+  };
+
+  // ---- Tribe list API (populates filter2 when filter1 = "Tribes") ----
+  const fetchTribeList = async () => {
+    try {
+      const response = await authAxios().get("/tribe");
+      const resData = response?.data;
+
+      if (resData?.success) {
+        const options = (resData.data.items || []).map((group) => ({
+          value: group.id,
+          label: group.name,
+        }));
+        console.log(options, "options");
+        setTribeOptions(options);
+      } else {
+        toast.error(response.data?.message);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to load tribes");
+    }
+  };
+
+  // Whenever filter1 changes, refresh filter2's option list from the right API
+  useEffect(() => {
+    fetchTribeGroupList();
+    fetchTribeList();
+  }, []);
+
+  const contentChartOptions = useMemo(
+    () => ({
+      chart: {
+        type: "column",
+        height: "80%",
+      },
+      title: {
+        text: "",
+      },
+      credits: {
+        enabled: false,
+      },
+      xAxis: {
+        categories: ["Hot Takes", "Deep Dives", "Vibe Checks"],
+      },
+      yAxis: {
+        min: 0,
+        title: {
+          // text: "Count",
+          text: null,
+        },
+      },
+      legend: {
+        enabled: false,
+      },
+      series: [
+        {
+          name: filterTribe?.label || filterTribeGroup?.label || "Content",
+          color: "#3774d0",
+          data: [
+            contentChartData?.hot_takes || 0,
+            contentChartData?.deep_dives || 0,
+            contentChartData?.vibe_checks || 0,
+          ],
+        },
+      ],
+    }),
+    [contentChartData, filterTribeGroup, filterTribe],
+  );
+
+  const engagementChartOptions = useMemo(
+    () => ({
+      chart: {
+        type: "column",
+        height: "80%",
+      },
+      title: {
+        text: "",
+      },
+      credits: {
+        enabled: false,
+      },
+      xAxis: {
+        categories: ["Likes", "Comments", "Followers"],
+      },
+      yAxis: {
+        min: 0,
+        title: {
+          text: null,
+        },
+      },
+      legend: {
+        enabled: false,
+      },
+      series: [
+        {
+          name: filterTribe?.label || filterTribeGroup?.label || "Engagement",
+          color: "#00A870",
+          data: [
+            engagementChartData?.likes || 0,
+            engagementChartData?.comments || 0,
+            engagementChartData?.followers || 0,
+          ],
+        },
+      ],
+    }),
+    [engagementChartData, filterTribeGroup, filterTribe],
+  );
+
   // Called only when DateRangePicker's Apply or Clear button is clicked.
   const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
     setStartDate(newStart);
     setEndDate(newEnd);
   };
 
-
   return (
     <>
       <div>
         <div className="space-y-6">
-          <div className="w-full relative">
+          <div className="w-full relative flex gap-2 items-center justify-between">
             <div className="max-w-[200px] w-full">
               <DateRangePicker
                 onChange={handleDateRangeChange}
@@ -144,11 +437,24 @@ const AdminDashboard = (props) => {
                 panelOffsetLeft={0}
               />
             </div>
+            <div className="border px-2 py-1 rounded-lg">
+              <div className="w-fit flex items-center gap-2">
+                <div className="text-[13px] font-medium text-gray-500 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#3774d0]" />
+                  <span className="leading-1">Total Users</span>
+                </div>
+                <div className="flex">
+                  <span className="text-[13px] font-semibold leading-1">
+                    {allDashboardData?.total_users_count}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
           {/* Top Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-5 xl:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-2">
             <StatCard
-              title="Total Users"
+              title="Active Users"
               value={allDashboardData?.total_users_count}
               icon={FaUsers}
               iconBg="bg-blue-100"
@@ -156,7 +462,7 @@ const AdminDashboard = (props) => {
             />
 
             <StatCard
-              title="Active"
+              title="Suspended Users"
               value="4,210"
               icon={FaUserCheck}
               iconBg="bg-green-100"
@@ -164,7 +470,7 @@ const AdminDashboard = (props) => {
             />
 
             <StatCard
-              title="Suspended"
+              title="Banned Users"
               value={allDashboardData?.total_muted_users_count}
               icon={FaUserSlash}
               iconBg="bg-yellow-100"
@@ -172,7 +478,7 @@ const AdminDashboard = (props) => {
             />
 
             <StatCard
-              title="Banned"
+              title="New Users"
               value={allDashboardData?.total_banned_users_count}
               icon={FaBan}
               iconBg="bg-red-100"
@@ -180,113 +486,116 @@ const AdminDashboard = (props) => {
             />
 
             <StatCard
-              title="New this week"
+              title="Pending Flags"
               value="214"
-              icon={FaUserPlus}
-              iconBg="bg-purple-100"
-              iconColor="text-purple-600"
-            />
-
-            <StatCard
-              title="Pending DPDP Consent"
-              value="-"
-              subtitle="Blocked: consent not modeled"
-              icon={FaClipboardCheck}
+              icon={FaFlag}
               iconBg="bg-orange-100"
               iconColor="text-orange-600"
-              highlight
+            />
+            <StatCard
+              title="Posts Reviewed"
+              value="214"
+              icon={FaClipboardCheck}
+              iconBg="bg-green-100"
+              iconColor="text-green-600"
             />
           </div>
 
-          {/* Middle Section */}
-          <div className="grid lg:grid-cols-5 gap-2">
-            {/* Moderation Snapshot */}
-            <div className="lg:col-span-2">
-              <h2 className="lg:text-lg text-md font-semibold lg:mb-4 mb-2 uppercase tracking-wide">
-                Moderation Snapshot
-              </h2>
+          <div className="flex lg:flex-row flex-col justify-between lg:items-center lg:!mt-10  gap-2">
+            <h2 className="text-lg font-semibold">Content Analytics</h2>
 
-              <div className="grid md:grid-cols-2 gap-2">
-                <StatCard
-                  title="Pending Flags"
-                  value="27"
-                  highlight
-                  subtitle="Open queue →"
+            <div className="flex lg:justify-end gap-2 mb-4">
+              <div className="max-w-fit w-full">
+                <Select
+                  value={filterTribeGroup}
+                  options={tribeGroupOptions}
+                  onChange={setFilterTribeGroup}
+                  styles={customStyles}
+                  placeholder="Select Tribe Group"
+                  isClearable
                 />
+              </div>
 
-                <StatCard title="Actions Taken Today" value="8" />
+              <div className="max-w-fit w-full">
+                <Select
+                  value={filterTribe}
+                  options={tribeOptions}
+                  onChange={setFilterTribe}
+                  styles={customStyles}
+                  placeholder="Select Tribe"
+                  isClearable
+                />
               </div>
             </div>
+          </div>
 
-            {/* Content & Community */}
-            <div className="lg:col-span-3">
-              <h2 className="lg:text-lg text-md font-semibold lg:mb-4 mb-2 uppercase tracking-wide">
-                Content & Community
-              </h2>
+          <div className="grid lg:grid-cols-2 gap-2 !mt-0">
+            <div className="bg-white rounded-xl border p-5 shadow-sm">
+              <HighchartsReact
+                highcharts={Highcharts}
+                options={contentChartOptions}
+              />
+            </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <StatCard
-                  title="Hot Take"
-                  value={allDashboardData?.posts_count}
-                />
-                <StatCard
-                  title="Vibe Check"
-                  value={allDashboardData?.polls_count}
-                />
-                <StatCard
-                  title="Comments"
-                  value={allDashboardData?.comments_count}
-                />
-                <StatCard
-                  title="Active Tribes"
-                  value={allDashboardData?.active_tribes_count}
-                />
-              </div>
+            <div className="bg-white rounded-xl border p-5 shadow-sm">
+              <HighchartsReact
+                highcharts={Highcharts}
+                options={engagementChartOptions}
+              />
             </div>
           </div>
 
           {/* Activity Table */}
-          <div className="bg-white rounded-lg border">
-            <div className="p-4 border-b">
+          <div className="!mt-10">
+            <div className="flex lg:flex-row flex-col justify-between lg:items-center mb-3  gap-2">
               <h2 className="lg:text-lg text-md font-semibold uppercase">
                 Recent Moderation Activity
               </h2>
+
+              <div className="flex lg:flex-row flex-col lg:items-center pr-2">
+                <div className="w-fit flex items-center gap-2 lg:border-r">
+                  <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                    <FaCircle className="text-[10px] text-[#009EB2]" />
+                    <span>Total Posts Flagged</span>
+                  </div>
+                  <div className="pr-2 flex">
+                    <span className="text-[13px] font-semibold">50</span>
+                  </div>
+                </div>
+                <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+                  <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                    <FaCircle className="text-[10px] text-[#1F9254]" />
+                    <span>Total Actions Pending</span>
+                  </div>
+                  <div className="pr-2 flex">
+                    <span className="text-[13px] font-semibold">15</span>
+                  </div>
+                </div>
+                <div className="w-fit flex items-center gap-2 lg:pl-2">
+                  <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                    <FaCircle className="text-[10px] text-[#ff9900]" />
+                    <span>Total Actions Taken</span>
+                  </div>
+                  <div className="pr-2 flex">
+                    <span className="text-[13px] font-semibold">20</span>
+                  </div>
+                </div>
+                <div className="w-fit flex items-center gap-2 lg:pl-8">
+                  <div className="text-[13px] font-medium text-blue-600 flex gap-2 items-center underline">
+                    <Link to="/moderation-queue">View All</Link>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="px-4">
-              <ActivityRow
-                type="Ban"
-                message="Post by Diya Patel — repeated spam links"
-                moderator="Neha K"
-                time="12m ago"
-              />
-
-              <ActivityRow
-                type="Hide"
-                message='Comment by Imran Khan — flagged keyword "crack tool"'
-                moderator="Rohit S"
-                time="38m ago"
-              />
-
-              <ActivityRow
-                type="Mute"
-                message="User Rahul Verma — abusive replies (24h)"
-                moderator="Neha K"
-                time="1h ago"
-              />
-
-              <ActivityRow
-                type="Hide"
-                message="Poll by Sneha Iyer — off-topic"
-                moderator="Rohit S"
-                time="2h ago"
-              />
-
-              <ActivityRow
-                type="Ban"
-                message="Post by Karan Mehta — counterfeit listing"
-                moderator="Neha K"
-                time="3h ago"
+            <div className="">
+              <CustomDataTable
+                columns={activityCol}
+                data={activitiData}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                rowsPerPage={rowsPerPage}
+                pagination={false}
               />
             </div>
           </div>

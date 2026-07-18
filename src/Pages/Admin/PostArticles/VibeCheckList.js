@@ -35,14 +35,20 @@ const VibeCheckList = (props) => {
 
   const columns = [
     {
+      name: "Post ID",
+      selector: (row) => row.id || "-",
+      sortable: true,
+    },
+    {
       name: "Question",
       selector: (row) => row.question || "-",
       // sortable: true,
     },
     {
-      name: "Allow Multiple Votes",
+      name: "Allow Multi. Votes",
       selector: (row) => (row.allows_multiple_votes ? "Yes" : "No"),
       // center: true,
+      width:"150px"
     },
 
     {

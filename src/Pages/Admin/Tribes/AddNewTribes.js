@@ -274,11 +274,12 @@ const AddNewCircle = ({
                       type="text"
                       name="name"
                       value={formik.values.name}
-                      onKeyDown={blockOnlyTextKeys}
-                      onChange={(e) => {
-                        const cleaned = sanitizeOnlyText(e.target.value);
-                        formik.setFieldValue("name", cleaned);
-                      }}
+                      // onKeyDown={blockOnlyTextKeys}
+                      // onChange={(e) => {
+                      //   const cleaned = sanitizeOnlyText(e.target.value);
+                      //   formik.setFieldValue("name", cleaned);
+                      // }}
+                      onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Name"

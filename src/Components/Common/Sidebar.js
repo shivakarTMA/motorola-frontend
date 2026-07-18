@@ -157,27 +157,48 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             <span className="nav-text">Moderation Queue</span>
           </Link>
 
-          <Link
-            to="/hot-take"
-            className={`nav-link ${location.pathname === "/hot-take" ? "active" : ""}`}
+          <div
+            className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
+            onClick={() => toggleMenu("posts")}
+            style={{ cursor: "pointer" }}
           >
-            <RiArticleFill className="menu--icon" />
-            <span className="nav-text">Hot Take</span>
-          </Link>
-          <Link
-            to="/deep-dive"
-            className={`nav-link ${location.pathname === "/deep-dive" ? "active" : ""}`}
-          >
-            <RiArticleFill className="menu--icon" />
-            <span className="nav-text">Deep Dive</span>
-          </Link>
-          <Link
-            to="/vibe-check"
-            className={`nav-link ${location.pathname === "/vibe-check" ? "active" : ""}`}
-          >
-            <RiArticleFill className="menu--icon" />
-            <span className="nav-text">Vibe Check</span>
-          </Link>
+            <div className="flex items-center">
+              <RiArticleFill className="menu--icon" />
+              <span className="nav-text">Posts</span>
+            </div>
+            <FaAngleDown
+              className={`downmenu transition ${
+                dropdownToggles["posts"] ? "rotate-[180deg]" : ""
+              }`}
+            />
+          </div>
+
+          {dropdownToggles["posts"] && (
+            <div className="pl-[40px] relative dropdown--menu--nav">
+              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
+              <Link
+                to="/hot-take"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <FaCircle className="menu--icon !text-[10px]" />
+                <span className="nav-text">Hot Take</span>
+              </Link>
+              <Link
+                to="/deep-dive"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <FaCircle className="menu--icon !text-[10px]" />
+                <span className="nav-text">Deep Dive</span>
+              </Link>
+              <Link
+                to="/vibe-check"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <FaCircle className="menu--icon !text-[10px]" />
+                <span className="nav-text">Vibe Check</span>
+              </Link>
+            </div>
+          )}
 
           <Link
             to="/staff"

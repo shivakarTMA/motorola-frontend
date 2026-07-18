@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { MdModeEdit } from "react-icons/md";
-import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiEye, FiPlus, FiTrash2 } from "react-icons/fi";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { authAxios } from "../../../Config/config";
@@ -49,6 +49,12 @@ const HotTakeList = (props) => {
       name: "Title",
       selector: (row) => row.title || "-",
       sortable: true,
+      width:"150px"
+    },
+    {
+      name: "Post ID",
+      selector: (row) => row.id || "-",
+      sortable: true,
     },
     {
       name: "Status",
@@ -88,18 +94,21 @@ const HotTakeList = (props) => {
       name: "Comments",
       selector: (row) => row.comments_count,
       center: true,
+      width:"120px"
     },
     {
       name: "Tribe Name",
       selector: (row) => row.circle?.name || "-",
       //   sortable: true,
       center: true,
+      width:"120px"
     },
     {
       name: "Created By",
       selector: (row) => row.user?.name || "-",
       //   sortable: true,
       center: true,
+      width:"120px"
     },
     {
       name: "Username",
@@ -127,7 +136,7 @@ const HotTakeList = (props) => {
               className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
               title="Edit"
             >
-              <MdModeEdit size={18} />
+              <FiEye size={18} />
             </button>
           </Tooltip>
         </div>

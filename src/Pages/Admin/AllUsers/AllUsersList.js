@@ -20,11 +20,14 @@ import {
   FaBan,
   FaClipboardCheck,
   FaUser,
+  FaUserPlus,
+  FaCircle,
 } from "react-icons/fa";
 import { authAxios } from "../../../Config/config";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { format } from "date-fns";
 import DateRangePicker from "../../../Components/Common/DateRangePickerField";
+import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
 const StatCard = ({
   title,
@@ -41,7 +44,7 @@ const StatCard = ({
       ${highlight ? "border-red-200 bg-red-50" : "border-gray-200"}`}
     >
       <div className="flex items-start justify-between">
-        <h3 className="text-2xl font-semibold text-gray-800">{value || "-"}</h3>
+        <h3 className="text-2xl font-semibold text-gray-800">{value || 0}</h3>
 
         {Icon && (
           <div
@@ -112,24 +115,17 @@ const getActionItems = (status) => {
         { label: "Ban", action: "ban", icon: FiUserX, danger: true },
       ];
 
-    case "MUTED":
+    case "SUSPEND":
       return [
         { label: "View", action: "view", icon: FiEye },
-        { label: "Suspend", action: "suspend", icon: FiSlash },
         { label: "Ban", action: "ban", icon: FiUserX, danger: true },
-      ];
-
-    case "Suspended":
-      return [
-        { label: "View", action: "view", icon: FiEye },
-        { label: "Reinstate", action: "reinstate", icon: FiUserCheck },
-        { label: "Ban", action: "ban", icon: FiUserX, danger: true },
+        { label: "Unsuspend", action: "Unsuspend", icon: FiUserCheck },
       ];
 
     case "BANNED":
       return [
         { label: "View", action: "view", icon: FiEye },
-        { label: "Reinstate", action: "reinstate", icon: FiUserCheck },
+        { label: "Unban", action: "Unban", icon: FiUserCheck },
       ];
 
     default:
@@ -141,9 +137,14 @@ const AllUsersList = (props) => {
   const { setLoading } = props;
 
   const [allUsersData, setAllUsersData] = useState([]);
+  const [allUserCount, setAllUserCount] = useState({});
   const [status, setStatus] = useState(null);
   const [consent, setConsent] = useState(null);
   const [moderatorFilter, setModeratorFilter] = useState(null);
+
+  const [statusModal, setStatusModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(null);
 
   // These now only change when the DateRangePicker's Apply/Clear fires,
   // so no fetch happens mid-selection anymore.
@@ -159,7 +160,7 @@ const AllUsersList = (props) => {
 
   const userColumns = [
     {
-      name: "PHOTO",
+      name: "Photo",
       width: "80px",
       cell: (row) =>
         row?.profile_picture ? (
@@ -180,9 +181,9 @@ const AllUsersList = (props) => {
     },
 
     {
-      name: "NAME",
+      name: "Name",
       sortable: true,
-      minWidth: "220px",
+      // width: "150px",
       cell: (row) =>
         row.name ? (
           <div>
@@ -202,66 +203,44 @@ const AllUsersList = (props) => {
     },
 
     {
-      name: "USER ID",
+      name: "Username",
       selector: (row) => (row.username ? row.username : "--"),
       sortable: true,
-      width: "120px",
+      // width: "120px",
     },
 
     {
-      name: "MOBILE",
-      selector: (row) => (
-        <div>
-          +{row.country_code} {row.mobile}
-        </div>
-      ),
-      width: "160px",
-    },
-
-    {
-      name: "CITY",
-      selector: (row) => (row.city ? row.city : "--"),
-      sortable: true,
-      width: "140px",
-    },
-
-    {
-      name: "REGISTERED",
+      name: "Registered on",
       selector: (row) => formatViewDate(row.created_at),
       sortable: true,
-      width: "150px",
+      // width: "150px",
     },
 
     {
-      name: "DPDP CONSENT",
-      width: "180px",
-      cell: (row) => <ConsentBadge consent={row.has_consent} />,
+      name: "Last Active",
+      selector: (row) =>
+        row.last_login_at ? formatWithTimeDate(row.last_login_at) : "--",
+      // width: "160px",
     },
 
     {
-      name: "STATUS",
-      width: "140px",
+      name: "Posts",
+      selector: (row) => row.posts ? row.posts : "--",
+      center: true,
+      // width: "90px",
+    },
+
+    {
+      name: "Status",
+      // width: "100px",
+      center: true,
       cell: (row) => <StatusBadge status={row.status} />,
     },
 
     {
-      name: "LAST ACTIVE",
-      selector: (row) =>
-        row.last_login_at ? formatWithTimeDate(row.last_login_at) : "--",
-      width: "160px",
-    },
-
-    {
-      name: "POSTS",
-      selector: (row) => row.posts,
+      name: "Actions",
       center: true,
-      width: "90px",
-    },
-
-    {
-      name: "ACTIONS",
-      center: true,
-      width: "160px",
+      // width: "140px",
       cell: (row) => (
         <div className="flex items-center justify-center gap-[1px]">
           {getActionItems(row.status).map((item) => {
@@ -296,7 +275,24 @@ const AllUsersList = (props) => {
                   key={item.action}
                   type="button"
                   title={item.label}
-                  onClick={() => console.log(item.action, row)}
+                  onClick={() => {
+                    switch (item.action) {
+                      case "suspend":
+                        openStatusModal(row, "MUTED");
+                        break;
+
+                      case "ban":
+                        openStatusModal(row, "BANNED");
+                        break;
+
+                      case "reinstate":
+                        openStatusModal(row, "ACTIVE");
+                        break;
+
+                      default:
+                        break;
+                    }
+                  }}
                   className={`p-2 rounded-md border transition ${
                     item.danger
                       ? "text-red-600 hover:bg-red-50"
@@ -349,6 +345,7 @@ const AllUsersList = (props) => {
       if (resData.success) {
         setAllUsersData(resData.data.items);
         setPagination(resData.data.pagination);
+        setAllUserCount(resData.data.counts);
       } else {
         toast.error(resData.message);
       }
@@ -382,36 +379,81 @@ const AllUsersList = (props) => {
     setEndDate(newEnd);
   };
 
+  const getStatusActionLabel = (status) => {
+    switch (status) {
+      case "ACTIVE":
+        return "reinstate";
+
+      case "SUSPEND":
+        return "suspend";
+
+      case "BANNED":
+        return "ban";
+
+      default:
+        return "update";
+    }
+  };
+
+  const handleStatusUpdate = async () => {
+    try {
+      await authAxios().put(`/user/${selectedUser.id}`, {
+        status: selectedStatus,
+      });
+
+      toast.success("User status updated successfully.");
+
+      setStatusModal(false);
+      setSelectedUser(null);
+      setSelectedStatus(null);
+
+      fetchAllUsers(currentPage);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update status.");
+    }
+  };
+
+  const openStatusModal = (user, status) => {
+    setSelectedUser(user);
+    setSelectedStatus(status);
+    setStatusModal(true);
+  };
+
   return (
     <>
       <div>
-        <div className="mb-5">
-          <button className="ms-auto custom--btn">
+        <div className="mb-5 flex gap-2 items-center justify-end">
+          {/* <button className="ms-auto custom--btn">
             <FiDownload />
             <span>Export Users</span>
-          </button>
+          </button> */}
+          <div className="border px-2 py-1 rounded-lg">
+            <div className="w-fit flex items-center gap-2">
+              <div className="text-[13px] font-medium text-gray-500 flex gap-2 items-center">
+                <FaCircle className="text-[10px] text-[#3774d0]" />
+                <span className="leading-1">Total Users</span>
+              </div>
+              <div className="flex">
+                <span className="text-[13px] font-semibold leading-1">
+                  {allUserCount?.total_users_count}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 lg:gap-4 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-4 lg:gap-4 gap-2">
           <StatCard
             title="Active"
-            value="4,210"
+            value={allUserCount?.total_users_count}
             icon={FaUserCheck}
             iconColor="text-green-600"
             iconBg="bg-green-100"
           />
 
           <StatCard
-            title="Inactive"
-            value="980"
-            icon={FaUserTimes}
-            iconColor="text-gray-600"
-            iconBg="bg-gray-100"
-          />
-
-          <StatCard
             title="Suspended"
-            value="36"
+            value={allUserCount?.total_suspended_users_count}
             icon={FaUserSlash}
             iconColor="text-yellow-600"
             iconBg="bg-yellow-100"
@@ -419,23 +461,23 @@ const AllUsersList = (props) => {
 
           <StatCard
             title="Banned"
-            value="58"
+            value={allUserCount?.total_banned_users_count}
             icon={FaBan}
             iconColor="text-red-600"
             iconBg="bg-red-100"
           />
 
           <StatCard
-            title="Pending DPDP Consent"
-            value="412"
-            icon={FaClipboardCheck}
+            title="New Users"
+            value={allUserCount?.total_pending_dpdp_consent}
+            icon={FaUserPlus}
             iconColor="text-orange-600"
             iconBg="bg-orange-100"
           />
         </div>
 
         <div className="bg-white rounded-lg border p-4 mt-3">
-          <div className="grid xl:grid-cols-4 lg:grid-cols-2 md:grid-cols-2 gap-3 relative">
+          <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-3 relative">
             <div className="">
               {/* Status */}
               <Select
@@ -448,20 +490,18 @@ const AllUsersList = (props) => {
                 isClearable
               />
             </div>
-            <div className="">
-              {/* DPDP */}
-              <Select
-                styles={customStyles}
-                options={consentOptions}
-                value={consent}
-                onChange={setConsent}
-                isSearchable={false}
-                placeholder="Select Consent"
-                isClearable
+
+            <div>
+              {/* Registered date range — replaces the two react-datepicker fields */}
+              <DateRangePicker
+                onChange={handleDateRangeChange}
+                defaultPreset="Today"
+                panelOffsetTop={100}
+                panelOffsetRight={0}
+                align="right"
               />
             </div>
-
-            <div className="col-span-2">
+            <div>
               {/* Registered date range — replaces the two react-datepicker fields */}
               <DateRangePicker
                 onChange={handleDateRangeChange}
@@ -472,17 +512,6 @@ const AllUsersList = (props) => {
               />
             </div>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg border p-4 mt-3">
-          {/* Search */}
-          <input
-            type="text"
-            placeholder="Search name / mobile / User ID"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="custom--input w-full"
-          />
         </div>
 
         <div className="mt-3">
@@ -496,6 +525,54 @@ const AllUsersList = (props) => {
           />
         </div>
       </div>
+
+      <Dialog
+        open={statusModal}
+        onClose={() => setStatusModal(false)}
+        className="relative z-50"
+      >
+        <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <DialogTitle className="text-lg font-semibold">
+              Confirm Status Update
+            </DialogTitle>
+
+            <p className="mt-3 text-sm text-gray-600">
+              Are you sure you want to{" "}
+              <strong>{getStatusActionLabel(selectedStatus)}</strong>{" "}
+              <strong>{selectedUser?.name}</strong>?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setStatusModal(false);
+                  setSelectedUser(null);
+                  setSelectedStatus(null);
+                }}
+                className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleStatusUpdate}
+                className={`rounded-md px-4 py-2 text-white ${
+                  selectedStatus === "BANNED"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : selectedStatus === "MUTED"
+                      ? "bg-yellow-600 hover:bg-yellow-700"
+                      : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
     </>
   );
 };

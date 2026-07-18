@@ -1,50 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdModeEdit } from "react-icons/md";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { Link } from "react-router-dom";
 import Select from "react-select";
-import { customStyles } from "../../../Helper/helper";
+import { customStyles, formatText } from "../../../Helper/helper";
 import CreateNewKeyword from "./CreateNewKeyword";
+import { authAxios } from "../../../Config/config";
+import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
+import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
-const keywords = [
-  {
-    id: 1,
-    keyword: "Porn",
-    match_type: "CONTAINS",
-    severity: "MEDIUM",
-    auto_action: "FLAG_FOR_REVIEW",
-    status: "ACTIVE",
-  },
-  {
-    id: 2,
-    keyword: "Violence",
-    match_type: "EXACT",
-    severity: "HIGH",
-    auto_action: "BLOCK",
-    status: "ACTIVE",
-  },
-  {
-    id: 3,
-    keyword: "Spam",
-    match_type: "CONTAINS",
-    severity: "LOW",
-    auto_action: "FLAG_FOR_REVIEW",
-    status: "INACTIVE",
-  },
-  {
-    id: 4,
-    keyword: "Abuse",
-    match_type: "EXACT",
-    severity: "HIGH",
-    auto_action: "BLOCK",
-    status: "ACTIVE",
-  },
-];
-
-const FlaggedKeywordsList = () => {
+const FlaggedKeywordsList = (props) => {
+  const { setLoading } = props;
+  const [flaggedKeywordList, setFlaggedKeywordList] = useState([]);
   const [createKeyword, setCreateKeyword] = useState(false);
+  const [editKeywordId, setEditKeywordId] = useState(null);
+
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -56,7 +32,7 @@ const FlaggedKeywordsList = () => {
     },
     {
       name: "Match Type",
-      selector: (row) => row.match_type,
+      selector: (row) => formatText(row.match_type),
       center: true,
       sortable: true,
     },
@@ -76,14 +52,14 @@ const FlaggedKeywordsList = () => {
               colors[row.severity] || "bg-gray-100 text-gray-700"
             }`}
           >
-            {row.severity}
+            {formatText(row.severity)}
           </span>
         );
       },
     },
     {
       name: "Auto Action",
-      selector: (row) => row.auto_action,
+      selector: (row) => formatText(row.auto_action),
       grow: 2,
     },
     {
@@ -97,7 +73,7 @@ const FlaggedKeywordsList = () => {
               : "bg-red-100 text-red-700"
           }`}
         >
-          {row.status}
+          {formatText(row.status)}
         </span>
       ),
     },
@@ -108,7 +84,10 @@ const FlaggedKeywordsList = () => {
         <div className="flex items-center justify-center gap-[1px]">
           <Tooltip id={`tooltip-edit-${row.id}`} content="Edit" place="left">
             <button
-              onClick={() => handleEdit(row)}
+              onClick={() => {
+                setEditKeywordId(row.id);
+                setCreateKeyword(true);
+              }}
               className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
             >
               <MdModeEdit size={18} />
@@ -121,7 +100,10 @@ const FlaggedKeywordsList = () => {
             place="left"
           >
             <button
-              onClick={() => handleDelete(row.id)}
+              onClick={() => {
+                setDeleteId(row.id);
+                setDeleteModal(true);
+              }}
               className="text-red-500 bg-red-100 w-[30px] h-[30px] flex items-center justify-center rounded-r-md"
             >
               <FiTrash2 size={18} />
@@ -132,17 +114,57 @@ const FlaggedKeywordsList = () => {
     },
   ];
 
-  const handleEdit = (row) => {
-    console.log("Edit:", row);
-    // Open edit modal
-  };
+  const handleFetchFlaggedKeyword = async (page = 1) => {
+    try {
+      setLoading(true);
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this module?")) {
-      console.log("Delete:", id);
-      // Call delete API
+      // Fetch staff data from API
+      const response = await authAxios().get("/flagged-keyword", {
+        params: {
+          page,
+          limit: rowsPerPage,
+        },
+      });
+      const resData = response?.data;
+      if (resData?.success) {
+        setFlaggedKeywordList(resData.data.items || []);
+        setPagination(resData.data.pagination);
+      } else {
+        console.error("Failed to fetch staff data:", resData?.message);
+      }
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    handleFetchFlaggedKeyword(currentPage);
+  }, [currentPage]);
+
+    const handleDelete = async () => {
+      try {
+        setLoading(true);
+  
+        const response = await authAxios().delete(`/flagged-keyword/${deleteId}`);
+  
+        if (response.data.success) {
+          setDeleteModal(false);
+          setDeleteId(null);
+  
+          // Refresh list
+          handleFetchFlaggedKeyword(currentPage);
+        } else {
+          alert(response.data.message);
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Failed to delete tribe.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <>
@@ -161,7 +183,7 @@ const FlaggedKeywordsList = () => {
         <div className="mt-3">
           <CustomDataTable
             columns={columns}
-            data={keywords}
+            data={flaggedKeywordList}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
@@ -170,13 +192,55 @@ const FlaggedKeywordsList = () => {
       </div>
       <CreateNewKeyword
         open={createKeyword}
-        onClose={() => setCreateKeyword(false)}
-        onSuccess={() => {
-          // TODO: refetch flagged keywords from API after a successful create
+        onClose={() => {
+          setCreateKeyword(false);
+          setEditKeywordId(null);
         }}
+        editId={editKeywordId}
+        onSuccess={() => handleFetchFlaggedKeyword(currentPage)}
       />
+      <Dialog
+        open={deleteModal}
+        onClose={() => setDeleteModal(false)}
+        className="relative z-50"
+      >
+        {/* Backdrop */}
+        <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+
+        {/* Modal */}
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              Delete Keyword
+            </DialogTitle>
+
+            <p className="mt-3 text-sm text-gray-600">
+              Are you sure you want to delete this Keyword?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setDeleteModal(false);
+                  setDeleteId(null);
+                }}
+                className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDelete}
+                className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
     </>
   );
 };
 
-export default FlaggedKeywordsList;
+export default IsLoadingHOC(FlaggedKeywordsList);

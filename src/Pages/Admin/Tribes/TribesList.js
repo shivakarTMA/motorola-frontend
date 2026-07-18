@@ -8,6 +8,8 @@ import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { authAxios } from "../../../Config/config";
 import { filterActiveItems, formatText, formatViewDate } from "../../../Helper/helper";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
+import { format } from "date-fns";
+import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 
 const TribesList = (props) => {
   const { setLoading } = props;
@@ -16,6 +18,10 @@ const TribesList = (props) => {
   const [addNewTribe, setAddNewTribe] = useState(false);
   const [tribeGroupList, setTribeGroupList] = useState([]);
   const [parentTribeList, setParentTribeList] = useState([]);
+
+  const [status, setStatus] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -39,20 +45,32 @@ const TribesList = (props) => {
       width: "60px",
     },
     {
+      name: "Created At",
+      selector: (row) => formatViewDate(row.created_at),
+      center: true,
+    },
+    {
       name: "Name",
-      selector: (row) => row.name,
-      sortable: true,
+      grow: 2,
+      cell: (row) => (
+        <div className="whitespace-normal break-words py-2">
+          {row.name}
+        </div>
+      ),
+      width:'200px'
+    },
+    {
+      name: "Tribe Group",
+      selector: (row) => row.circleGroup?.name ?? "--",
+      center: true,
+      width:"120px"
     },
     {
       name: "Parent",
       selector: (row) => row.parent?.name ?? "--",
       center: true,
     },
-    {
-      name: "Tribe Group",
-      selector: (row) => row.circleGroup?.name ?? "--",
-      center: true,
-    },
+    
 
     {
       name: "Users",
@@ -60,20 +78,28 @@ const TribesList = (props) => {
       center: true,
     },
     {
+      name: "Interactions",
+      selector: (row) => row.interactions_count,
+      center: true,
+      width:"120px"
+    },
+    {
       name: "Posts",
       selector: (row) => row.posts_count,
       center: true,
     },
+    // {
+    //   name: "Polls",
+    //   selector: (row) => row.polls_count,
+    //   center: true,
+    // },
     {
-      name: "Polls",
-      selector: (row) => row.polls_count,
+      name: "Moderators",
+      selector: (row) => row.moderators ? row.moderators : 0,
       center: true,
+      width:"120px"
     },
-    {
-      name: "Interactions",
-      selector: (row) => row.interactions_count,
-      center: true,
-    },
+    
     {
       name: "Status",
       center: true,
@@ -105,16 +131,12 @@ const TribesList = (props) => {
         </span>
       ),
     },
-    {
-      name: "Created At",
-      selector: (row) => formatViewDate(row.created_at),
-      center: true,
-    },
-    {
-      name: "Created by",
-      selector: (row) => row.staff?.name,
-      center: true,
-    },
+    
+    // {
+    //   name: "Created by",
+    //   selector: (row) => row.staff?.name,
+    //   center: true,
+    // },
     {
       name: "Position",
       selector: (row) => row.position,
@@ -158,13 +180,23 @@ const TribesList = (props) => {
     try {
       setLoading(true);
 
+      const params = {
+        page,
+        limit: rowsPerPage,
+      };
+
+      if (status?.value) {
+        params.status = status?.value;
+      }
+
+      if (startDate && endDate) {
+        params.date_from = format(startDate, "yyyy-MM-dd");
+        params.date_to = format(endDate, "yyyy-MM-dd");
+        params.date_filter_field = "created_at";
+      }
+
       // Fetch tribe data from API
-      const response = await authAxios().get("/tribe", {
-        params: {
-          page,
-          limit: rowsPerPage,
-        },
-      });
+      const response = await authAxios().get("/tribe", {params});
       const resData = response?.data;
       if (resData?.success) {
         setTribeList(resData.data.items || []);
@@ -182,7 +214,7 @@ const TribesList = (props) => {
 
   useEffect(() => {
     handleFetchTribes(currentPage);
-  }, [currentPage]);
+  }, [currentPage, startDate, endDate, status]);
 
   const handleFetchTribesGroup = async (page = 1) => {
     try {
@@ -262,10 +294,24 @@ const TribesList = (props) => {
     }
   };
 
+    // Called only when DateRangePicker's Apply or Clear button is clicked.
+  const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  };
+
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-end gap-4">
+        <div className="relative flex justify-between gap-4">
+          <div className="max-w-[200px] w-full">
+            <DateRangePicker
+              onChange={handleDateRangeChange}
+              defaultPreset="Today"
+              panelOffsetTop={100}
+              panelOffsetLeft={0}
+            />
+          </div>
           <button className="custom--btn" onClick={() => setAddNewTribe(true)}>
             <FiPlus />
             <span>New Tribes</span>
@@ -279,6 +325,7 @@ const TribesList = (props) => {
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
+            paginationTotalRows={pagination?.total || 0}
           />
         </div>
       </div>

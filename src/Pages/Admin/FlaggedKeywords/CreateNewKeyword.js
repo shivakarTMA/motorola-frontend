@@ -14,7 +14,7 @@ import {
 } from "../../../Helper/Inputhelpers";
 import { RiImageAddLine } from "react-icons/ri";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-// import { authAxios } from "../../../config/config";
+import { authAxios } from "../../../Config/config";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -38,8 +38,9 @@ const autoActionOptions = [
   { value: "AUTO_HIDE", label: "Auto Hide" },
 ];
 
-const CreateNewKeyword = ({ open, onClose, onSuccess }) => {
+const CreateNewKeyword = ({ open, onClose, onSuccess, editId }) => {
   const [badgePreview, setBadgePreview] = useState(null);
+  const isEdit = !!editId;
 
   const formik = useFormik({
     initialValues: {
@@ -71,10 +72,13 @@ const CreateNewKeyword = ({ open, onClose, onSuccess }) => {
         };
 
         console.log(payload);
-
-        // await authAxios().post("/keywords/create", payload);
-
-        toast.success("Keyword Created Successfully");
+        if (isEdit) {
+          await authAxios().put(`/flagged-keyword/${editId}`, payload);
+          toast.success("Keyword Updated Successfully");
+        } else {
+          await authAxios().post("/flagged-keyword", payload);
+          toast.success("Keyword Created Successfully");
+        }       
 
         resetForm();
         onSuccess?.();
@@ -84,6 +88,44 @@ const CreateNewKeyword = ({ open, onClose, onSuccess }) => {
       }
     },
   });
+
+  useEffect(() => {
+    if (!editId) {
+      formik.resetForm();
+    }
+  }, [editId]);
+
+  useEffect(() => {
+    if (!editId) return;
+    const fetchKeywordById = async () => {
+      try {
+        const res = await authAxios().get(`/flagged-keyword/${editId}`);
+        const data = res?.data?.data;
+
+        if (res?.data?.success && data) {
+          formik.setValues({
+            keyword: data.keyword || "",
+            match_type:
+              matchTypeOptions.find((item) => item.value === data.match_type) ||
+              null,
+            severity:
+              severityOptions.find((item) => item.value === data.severity) ||
+              null,
+            auto_action:
+              autoActionOptions.find(
+                (item) => item.value === data.auto_action,
+              ) || null,
+            status:
+              statusOptions.find((item) => item.value === data.status) || null,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load staff:", err);
+      }
+    };
+
+    fetchKeywordById();
+  }, [editId]);
 
   const handleClose = () => {
     formik.resetForm();

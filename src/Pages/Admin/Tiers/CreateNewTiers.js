@@ -14,6 +14,7 @@ import {
 } from "../../../Helper/Inputhelpers";
 import { RiImageAddLine } from "react-icons/ri";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { authAxios } from "../../../Config/config";
 // import { authAxios } from "../../../config/config";
 
 const statusOptions = [
@@ -22,8 +23,9 @@ const statusOptions = [
 ];
 const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
 
-const CreateNewTiers = ({ open, onClose, onSuccess }) => {
+const CreateNewTiers = ({ open, onClose, onSuccess, editId }) => {
   const [badgePreview, setBadgePreview] = useState(null);
+  const isEdit = !!editId;
 
   const formik = useFormik({
     initialValues: {
@@ -57,18 +59,25 @@ const CreateNewTiers = ({ open, onClose, onSuccess }) => {
         formData.append("level", values.level);
         formData.append("min_points", values.min_points);
         formData.append("benefits", values.benefits);
-        formData.append("badge_icon", values.badge_icon);
         formData.append("status", values.status.value);
 
-        console.log([...formData.entries()]);
+        if (values.badge_icon instanceof File) {
+          formData.append("badge_icon", values.badge_icon);
+        }
 
-        // await authAxios().post("/tiers/create", formData, {
-        //   headers: {
-        //     "Content-Type": "multipart/form-data",
-        //   },
-        // });
+        const config = {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        };
 
-        toast.success("Tier Created Successfully");
+        if (isEdit) {
+          await authAxios().put(`/tier/${editId}`, formData, config);
+          toast.success("Tier updated successfully");
+        } else {
+          await authAxios().post("/tier", formData, config);
+          toast.success("Tier created successfully");
+        }
 
         resetForm();
         setBadgePreview(null);
@@ -79,6 +88,42 @@ const CreateNewTiers = ({ open, onClose, onSuccess }) => {
       }
     },
   });
+
+  useEffect(() => {
+    if (!editId) {
+      formik.resetForm();
+    }
+  }, [editId]);
+
+  useEffect(() => {
+    if (!editId) return;
+    const fetchKeywordById = async () => {
+      try {
+        const res = await authAxios().get(`/tier/${editId}`);
+        const data = res?.data?.data;
+
+        if (res?.data?.success && data) {
+          formik.setValues({
+            name: data.name || "",
+            level: data.level || "",
+            min_points: data.min_points || "",
+            benefits: data.benefits || "",
+            badge_icon: null, // keep null since this should be a File when uploading
+            status:
+              statusOptions.find((option) => option.value === data.status) ||
+              null,
+          });
+          if (data.badge_icon) {
+            setBadgePreview(data.badge_icon);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load staff:", err);
+      }
+    };
+
+    fetchKeywordById();
+  }, [editId]);
 
   const handleClose = () => {
     formik.resetForm();
@@ -254,7 +299,7 @@ const CreateNewTiers = ({ open, onClose, onSuccess }) => {
                       Badge Icon
                     </label>
 
-                    <label className="border-2 border-dashed rounded-lg py-2 h-[70px] flex flex-col items-center justify-center cursor-pointer">
+                    <label className="border-2 border-dashed rounded-lg py-2 flex flex-col items-center justify-center cursor-pointer">
                       {badgePreview ? (
                         <img
                           src={badgePreview}

@@ -12,9 +12,11 @@ import {
   setUserType,
 } from "../../Redux/Reducers/authSlice";
 import Logo from "../../Assests/Images/logo.png";
-import { apiAxios } from "../../Config/config";
-import { blockOnlyNumericKeys, sanitizeOnlyNumeric } from "../../Helper/Inputhelpers";
-
+import { apiAxios, authAxios } from "../../Config/config";
+import {
+  blockOnlyNumericKeys,
+  sanitizeOnlyNumeric,
+} from "../../Helper/Inputhelpers";
 
 const OTP_LENGTH = 6;
 const PHONE_LENGTH = 10;
@@ -29,6 +31,7 @@ const Login = (props) => {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [step, setStep] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
+  const [timer, setTimer] = useState(0);
 
   const otpRefs = useRef([]);
 
@@ -106,7 +109,7 @@ const Login = (props) => {
   const handleSendOtp = async () => {
     try {
       setLoading(true);
-      const response = await apiAxios().post("/auth/send-otp", {
+      const response = await authAxios().post("/auth/send-otp", {
         mobile: phone,
       });
 
@@ -115,6 +118,7 @@ const Login = (props) => {
         toast.success(response.data.message || "OTP sent successfully");
         setStep(2);
         setTimeout(() => otpRefs.current[0]?.focus(), 50);
+        setTimer(30);
       } else {
         toast.error(response.data.message || "Failed to send OTP");
       }
@@ -130,7 +134,7 @@ const Login = (props) => {
   const handleVerifyOtp = async () => {
     try {
       setLoading(true);
-      const response = await apiAxios().post("/auth/login", {
+      const response = await authAxios().post("/auth/login", {
         mobile: currentUser.mobile,
         otp: otpValue,
       });
@@ -162,6 +166,29 @@ const Login = (props) => {
     }
   };
 
+  // ✅ Resend OTP
+  const handleResendOtp = async () => {
+    try {
+      setLoading(true);
+
+      const response = await authAxios().post("/auth/send-otp", {
+        mobile: currentUser.mobile,
+      });
+
+      if (response.data.success) {
+        setCurrentUser({ mobile: phone });
+        toast.success("OTP resent successfully");
+        setTimer(30);
+      } else {
+        toast.error(response.data.message || "Failed to resend OTP");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to resend OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (step === 1) {
@@ -185,6 +212,19 @@ const Login = (props) => {
     setCurrentUser(null);
   };
 
+  // ✅ Timer logic
+  useEffect(() => {
+    let interval = null;
+
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
   return (
     <div className="min-h-screen w-full relative flex items-center justify-center overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-white px-4 py-10">
       {/* Decorative cloud blobs */}
@@ -196,7 +236,13 @@ const Login = (props) => {
 
       {/* Logo top-left */}
       <div className="absolute top-6 left-6 flex items-center gap-2 z-10">
-        <img src={Logo} alt="logo" width={50} height={50} className="rounded-lg" />
+        <img
+          src={Logo}
+          alt="logo"
+          width={50}
+          height={50}
+          className="rounded-lg"
+        />
       </div>
 
       {/* Card */}
@@ -248,26 +294,50 @@ const Login = (props) => {
           )}
 
           {step === 2 && (
-            <div className="flex justify-center gap-2 sm:gap-3">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el) => (otpRefs.current[index] = el)}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  onPaste={handleOtpPaste}
-                  className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg font-semibold rounded-xl border bg-white/70 focus:outline-none transition-colors ${
-                    digit
-                      ? "border-blue-400"
-                      : "border-gray-200 focus:border-gray-400"
-                  }`}
-                />
-              ))}
-            </div>
+            <>
+              <div className="flex justify-center gap-2 sm:gap-3">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => (otpRefs.current[index] = el)}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    onPaste={handleOtpPaste}
+                    className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg font-semibold rounded-xl border bg-white/70 focus:outline-none transition-colors ${
+                      digit
+                        ? "border-blue-400"
+                        : "border-gray-200 focus:border-gray-400"
+                    }`}
+                  />
+                ))}
+              </div>
+              {/* Timer / Resend */}
+              <div className="mt-2">
+                {timer > 0 ? (
+                  <p className="text-sm text-gray-500">
+                    Didn’t receive the code? Resend OTP in{" "}
+                    <span className="font-semibold">{timer}s</span>
+                  </p>
+                ) : (
+                  <p className="text-sm">
+                    <span className="text-gray-400">
+                      Didn’t receive the code?
+                    </span>{" "}
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      className="text-sm font-medium hover:underline"
+                    >
+                      Resend OTP
+                    </button>
+                  </p>
+                )}
+              </div>
+            </>
           )}
 
           <button

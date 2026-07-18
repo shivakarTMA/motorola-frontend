@@ -385,3 +385,13 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
     text-decoration: underline;
     color: var(--primarycolor);
 }
+
+.rdt_cellBase {
+    background: #fafafa;
+    border-bottom: 1px solid rgb(229, 231, 235);
+}
+
+.rdt_headRow {
+    background: transparent !important;
+    border-bottom: none !important;
+}

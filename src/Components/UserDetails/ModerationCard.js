@@ -11,13 +11,6 @@ export default function ModerationCard() {
       <div className="mt-3 space-y-2 text-sm">
 
         <div className="flex justify-between">
-          <span>DPDP Consent</span>
-          <span className="font-semibold text-orange-600">
-            Pending
-          </span>
-        </div>
-
-        <div className="flex justify-between">
           <span>Status</span>
           <span className="font-semibold text-green-600">
             Active

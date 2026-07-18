@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { MdModeEdit } from "react-icons/md";
-import { FiEye, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { authAxios } from "../../../Config/config";
@@ -15,10 +15,87 @@ import { IoMdCloseCircle } from "react-icons/io";
 import DatePicker from "react-datepicker"; // Import datepicker for custom date selection
 import "react-datepicker/dist/react-datepicker.css"; // Import default datepicker styles
 import { format } from "date-fns";
-import ViewArticleDetails from "./ViewArticleDetails";
 import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 
-const DeepDiveList = (props) => {
+const activitiData = [
+  {
+    report_id: "Mod0001",
+    reported_date: "03/07/2026",
+    reported_time: "12:05",
+    item_type: "Comment",
+    reported_user: "@user_x",
+    tribe: "Gaming",
+    post_title: "bvghebqljihq",
+    source: "Keyword auto-flag",
+    reason: "Abuse",
+    action: "Removed",
+    actioned_by: "@nikhil.tma",
+    resolution_time: "12:20",
+    status: "Resolved",
+  },
+  {
+    report_id: "Mod0002",
+    reported_date: "04/07/2026",
+    reported_time: "13:05",
+    item_type: "Hot Take",
+    reported_user: "@nitin.tma",
+    tribe: "Tech",
+    post_title: "bvghebqljihq",
+    source: "User report",
+    reason: "Spam",
+    action: "Approved",
+    actioned_by: "@sara.tma",
+    resolution_time: "13:20",
+    status: "Resolved",
+  },
+  {
+    report_id: "Mod0003",
+    reported_date: "06/07/2026",
+    reported_time: "14:05",
+    item_type: "Vibe Check",
+    reported_user: "@sara.tma",
+    tribe: "Gaming",
+    post_title: "bvghebqljihq",
+    source: "Keyword auto-flag",
+    reason: "Misinformation",
+    action: "Warned",
+    actioned_by: "@nikhil.tma",
+    resolution_time: "14:20",
+    status: "Resolved",
+  },
+  {
+    report_id: "Mod0004",
+    reported_date: "06/07/2026",
+    reported_time: "15:05",
+    item_type: "Comment",
+    reported_user: "@user_y",
+    tribe: "Tech",
+    post_title: "bvghebqljihq",
+    source: "User report",
+    reason: "Abuse",
+    action: "Suspended",
+    actioned_by: "@sara.tma",
+    resolution_time: "15:20",
+    status: "Pending",
+  },
+  {
+    report_id: "Mod0005",
+    reported_date: "07/07/2026",
+    reported_time: "16:05",
+    item_type: "Deep Dive",
+    reported_user: "@arjun.tma",
+    tribe: "Tech",
+    post_title: "bvghebqljihq",
+    source: "User report",
+    reason: "Spam",
+    action: "Dismissed",
+    actioned_by: "@sara.tma",
+    resolution_time: "16:20",
+    status: "Resolved",
+  },
+];
+
+const ModerationQueue = (props) => {
   const { setLoading } = props;
   const [hotTakeList, setHotTakeList] = useState([]);
   const [viewPostDetails, setViewPostDetails] = useState(false);
@@ -32,115 +109,82 @@ const DeepDiveList = (props) => {
 
   const columns = [
     {
-      name: "Media",
+      name: "Report ID",
+      selector: (row) => row.report_id,
+      // sortable: true,
+      width: "110px",
+    },
+    {
+      name: "Reported Date",
+      selector: (row) => row.reported_date,
       center: true,
-      cell: (row) =>
-        row.media?.[0]?.media ? (
-          <img
-            src={row.media[0].media}
-            alt="Post"
-            className="w-8 h-8 object-cover rounded-full"
-          />
-        ) : (
-          <span className="text-gray-400">No Media</span>
-        ),
+      width: "150px",
     },
     {
-      name: "Title",
-      selector: (row) => row.title || "-",
-      sortable: true,
-      width:"150px"
+      name: "Reported Time",
+      selector: (row) => row.reported_time,
+      center: true,
+      width: "150px",
     },
     {
-      name: "Post ID",
-      selector: (row) => row.id || "-",
-      sortable: true,
+      name: "Item Type",
+      selector: (row) => row.item_type,
+      center: true,
+      width: "110px",
+    },
+    {
+      name: "Reported",
+      selector: (row) => row.reported_user,
+      center: true,
+      width: "110px",
+    },
+    {
+      name: "Tribe",
+      selector: (row) => row.tribe,
+      center: true,
+      width: "110px",
+    },
+    {
+      name: "Post Title",
+      selector: (row) => row.post_title,
+      center: true,
+      width: "150px",
+    },
+    {
+      name: "Source",
+      selector: (row) => row.source,
+      center: true,
+      width: "150px",
+    },
+    {
+      name: "Reason",
+      selector: (row) => row.reason,
+      center: true,
+      width: "110px",
+    },
+    {
+      name: "Action",
+      selector: (row) => row.action,
+      center: true,
+      width: "110px",
+    },
+    {
+      name: "Actioned By",
+      selector: (row) => row.actioned_by,
+      center: true,
+      width: "110px",
+    },
+    {
+      name: "Resolution Time",
+      selector: (row) => row.resolution_time,
+      center: true,
+      width: "150px",
     },
     {
       name: "Status",
+      selector: (row) => row.status,
       center: true,
-      cell: (row) => {
-        const statusColors = {
-          PUBLISHED: "bg-green-100 text-green-700",
-          UNDER_REVIEW: "bg-blue-100 text-blue-700",
-          HIDDEN: "bg-gray-200 text-gray-700",
-          DELETED: "bg-red-100 text-red-700",
-          BANNED: "bg-yellow-100 text-yellow-700",
-        };
-
-        return (
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              statusColors[row.status] || "bg-gray-100 text-gray-600"
-            }`}
-          >
-            {formatText(row.status)}
-          </span>
-        );
-      },
-      width: "140px",
-    },
-    {
-      name: "Pinned",
-      selector: (row) => (row.is_pinned ? "Yes" : "No"),
-      center: true,
-    },
-    {
-      name: "Likes",
-      selector: (row) => row.likes_count,
-      center: true,
-    },
-    {
-      name: "Comments",
-      selector: (row) => row.comments_count,
-      center: true,
-      width: "120px",
-    },
-    {
-      name: "Tribe Name",
-      selector: (row) => row.circle?.name || "-",
-      //   sortable: true,
-      center: true,
-      width: "120px",
-    },
-    {
-      name: "Created By",
-      selector: (row) => row.user?.name || "-",
-      //   sortable: true,
-      center: true,
-      width: "120px",
-    },
-    {
-      name: "Username",
-      selector: (row) => row.user?.username || "-",
-      //   sortable: true,
-      center: true,
-    },
-    {
-      name: "Created At",
-      selector: (row) => formatViewDate(row.created_at),
-      //   sortable: true,
-      center: true,
-    },
-    {
-      name: "Actions",
-      center: true,
-      cell: (row) => (
-        <div className="flex items-center justify-center gap-[1px]">
-          <Tooltip id={`tooltip-view-${row.id}`} content="Edit" place="left">
-            <button
-              onClick={() => {
-                setEditPostId(row.id);
-                setViewPostDetails(true);
-              }}
-              className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
-              title="Edit"
-            >
-              <FiEye size={18} />
-            </button>
-          </Tooltip>
-        </div>
-      ),
+      width: "110px",
     },
   ];
 
@@ -212,7 +256,7 @@ const DeepDiveList = (props) => {
         <div className="mt-3">
           <CustomDataTable
             columns={columns}
-            data={hotTakeList}
+            data={activitiData}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             rowsPerPage={rowsPerPage}
@@ -220,18 +264,8 @@ const DeepDiveList = (props) => {
           />
         </div>
       </div>
-
-      <ViewArticleDetails
-        open={viewPostDetails}
-        onClose={() => {
-          setViewPostDetails(false);
-          setEditPostId(null);
-        }}
-        editId={editPostId}
-        onSuccess={() => fetchHotTakeList(currentPage)}
-      />
     </>
   );
 };
 
-export default IsLoadingHOC(DeepDiveList);
+export default IsLoadingHOC(ModerationQueue);
