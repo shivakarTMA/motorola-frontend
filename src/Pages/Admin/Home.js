@@ -168,6 +168,13 @@ const AdminDashboard = (props) => {
   const [tribeGroupOptions, setTribeGroupOptions] = useState([]);
   const [tribeOptions, setTribeOptions] = useState([]);
 
+  const [moderationStats, setModerationStats] = useState({
+    totalFlagged: 0,
+    actionsPending: 0,
+    actionsTaken: 0,
+  });
+  const [recentActions, setRecentActions] = useState([]);
+
   // Static dummy data for the charts - no API call
   const [contentChartData] = useState(DUMMY_CONTENT_CHART_DATA);
   const [engagementChartData] = useState(DUMMY_ENGAGEMENT_CHART_DATA);
@@ -180,80 +187,81 @@ const AdminDashboard = (props) => {
       name: "Report ID",
       selector: (row) => row.report_id,
       // sortable: true,
-      width:"110px"
+      //width:"110px"
     },
     {
       name: "Reported Date",
       selector: (row) => row.reported_date,
       center: true,
-      width:"150px"
+      //width:"150px"
     },
     {
       name: "Reported Time",
       selector: (row) => row.reported_time,
       center: true,
-      width:"150px"
+      //width:"150px"
     },
     {
       name: "Item Type",
       selector: (row) => row.item_type,
       center: true,
-      width:"110px"
+      //width:"110px"
     },
     {
-      name: "Reported",
+      name: "Reported (User)",
       selector: (row) => row.reported_user,
       center: true,
-      width:"110px"
+      //width:"110px"
     },
     {
       name: "Tribe",
       selector: (row) => row.tribe,
       center: true,
-      width:"110px"
+      //width:"110px"
     },
-    {
-      name: "Post Title",
-      selector: (row) => row.post_title,
-      center: true,
-      width:"150px"
-    },
-    {
-      name: "Source",
-      selector: (row) => row.source,
-      center: true,
-      width:"150px"
-    },
-    {
-      name: "Reason",
-      selector: (row) => row.reason,
-      center: true,
-      width:"110px"
-    },
-    {
-      name: "Action",
-      selector: (row) => row.action,
-      center: true,
-      width:"110px"
-    },
-    {
-      name: "Actioned By",
-      selector: (row) => row.actioned_by,
-      center: true,
-      width:"110px"
-    },
-    {
-      name: "Resolution Time",
-      selector: (row) => row.resolution_time,
-      center: true,
-      width:"150px"
-    },
+    // {
+    //   name: "Post Title",
+    //   selector: (row) => row.post_title,
+    //   center: true,
+    //   width:"150px"
+    // },
+    // {
+    //   name: "Source",
+    //   selector: (row) => row.source,
+    //   center: true,
+    //   width:"150px"
+    // },
     {
       name: "Status",
       selector: (row) => row.status,
       center: true,
-      width:"110px"
+      //width:"110px"
     },
+    // {
+    //   name: "Reason",
+    //   selector: (row) => row.reason,
+    //   center: true,
+    //   width:"110px"
+    // },
+    {
+      name: "View",
+      selector: (row) => row.view,
+      center: true,
+      //width:"110px"
+    },
+    // {
+    //   name: "Actioned By",
+    //   selector: (row) => row.actioned_by,
+    //   center: true,
+    //   width:"110px"
+    // },
+    // {
+    //   name: "Resolution Time",
+    //   selector: (row) => row.resolution_time,
+    //   center: true,
+    //   width:"150px"
+    // },
+    
   ];
 
   const fetchDashboardList = async () => {
@@ -333,10 +341,61 @@ const AdminDashboard = (props) => {
     }
   };
 
+
+  const CONTENT_TYPE_LABELS = {
+    POST: "Post",
+    POLL: "Poll",
+    COMMENT: "Comment",
+  };
+
+  const fetchRecentModerationActivities = async () => {
+    try {
+      const response = await authAxios().get("/moderation/recent");
+      const resData = response?.data;
+
+      if (resData?.success) {
+        const {
+          total_posts_flagged,
+          total_actions_pending,
+          total_actions_taken,
+          recent_actions,
+        } = resData.data;
+
+        setModerationStats({
+          totalFlagged: total_posts_flagged,
+          actionsPending: total_actions_pending,
+          actionsTaken: total_actions_taken,
+        });
+        const actions = (recent_actions || []).map((item) => ({
+          
+          report_id: item.report_id,                                          // "Report ID"
+          reported_date: item.reported_at
+            ? item.reported_at.split("-").reverse().join("/")                 // "Reported Date" → 15/07/2026
+            : "-",
+          reported_time: item.reported_time?.slice(0, 5) || "-",              // "Reported Time" → 15:37
+          item_type: CONTENT_TYPE_LABELS[item.content_type] || item.content_type, // "Item Type"
+          reported_user: item.user?.name || "-",                              // "Reported"
+          tribe: item.contentFlag?.post?.circle?.name || "-",                 // "Tribe"
+          post_title: item.contentFlag?.post?.title || "-",                   // "Post Title"
+          view: '' ,//  add link to view content here                 
+          status: item.status || "Pending",                   // "Status"
+        }));
+        setRecentActions(actions);
+      } else {
+        toast.error(resData?.message);
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Unable to load recent activity"
+      );
+    }
+  };
+
   // Whenever filter1 changes, refresh filter2's option list from the right API
   useEffect(() => {
     fetchTribeGroupList();
     fetchTribeList();
+    fetchRecentModerationActivities();
   }, []);
 
   const contentChartOptions = useMemo(
@@ -559,7 +618,7 @@ const AdminDashboard = (props) => {
                     <span>Total Posts Flagged</span>
                   </div>
                   <div className="pr-2 flex">
-                    <span className="text-[13px] font-semibold">50</span>
+                    <span className="text-[13px] font-semibold">{moderationStats.totalFlagged ?? "—"}</span>
                   </div>
                 </div>
                 <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
@@ -568,7 +627,7 @@ const AdminDashboard = (props) => {
                     <span>Total Actions Pending</span>
                   </div>
                   <div className="pr-2 flex">
-                    <span className="text-[13px] font-semibold">15</span>
+                    <span className="text-[13px] font-semibold">{moderationStats.actionsPending ?? "—"}</span>
                   </div>
                 </div>
                 <div className="w-fit flex items-center gap-2 lg:pl-2">
@@ -577,7 +636,7 @@ const AdminDashboard = (props) => {
                     <span>Total Actions Taken</span>
                   </div>
                   <div className="pr-2 flex">
-                    <span className="text-[13px] font-semibold">20</span>
+                    <span className="text-[13px] font-semibold">{moderationStats.actionsTaken ?? "—"}</span>
                   </div>
                 </div>
                 <div className="w-fit flex items-center gap-2 lg:pl-8">
@@ -591,7 +650,7 @@ const AdminDashboard = (props) => {
             <div className="">
               <CustomDataTable
                 columns={activityCol}
-                data={activitiData}
+                data={recentActions}
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
                 rowsPerPage={rowsPerPage}
