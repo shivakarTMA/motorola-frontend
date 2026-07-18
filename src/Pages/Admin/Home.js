@@ -375,7 +375,7 @@ const AdminDashboard = (props) => {
           reported_time: item.reported_time?.slice(0, 5) || "-",              // "Reported Time" → 15:37
           item_type: CONTENT_TYPE_LABELS[item.content_type] || item.content_type, // "Item Type"
           reported_user: item.user?.name || "-",                              // "Reported"
-          tribe: item.contentFlag?.post?.circle?.name || "-",                 // "Tribe"
+          tribe: item.tribe || "-",                 // "Tribe"
           post_title: item.contentFlag?.post?.title || "-",                   // "Post Title"
           view: '' ,//  add link to view content here                 
           status: item.status || "Pending",                   // "Status"
