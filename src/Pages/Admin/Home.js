@@ -455,7 +455,7 @@ const AdminDashboard = (props) => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-2">
             <StatCard
               title="Active Users"
-              value={allDashboardData?.total_users_count}
+              value={allDashboardData?.total_active_users}
               icon={FaUsers}
               iconBg="bg-blue-100"
               iconColor="text-blue-600"
@@ -463,7 +463,7 @@ const AdminDashboard = (props) => {
 
             <StatCard
               title="Suspended Users"
-              value="4,210"
+              value={allDashboardData?.total_suspended_users_count}
               icon={FaUserCheck}
               iconBg="bg-green-100"
               iconColor="text-green-600"
@@ -471,7 +471,7 @@ const AdminDashboard = (props) => {
 
             <StatCard
               title="Banned Users"
-              value={allDashboardData?.total_muted_users_count}
+              value={allDashboardData?.total_banned_users_count}
               icon={FaUserSlash}
               iconBg="bg-yellow-100"
               iconColor="text-yellow-600"
@@ -479,7 +479,7 @@ const AdminDashboard = (props) => {
 
             <StatCard
               title="New Users"
-              value={allDashboardData?.total_banned_users_count}
+              value={allDashboardData?.total_new_users}
               icon={FaBan}
               iconBg="bg-red-100"
               iconColor="text-red-600"
@@ -487,14 +487,14 @@ const AdminDashboard = (props) => {
 
             <StatCard
               title="Pending Flags"
-              value="214"
+              value={allDashboardData?.pending_flags}
               icon={FaFlag}
               iconBg="bg-orange-100"
               iconColor="text-orange-600"
             />
             <StatCard
               title="Posts Reviewed"
-              value="214"
+              value={allDashboardData?.posts_reviewed}
               icon={FaClipboardCheck}
               iconBg="bg-green-100"
               iconColor="text-green-600"
