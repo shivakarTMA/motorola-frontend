@@ -445,7 +445,7 @@ const AllUsersList = (props) => {
         <div className="grid grid-cols-2 lg:grid-cols-4 lg:gap-4 gap-2">
           <StatCard
             title="Active"
-            value={allUserCount?.total_users_count}
+            value={allUserCount?.total_active_users_count}
             icon={FaUserCheck}
             iconColor="text-green-600"
             iconBg="bg-green-100"
@@ -469,7 +469,7 @@ const AllUsersList = (props) => {
 
           <StatCard
             title="New Users"
-            value={allUserCount?.total_pending_dpdp_consent}
+            value={allUserCount?.total_new_users_count}
             icon={FaUserPlus}
             iconColor="text-orange-600"
             iconBg="bg-orange-100"
