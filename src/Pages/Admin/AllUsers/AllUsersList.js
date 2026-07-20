@@ -225,7 +225,10 @@ const AllUsersList = (props) => {
 
     {
       name: "Posts",
-      selector: (row) => row.posts ? row.posts : "--",
+      selector: (row) =>
+  row.posts_count == null && row.polls_count == null
+    ? "--"
+    : (row.posts_count ?? 0) + (row.polls_count ?? 0),
       center: true,
       // width: "90px",
     },
