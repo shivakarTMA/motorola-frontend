@@ -64,7 +64,7 @@ const AddNewBanner = ({ open, onClose, onSuccess, editId }) => {
           return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
         }),
 
-      title: Yup.string().trim().required("Title is required"),
+      // title: Yup.string().trim().required("Title is required"),
 
       link_type: Yup.string().required("Link type is required"),
 
@@ -291,27 +291,28 @@ const AddNewBanner = ({ open, onClose, onSuccess, editId }) => {
                   <div className="grid lg:grid-cols-2 grid-cols-1 gap-2">
                     <div>
                       <label className="block mb-2 text-sm font-medium">
-                        Title<span className="text-red-600">*</span>
+                        Title
                       </label>
                       <input
                         type="text"
                         name="title"
                         value={formik.values.title}
-                        onKeyDown={blockOnlyTextKeys}
-                        onChange={(e) => {
-                          const cleaned = sanitizeOnlyText(e.target.value);
-                          formik.setFieldValue("title", cleaned);
-                        }}
+                        // onKeyDown={blockOnlyTextKeys}
+                        // onChange={(e) => {
+                        //   const cleaned = sanitizeOnlyText(e.target.value);
+                        //   formik.setFieldValue("title", cleaned);
+                        // }}
+                        onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                         placeholder="Title"
                       />
 
-                      {formik.touched.title && formik.errors.title && (
+                      {/* {formik.touched.title && formik.errors.title && (
                         <p className="text-red-500 text-sm mt-1">
                           {formik.errors.title}
                         </p>
-                      )}
+                      )} */}
                     </div>
 
                     <div>

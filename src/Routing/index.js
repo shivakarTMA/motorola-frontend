@@ -25,6 +25,9 @@ import HotTakeList from "../Pages/Admin/PostArticles/HotTakeList";
 import DeepDiveList from "../Pages/Admin/PostArticles/DeepDiveList";
 import VibeCheckList from "../Pages/Admin/PostArticles/VibeCheckList";
 import ModerationQueue from "../Pages/Admin/Moderation/ModerationQueue";
+import DeviceBrandsList from "../Pages/Admin/DeviceBrands/DeviceBrandsList";
+import DeviceModelList from "../Pages/Admin/DeviceModels/DeviceModelList";
+import TopPicsList from "../Pages/Admin/TopPics/TopPicsList";
 
 
 export default function Routing() {
@@ -188,6 +191,30 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <ModerationQueue />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/device-brands"
+          element={
+            <PrivateRoute>
+              <DeviceBrandsList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/device-models"
+          element={
+            <PrivateRoute>
+              <DeviceModelList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/top-pics"
+          element={
+            <PrivateRoute>
+              <TopPicsList />
             </PrivateRoute>
           }
         />

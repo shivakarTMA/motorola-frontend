@@ -175,13 +175,14 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
                       type="text"
                       name="name"
                       value={formik.values.name}
-                      onKeyDown={blockOnlyTextKeys}
-                      onChange={(e) =>
-                        formik.setFieldValue(
-                          "name",
-                          sanitizeOnlyText(e.target.value),
-                        )
-                      }
+                      // onKeyDown={blockOnlyTextKeys}
+                      // onChange={(e) =>
+                      //   formik.setFieldValue(
+                      //     "name",
+                      //     sanitizeOnlyText(e.target.value),
+                      //   )
+                      // }
+                      onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Enter Name"

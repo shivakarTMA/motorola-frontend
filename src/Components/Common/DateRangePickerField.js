@@ -222,6 +222,7 @@ export default function DateRangePicker({
   panelOffsetTop = 10, // gap between trigger and panel, in px
   panelOffsetLeft = 0, // extra horizontal nudge, in px (added to left, or subtracted on the right side)
   panelOffsetRight = 0,
+  placeholder,
 }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const presets = useMemo(() => getPresets(today), [today]);
@@ -361,7 +362,7 @@ export default function DateRangePicker({
               {formatShort(committedEnd)}
             </>
           ) : (
-            "Select date range"
+            placeholder || "Select date range"
           )}
         </span>
         <FiChevronDown size={13} className="drp-trigger-chevron" />

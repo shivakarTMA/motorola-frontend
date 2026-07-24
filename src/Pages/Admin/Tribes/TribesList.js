@@ -6,10 +6,22 @@ import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { authAxios } from "../../../Config/config";
-import { filterActiveItems, formatText, formatViewDate } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatText,
+  formatViewDate,
+} from "../../../Helper/helper";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { format } from "date-fns";
 import DateRangePicker from "../../../Components/Common/DateRangePickerField";
+import Pagination from "../../../Components/Common/Pagination";
+import Select from "react-select";
+
+const statusType = [
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
+];
 
 const TribesList = (props) => {
   const { setLoading } = props;
@@ -19,174 +31,38 @@ const TribesList = (props) => {
   const [tribeGroupList, setTribeGroupList] = useState([]);
   const [parentTribeList, setParentTribeList] = useState([]);
 
-  const [status, setStatus] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [groupFilter, setGroupFilter] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
-  const [pagination, setPagination] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+  // const [pagination, setPagination] = useState(null);
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const rowsPerPage = 10;
 
-  const columns = [
-    {
-      name: "",
-      cell: (row) => (
-        <div className="p-0">
-          <img
-            src={row.icon_url}
-            alt={row.name}
-            className="w-7 h-7 rounded-full object-cover object-center"
-          />
-        </div>
-      ),
-      width: "60px",
-    },
-    {
-      name: "Created At",
-      selector: (row) => formatViewDate(row.created_at),
-      center: true,
-    },
-    {
-      name: "Name",
-      grow: 2,
-      cell: (row) => (
-        <div className="whitespace-normal break-words py-2">
-          {row.name}
-        </div>
-      ),
-      width:'200px'
-    },
-    {
-      name: "Tribe Group",
-      selector: (row) => row.circleGroup?.name ?? "--",
-      center: true,
-      width:"120px"
-    },
-    {
-      name: "Parent",
-      selector: (row) => row.parent?.name ?? "--",
-      center: true,
-    },
-    
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-    {
-      name: "Users",
-      selector: (row) => row.users_count,
-      center: true,
-    },
-    {
-      name: "Interactions",
-      selector: (row) => row.interactions_count,
-      center: true,
-      width:"120px"
-    },
-    {
-      name: "Posts",
-      selector: (row) => row.posts_count,
-      center: true,
-    },
-    // {
-    //   name: "Polls",
-    //   selector: (row) => row.polls_count,
-    //   center: true,
-    // },
-    {
-      name: "Moderators",
-      selector: (row) => row.moderators ? row.moderators : 0,
-      center: true,
-      width:"120px"
-    },
-    
-    {
-      name: "Status",
-      center: true,
-      cell: (row) => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.status === "ACTIVE"
-              ? "bg-green-100 text-green-700"
-              : "bg-gray-100 text-gray-600"
-          }`}
-        >
-          {formatText(row.status)}
-        </span>
-      ),
-    },
-    {
-      name: "Is Feature",
-      selector: (row) => row.is_featured,
-      center: true,
-      cell: (row) => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.is_featured
-              ? "bg-green-100 text-green-700"
-              : "bg-gray-100 text-gray-600"
-          }`}
-        >
-          {row.is_featured ? "Yes" : "No"}
-        </span>
-      ),
-    },
-    
-    // {
-    //   name: "Created by",
-    //   selector: (row) => row.staff?.name,
-    //   center: true,
-    // },
-    {
-      name: "Position",
-      selector: (row) => row.position,
-      center: true,
-    },
-    {
-      name: "Actions",
-      center: true,
-      cell: (row) => (
-        <div className="flex items-center justify-center gap-[1px]">
-          <Tooltip id={`tooltip-view-${row.id}`} content="Edit" place="left">
-            <button
-              onClick={() => {
-                setEditTribeId(row.id);
-                setAddNewTribe(true);
-              }}
-              className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
-              title="Edit"
-            >
-              <MdModeEdit size={18} />
-            </button>
-          </Tooltip>
-          <Tooltip id={`tooltip-view-${row.id}`} content="Delete" place="left">
-            <button
-              onClick={() => {
-                setDeleteId(row.id);
-                setDeleteModal(true);
-              }}
-              className="text-red-500 bg-red-100 w-[30px] h-[30px] flex items-center justify-center rounded-r-md "
-              title="Delete"
-            >
-              <FiTrash2 size={18} />
-            </button>
-          </Tooltip>
-        </div>
-      ),
-    },
-  ];
-
-  const handleFetchTribes = async (page = 1) => {
+  const handleFetchTribes = async (currentPage = page) => {
     try {
       setLoading(true);
 
       const params = {
-        page,
+        page: currentPage,
         limit: rowsPerPage,
       };
 
-      if (status?.value) {
-        params.status = status?.value;
+      if (statusFilter) {
+        params.status = statusFilter;
+      }
+
+      if (groupFilter) {
+        params.circle_group_id = groupFilter;
       }
 
       if (startDate && endDate) {
@@ -196,12 +72,15 @@ const TribesList = (props) => {
       }
 
       // Fetch tribe data from API
-      const response = await authAxios().get("/tribe", {params});
+      const response = await authAxios().get("/tribe", { params });
       const resData = response?.data;
       if (resData?.success) {
         setTribeList(resData.data.items || []);
         // console.log("Fetched tribe data:", resData.data.items);
-        setPagination(resData.data.pagination);
+        const paginationData = resData.data.pagination;
+        setPage(paginationData.page);
+        setTotalPages(paginationData.totalPages);
+        setTotalCount(paginationData.total);
       } else {
         console.error("Failed to fetch tribe data:", resData?.message);
       }
@@ -213,20 +92,15 @@ const TribesList = (props) => {
   };
 
   useEffect(() => {
-    handleFetchTribes(currentPage);
-  }, [currentPage, startDate, endDate, status]);
+    handleFetchTribes();
+  }, [startDate, endDate, statusFilter, groupFilter]);
 
-  const handleFetchTribesGroup = async (page = 1) => {
+  const handleFetchTribesGroup = async () => {
     try {
       setLoading(true);
 
       // Fetch tribe-group data from API
-      const response = await authAxios().get("/tribe-group", {
-        params: {
-          page,
-          limit: rowsPerPage,
-        },
-      });
+      const response = await authAxios().get("/tribe-group");
       const resData = response?.data;
       if (resData?.success) {
         let data = resData.data.items || [];
@@ -243,7 +117,7 @@ const TribesList = (props) => {
     }
   };
 
-  const handleFetchParentTribes = async (page = 1) => {
+  const handleFetchParentTribes = async () => {
     try {
       setLoading(true);
 
@@ -271,6 +145,11 @@ const TribesList = (props) => {
     handleFetchParentTribes();
   }, []);
 
+  const groupOptions = tribeGroupList.map((group) => ({
+    value: group.id,
+    label: group.name,
+  }));
+
   const handleDelete = async () => {
     try {
       setLoading(true);
@@ -282,7 +161,7 @@ const TribesList = (props) => {
         setDeleteId(null);
 
         // Refresh list
-        handleFetchTribes(currentPage);
+        handleFetchTribes();
       } else {
         alert(response.data.message);
       }
@@ -294,23 +173,59 @@ const TribesList = (props) => {
     }
   };
 
-    // Called only when DateRangePicker's Apply or Clear button is clicked.
+  // Called only when DateRangePicker's Apply or Clear button is clicked.
   const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
     setStartDate(newStart);
     setEndDate(newEnd);
+    setPage(1);
+  };
+
+  const handleStatusChange = (option) => {
+    setPage(1);
+    setStatusFilter(option?.value || null);
+  };
+
+  const handleGroupChange = (option) => {
+    setPage(1);
+    setGroupFilter(option?.value || null);
   };
 
   return (
     <>
       <div className="space-y-6">
         <div className="relative flex justify-between gap-4">
-          <div className="max-w-[200px] w-full">
-            <DateRangePicker
-              onChange={handleDateRangeChange}
-              defaultPreset="Today"
-              panelOffsetTop={100}
-              panelOffsetLeft={0}
-            />
+          <div className="flex lg:flex-row flex-col gap-2 flex-1">
+            <div className="lg:max-w-[200px] w-full">
+              <DateRangePicker
+                onChange={handleDateRangeChange}
+                defaultPreset="Today"
+                panelOffsetTop={100}
+                panelOffsetLeft={0}
+              />
+            </div>
+
+            <div className="w-full lg:max-w-[200px]">
+              <Select
+                placeholder="Filter by status"
+                value={statusType.find((o) => o.value === statusFilter) || null}
+                options={statusType}
+                onChange={handleStatusChange}
+                isClearable
+                styles={customStyles}
+              />
+            </div>
+            <div className="w-full lg:max-w-[200px]">
+              <Select
+                placeholder="Filter by group"
+                value={
+                  groupOptions.find((o) => o.value === groupFilter) || null
+                }
+                options={groupOptions}
+                onChange={handleGroupChange}
+                isClearable
+                styles={customStyles}
+              />
+            </div>
           </div>
           <button className="custom--btn" onClick={() => setAddNewTribe(true)}>
             <FiPlus />
@@ -319,14 +234,170 @@ const TribesList = (props) => {
         </div>
 
         <div className="mt-3">
-          <CustomDataTable
-            columns={columns}
-            data={tribeList}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            rowsPerPage={rowsPerPage}
-            paginationTotalRows={pagination?.total || 0}
-          />
+          <div className="box--shadow bg-white rounded-[15px] p-4">
+            <div className="relative overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <tr>
+                    <th className="px-2 py-4 min-w-[80px]">Photo</th>
+                    <th className="px-2 py-4 min-w-[120px]">Created At</th>
+                    <th className="px-2 py-4 min-w-[120px]">Created By</th>
+                    <th className="px-2 py-4 min-w-[200px]">Name</th>
+                    <th className="px-2 py-4 min-w-[120px]">Tribe Group</th>
+                    <th className="px-2 py-4 min-w-[120px]">Parent</th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      Members
+                    </th>
+                    <th className="px-2 py-4 min-w-[120px] text-center">
+                      interactions
+                    </th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      posts
+                    </th>
+                    <th className="px-2 py-4 min-w-[120px] text-center">
+                      moderators
+                    </th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      Status
+                    </th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      Position
+                    </th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {tribeList?.length > 0 ? (
+                    tribeList.map((row, index) => (
+                      <tr
+                        key={row.id || index}
+                        className="border-b hover:bg-gray-50 text-xs"
+                      >
+                        <td className="px-2 py-4">
+                          <img
+                            src={row.icon_url}
+                            alt={row.name}
+                            className="w-7 h-7 rounded-full object-cover object-center"
+                          />
+                        </td>
+
+                        <td className="px-2 py-4">
+                          {formatViewDate(row.created_at)}
+                        </td>
+                        <td className="px-2 py-4">{row.staff?.name}</td>
+
+                        <td className="px-2 py-4">
+                          <div className="whitespace-normal break-words">
+                            {row.name}
+                          </div>
+                        </td>
+
+                        <td className="px-2 py-4">
+                          {row.circleGroup?.name ?? "--"}
+                        </td>
+
+                        <td className="px-2 py-4">
+                          {row.parent?.name ?? "--"}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          {row.users_count}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          {row.interactions_count}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          {row.posts_count}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          {row.moderators ?? 0}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              row.status === "ACTIVE"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {formatText(row.status)}
+                          </span>
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          {row.position}
+                        </td>
+
+                        <td className="px-2 py-4">
+                          <div className="flex items-center justify-center gap-[1px]">
+                            <Tooltip
+                              id={`tooltip-edit-${row.id}`}
+                              content="Edit"
+                              place="left"
+                            >
+                              <button
+                                onClick={() => {
+                                  setEditTribeId(row.id);
+                                  setAddNewTribe(true);
+                                }}
+                                className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-md"
+                              >
+                                <MdModeEdit size={18} />
+                              </button>
+                            </Tooltip>
+
+                            {/* <Tooltip
+                              id={`tooltip-delete-${row.id}`}
+                              content="Delete"
+                              place="left"
+                            >
+                              <button
+                                onClick={() => {
+                                  setDeleteId(row.id);
+                                  setDeleteModal(true);
+                                }}
+                                className="text-red-500 bg-red-100 w-[30px] h-[30px] flex items-center justify-center rounded-r-md"
+                              >
+                                <FiTrash2 size={18} />
+                              </button>
+                            </Tooltip> */}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={13}
+                        className="px-4 py-6 text-center text-gray-500"
+                      >
+                        No records found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage}
+              totalCount={totalCount}
+              currentDataLength={tribeList.length}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                handleFetchTribes(newPage);
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -339,7 +410,7 @@ const TribesList = (props) => {
           setEditTribeId(null);
         }}
         editId={editTribeId}
-        onSuccess={() => handleFetchTribes(currentPage)}
+        onSuccess={() => handleFetchTribes()}
       />
 
       <Dialog

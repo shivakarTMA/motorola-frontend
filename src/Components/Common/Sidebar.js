@@ -4,7 +4,7 @@ import Logo from "../../Assests/Images/logo.png";
 import { useSelector } from "react-redux";
 import { FaAngleDown, FaCircle, FaLayerGroup } from "react-icons/fa";
 import dashboardIcon from "../../Assests/Images/icons/dashboard.svg";
-import { MdControlCamera, MdDashboard, MdFormatListBulleted, MdManageAccounts, MdTextFormat } from "react-icons/md";
+import { MdBrandingWatermark, MdControlCamera, MdDashboard, MdDevices, MdFormatListBulleted, MdManageAccounts, MdTextFormat } from "react-icons/md";
 import { HiUsers } from "react-icons/hi";
 import {
   MdGroups,
@@ -16,7 +16,7 @@ import {
 } from "react-icons/md";
 import { IoIosGift } from "react-icons/io";
 import { TbSitemapFilled } from "react-icons/tb";
-import { RiArticleFill } from "react-icons/ri";
+import { RiArticleFill, RiPushpin2Fill } from "react-icons/ri";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
   const location = useLocation();
@@ -141,13 +141,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             <span className="nav-text">App Banner</span>
           </Link>
 
-          <Link
+          {/* <Link
             to="/reports"
             className={`nav-link ${location.pathname === "/reports" ? "active" : ""}`}
           >
             <MdAssessment className="menu--icon" />
             <span className="nav-text">Reports</span>
-          </Link>
+          </Link> */}
 
           <Link
             to="/moderation-queue"
@@ -208,21 +208,21 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             <span className="nav-text">Staff</span>
           </Link>
 
-          <Link
+          {/* <Link
             to="/roles"
             className={`nav-link ${location.pathname === "/roles" ? "active" : ""}`}
           >
             <MdManageAccounts className="menu--icon" />
             <span className="nav-text">Roles</span>
-          </Link>
+          </Link> */}
 
-          <Link
+          {/* <Link
             to="/modules"
             className={`nav-link ${location.pathname === "/modules" ? "active" : ""}`}
           >
             <MdControlCamera className="menu--icon" />
             <span className="nav-text">Modules</span>
-          </Link>
+          </Link> */}
 
           <Link
             to="/tiers"
@@ -239,6 +239,49 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             <MdTextFormat className="menu--icon" />
             <span className="nav-text">Flagged Keywords</span>
           </Link>
+          <Link
+            to="/top-pics"
+            className={`nav-link ${location.pathname === "/top-pics" ? "active" : ""}`}
+          >
+            <RiPushpin2Fill className="menu--icon" />
+            <span className="nav-text">Top Pics</span>
+          </Link>
+
+          <div
+            className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
+            onClick={() => toggleMenu("devices")}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="flex items-center">
+              <MdDevices className="menu--icon" />
+              <span className="nav-text">Devices</span>
+            </div>
+            <FaAngleDown
+              className={`downmenu transition ${
+                dropdownToggles["devices"] ? "rotate-[180deg]" : ""
+              }`}
+            />
+          </div>
+
+          {dropdownToggles["devices"] && (
+            <div className="pl-[40px] relative dropdown--menu--nav">
+              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
+              <Link
+                to="/device-brands"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <FaCircle className="menu--icon !text-[10px]" />
+                <span className="nav-text">Brands</span>
+              </Link>
+              <Link
+                to="/device-models"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <FaCircle className="menu--icon !text-[10px]" />
+                <span className="nav-text">Models</span>
+              </Link>
+            </div>
+          )}
 
           {/* <Link
             to="/settings"

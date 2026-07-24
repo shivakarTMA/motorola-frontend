@@ -7,18 +7,10 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 import Pagination from "../../../Components/Common/Pagination";
-import {
-  formatText,
-  formatViewDate,
-  formatViewTime,
-  formatWithTimeDate,
-} from "../../../Helper/helper";
+import { formatText, formatViewDate, formatViewTime, formatWithTimeDate } from "../../../Helper/helper";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { FiEye } from "react-icons/fi";
 import ModerationDetailModal from "./ModerationDetailModal";
-import PostModerationDetailModal from "./PostModerationDetailModal";
-import ArticleModerationDetailModal from "./ArticleModerationDetailModal";
-import PollModerationDetailModal from "./PollModerationDetailModal";
 
 const ACTION_LABELS = {
   WARNING: "Warned",
@@ -51,11 +43,9 @@ const ModerationQueue = (props) => {
   const [moderationList, setModerationList] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [editPostId, setEditPostId] = useState(null);
 
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -114,33 +104,29 @@ const ModerationQueue = (props) => {
 
   const openReport = (row) => {
     setSelectedReport(row);
-    setModalType(
-      row?.post?.type ? row?.post?.type : row?.content_type
-    );
-    setEditPostId(row.id);
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    setIsModalOpen(false);
     setSelectedReport(null);
-    setModalType(null);
-    setEditPostId(null);
   };
 
   // Called after the confirmation modal is confirmed
-  const handleModerationUpdate = async (payload) => {
-    try {
-      await authAxios().post(`/moderation/action`, payload);
-
-      toast.success("Moderation updated successfully.");
-
-      setIsModalOpen(false);
-      setSelectedReport(null);
-      setModalType(null);
-
-      fetchModerationList();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update status.");
-    }
+  const handleStatusUpdate = (payload) => {
+    setModerationList((prev) =>
+      prev.map((row) =>
+        row.report_id === payload.report_id
+          ? {
+              ...row,
+              status: payload.action === "APPROVE" ? "DISMISSED" : "ACTIONED",
+              moderator_name: "You", // replace with the logged-in admin's name
+              updated_time: new Date().toISOString(),
+            }
+          : row,
+      ),
+    );
+    toast.success("Report status updated");
   };
 
   return (
@@ -168,17 +154,18 @@ const ModerationQueue = (props) => {
                     {/* <th className="px-2 py-4 min-w-[80px]">Report ID</th> */}
                     <th className="px-2 py-4 min-w-[120px]">Reported Date</th>
                     <th className="px-2 py-4 min-w-[120px]">Reported Time</th>
-                    <th className="px-2 py-4 min-w-[100px] ">Item Type</th>
-                    <th className="px-2 py-4 min-w-[150px] ">
-                      Flagged Keyword
+                    <th className="px-2 py-4 min-w-[100px] ">
+                      Item Type
                     </th>
                     <th className="px-2 py-4 min-w-[150px] ">
                       Reported (User)
                     </th>
-                    <th className="px-2 py-4 min-w-[150px]">Tribe</th>
-                    <th className="px-2 py-4 min-w-[150px]">Moderator Name</th>
-                    <th className="px-2 py-4 min-w-[130px]">Updated Time</th>
-                    <th className="px-2 py-4 min-w-[120px]">Action Taken</th>
+                    <th className="px-2 py-4 min-w-[100px]">
+                      Tribe
+                    </th>
+                    <th className="px-2 py-4 min-w-[100px]">
+                      Moderator Name
+                    </th>
                     <th className="px-2 py-4 min-w-[120px] text-center">
                       Status
                     </th>
@@ -195,6 +182,10 @@ const ModerationQueue = (props) => {
                         key={row.id || index}
                         className="border-b hover:bg-gray-50 text-xs"
                       >
+                        {/* <td className="px-2 py-4">
+                          {row.report_id ? row.report_id : "--"}
+                        </td> */}
+
                         <td className="px-2 py-4">
                           {formatViewDate(row.created_at) || "--"}
                         </td>
@@ -204,18 +195,7 @@ const ModerationQueue = (props) => {
                         </td>
 
                         <td className="px-2 py-4">
-                          {row?.post?.type === "POST"
-                            ? "Hot Take"
-                            : row?.post?.type === "ARTICLE"
-                              ? "Deep Dive"
-                              : row?.content_type === "POLL"
-                                ? "Vibe Check"
-                                : "--"}
-                        </td>
-                        <td className="px-2 py-4">
-                          {row?.matchedKeyword?.keyword
-                            ? row.matchedKeyword?.keyword
-                            : "--"}
+                          {row.content_type ? row.content_type : "--"}
                         </td>
                         <td className="px-2 py-4">
                           {row.user.name ? row.user.name : "--"}
@@ -224,24 +204,22 @@ const ModerationQueue = (props) => {
                           {row.tribe ? row.tribe : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.moderator_name ? row.moderator_name : "--"}
-                        </td>
-                        <td className="px-2 py-4">
-                          {row?.updated_time ? row.updated_time : "--"}
-                        </td>
-                        <td className="px-2 py-4">
-                          {row?.action_taken ? row.action_taken : "--"}
+                          {row.tribe ? row.tribe : "--"}
                         </td>
                         <td className="px-2 py-4 text-center">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                               {
-                                ACTIONED: "bg-green-100 text-green-700",
+                                WARNING: "bg-green-100 text-green-700",
+                                HIDE_CONTENT: "bg-blue-100 text-blue-700",
+                                SUSPEND_USER: "bg-blue-100 text-blue-700",
+                                BAN_USER: "bg-red-100 text-red-700",
+                                DEACTIVATE_USER: "bg-gray-200 text-gray-700",
                                 PENDING: "bg-yellow-100 text-yellow-700",
                               }[row.status] || "bg-gray-100 text-gray-600"
                             }`}
                           >
-                            {formatText(row?.status === "ACTIONED" ? "Resolved" : row?.status)}
+                            {formatText(row.status)}
                           </span>
                         </td>
 
@@ -290,34 +268,12 @@ const ModerationQueue = (props) => {
         </div>
       </div>
 
-      {modalType === "POST" && (
-        <PostModerationDetailModal
-          isOpen={true}
-          onClose={closeModal}
-          report={selectedReport}
-          editId={editPostId}
-          onSubmit={handleModerationUpdate}
-        />
-      )}
-
-      {modalType === "ARTICLE" && (
-        <ArticleModerationDetailModal
-          isOpen={true}
-          onClose={closeModal}
-          report={selectedReport}
-          editId={editPostId}
-          onSubmit={handleModerationUpdate}
-        />
-      )}
-
-      {modalType === "POLL" && (
-        <PollModerationDetailModal
-          isOpen={true}
-          onClose={closeModal}
-          report={selectedReport}
-          editId={editPostId}
-        />
-      )}
+      <ModerationDetailModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        report={selectedReport}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </>
   );
 };

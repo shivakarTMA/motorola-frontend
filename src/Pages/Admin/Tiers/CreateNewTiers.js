@@ -175,13 +175,14 @@ const CreateNewTiers = ({ open, onClose, onSuccess, editId }) => {
                         type="text"
                         name="name"
                         value={formik.values.name}
-                        onKeyDown={blockOnlyTextKeys}
-                        onChange={(e) =>
-                          formik.setFieldValue(
-                            "name",
-                            sanitizeOnlyText(e.target.value),
-                          )
-                        }
+                        // onKeyDown={blockOnlyTextKeys}
+                        // onChange={(e) =>
+                        //   formik.setFieldValue(
+                        //     "name",
+                        //     sanitizeOnlyText(e.target.value),
+                        //   )
+                        // }
+                        onChange={formik.handleChange}
                         className="custom--input w-full"
                         placeholder="Enter Tier Name"
                       />

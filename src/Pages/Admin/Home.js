@@ -5,9 +5,15 @@ import "highcharts/modules/no-data-to-display";
 import Select from "react-select"; // Import react-select for dropdowns
 import DatePicker from "react-datepicker"; // Import datepicker for custom date selection
 import "react-datepicker/dist/react-datepicker.css"; // Import default datepicker styles
-import { customStyles } from "../../Helper/helper";
+import {
+  customStyles,
+  formatText,
+  formatViewTime,
+  formatViewDate,
+  formatWithTimeDate,
+} from "../../Helper/helper";
 import { Link } from "react-router-dom";
-import { LuCalendar } from "react-icons/lu";
+import { LuCalendar, LuUserPlus } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { authAxios } from "../../Config/config";
 import {
@@ -25,6 +31,12 @@ import { format } from "date-fns";
 import IsLoadingHOC from "../../Components/Common/IsLoadingHOC";
 import DateRangePicker from "../../Components/Common/DateRangePickerField";
 import CustomDataTable from "../../Components/Common/CustomDataTable";
+import Tooltip from "../../Components/Common/Tooltip";
+import { FiEye, FiTrash2 } from "react-icons/fi";
+import ModerationDetailModal from "./Moderation/ModerationDetailModal";
+import PollModerationDetailModal from "./Moderation/PollModerationDetailModal";
+import ArticleModerationDetailModal from "./Moderation/ArticleModerationDetailModal";
+import PostModerationDetailModal from "./Moderation/PostModerationDetailModal";
 
 const StatCard = ({
   title,
@@ -66,90 +78,16 @@ const chartFilterOptions = [
   { value: "tribes", label: "Tribes" },
 ];
 
-const activitiData = [
-  {
-    report_id: "Mod0001",
-    reported_date: "03/07/2026",
-    reported_time: "12:05",
-    item_type: "Comment",
-    reported_user: "@user_x",
-    tribe: "Gaming",
-    post_title: "bvghebqljihq",
-    source: "Keyword auto-flag",
-    reason: "Abuse",
-    action: "Removed",
-    actioned_by: "@nikhil.tma",
-    resolution_time: "12:20",
-    status: "Resolved",
-  },
-  {
-    report_id: "Mod0002",
-    reported_date: "04/07/2026",
-    reported_time: "13:05",
-    item_type: "Hot Take",
-    reported_user: "@nitin.tma",
-    tribe: "Tech",
-    post_title: "bvghebqljihq",
-    source: "User report",
-    reason: "Spam",
-    action: "Approved",
-    actioned_by: "@sara.tma",
-    resolution_time: "13:20",
-    status: "Resolved",
-  },
-  {
-    report_id: "Mod0003",
-    reported_date: "06/07/2026",
-    reported_time: "14:05",
-    item_type: "Vibe Check",
-    reported_user: "@sara.tma",
-    tribe: "Gaming",
-    post_title: "bvghebqljihq",
-    source: "Keyword auto-flag",
-    reason: "Misinformation",
-    action: "Warned",
-    actioned_by: "@nikhil.tma",
-    resolution_time: "14:20",
-    status: "Resolved",
-  },
-  {
-    report_id: "Mod0004",
-    reported_date: "06/07/2026",
-    reported_time: "15:05",
-    item_type: "Comment",
-    reported_user: "@user_y",
-    tribe: "Tech",
-    post_title: "bvghebqljihq",
-    source: "User report",
-    reason: "Abuse",
-    action: "Suspended",
-    actioned_by: "@sara.tma",
-    resolution_time: "15:20",
-    status: "Pending",
-  },
-  {
-    report_id: "Mod0005",
-    reported_date: "07/07/2026",
-    reported_time: "16:05",
-    item_type: "Deep Dive",
-    reported_user: "@arjun.tma",
-    tribe: "Tech",
-    post_title: "bvghebqljihq",
-    source: "User report",
-    reason: "Spam",
-    action: "Dismissed",
-    actioned_by: "@sara.tma",
-    resolution_time: "16:20",
-    status: "Resolved",
-  },
-];
-
-
 const AdminDashboard = (props) => {
   const { setLoading } = props;
   const [allDashboardData, setAllDashboardData] = useState({});
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+
+  const [editPostId, setEditPostId] = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(null);
 
   const [filterTribeGroup, setFilterTribeGroup] = useState(null);
   const [filterTribe, setFilterTribe] = useState(null);
@@ -180,97 +118,17 @@ const AdminDashboard = (props) => {
   const hasContentData =
     (contentChartData.hot_takes || 0) +
       (contentChartData.deep_dives || 0) +
-      (contentChartData.vibe_checks || 0) > 0;
+      (contentChartData.vibe_checks || 0) >
+    0;
 
   const hasEngagementData =
     (engagementChartData.likes || 0) +
       (engagementChartData.comments || 0) +
-      (engagementChartData.followers || 0) > 0;
-    
+      (engagementChartData.followers || 0) >
+    0;
+
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
-
-  const activityCol = [
-    {
-      name: "Report ID",
-      selector: (row) => row.report_id,
-      // sortable: true,
-      //width:"110px"
-    },
-    {
-      name: "Reported Date",
-      selector: (row) => row.reported_date,
-      center: true,
-      //width:"150px"
-    },
-    {
-      name: "Reported Time",
-      selector: (row) => row.reported_time,
-      center: true,
-      //width:"150px"
-    },
-    {
-      name: "Item Type",
-      selector: (row) => row.item_type,
-      center: true,
-      //width:"110px"
-    },
-    {
-      name: "Reported (User)",
-      selector: (row) => row.reported_user,
-      center: true,
-      //width:"110px"
-    },
-    {
-      name: "Tribe",
-      selector: (row) => row.tribe,
-      center: true,
-      //width:"110px"
-    },
-    // {
-    //   name: "Post Title",
-    //   selector: (row) => row.post_title,
-    //   center: true,
-    //   width:"150px"
-    // },
-    // {
-    //   name: "Source",
-    //   selector: (row) => row.source,
-    //   center: true,
-    //   width:"150px"
-    // },
-    {
-      name: "Status",
-      selector: (row) => row.status,
-      center: true,
-      //width:"110px"
-    },
-    // {
-    //   name: "Reason",
-    //   selector: (row) => row.reason,
-    //   center: true,
-    //   width:"110px"
-    // },
-    {
-      name: "View",
-      selector: (row) => row.view,
-      center: true,
-      //width:"110px"
-    },
-    // {
-    //   name: "Actioned By",
-    //   selector: (row) => row.actioned_by,
-    //   center: true,
-    //   width:"110px"
-    // },
-    // {
-    //   name: "Resolution Time",
-    //   selector: (row) => row.resolution_time,
-    //   center: true,
-    //   width:"150px"
-    // },
-    
-  ];
 
   const fetchDashboardList = async () => {
     try {
@@ -318,7 +176,9 @@ const AdminDashboard = (props) => {
         params.tribe_id = filterTribe.value;
       }
 
-      const response = await authAxios().get("/dashboard/analytics", { params });
+      const response = await authAxios().get("/dashboard/analytics", {
+        params,
+      });
       const resData = response?.data;
 
       if (resData?.success) {
@@ -342,7 +202,7 @@ const AdminDashboard = (props) => {
       }
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Unable to load chart analytics"
+        error?.response?.data?.message || "Unable to load chart analytics",
       );
     }
   };
@@ -379,26 +239,30 @@ const AdminDashboard = (props) => {
   };
 
   // ---- Tribe list API (populates filter2 when filter1 = "Tribes") ----
-  const fetchTribeList = async () => {
+  const fetchTribeList = async (circleGroupId) => {
     try {
-      const response = await authAxios().get("/tribe");
+      const response = await authAxios().get("/tribe", {
+        params: {
+          circle_group_id: circleGroupId,
+        },
+      });
+
       const resData = response?.data;
 
       if (resData?.success) {
-        const options = (resData.data.items || []).map((group) => ({
-          value: group.id,
-          label: group.name,
+        const options = (resData.data.items || []).map((tribe) => ({
+          value: tribe.id,
+          label: tribe.name,
         }));
-        console.log(options, "options");
+
         setTribeOptions(options);
       } else {
-        toast.error(response.data?.message);
+        toast.error(resData?.message);
       }
     } catch (error) {
       toast.error(error?.response?.data?.message || "Unable to load tribes");
     }
   };
-
 
   const CONTENT_TYPE_LABELS = {
     POST: "Post",
@@ -424,35 +288,31 @@ const AdminDashboard = (props) => {
           actionsPending: total_actions_pending,
           actionsTaken: total_actions_taken,
         });
-        const actions = (recent_actions || []).map((item) => ({
-          
-          report_id: item.report_id,                                          // "Report ID"
-          reported_date: item.reported_at
-            ? item.reported_at.split("-").reverse().join("/")                 // "Reported Date" → 15/07/2026
-            : "-",
-          reported_time: item.reported_time?.slice(0, 5) || "-",              // "Reported Time" → 15:37
-          item_type: CONTENT_TYPE_LABELS[item.content_type] || item.content_type, // "Item Type"
-          reported_user: item.user?.name || "-",                              // "Reported"
-          tribe: item.tribe || "-",                 // "Tribe"
-          post_title: item.contentFlag?.post?.title || "-",                   // "Post Title"
-          view: '' ,//  add link to view content here                 
-          status: item.status || "Pending",                   // "Status"
-        }));
-        setRecentActions(actions);
+
+        setRecentActions(resData?.data?.recent_actions);
       } else {
         toast.error(resData?.message);
       }
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Unable to load recent activity"
+        error?.response?.data?.message || "Unable to load recent activity",
       );
     }
   };
 
   // Whenever filter1 changes, refresh filter2's option list from the right API
   useEffect(() => {
+    if (filterTribeGroup?.value) {
+      fetchTribeList(filterTribeGroup.value);
+      setFilterTribe(null); // Clear previous selection
+    } else {
+      setTribeOptions([]);
+      setFilterTribe(null);
+    }
+  }, [filterTribeGroup]);
+
+  useEffect(() => {
     fetchTribeGroupList();
-    fetchTribeList();
     fetchRecentModerationActivities();
   }, []);
 
@@ -460,7 +320,7 @@ const AdminDashboard = (props) => {
     () => ({
       chart: {
         type: "column",
-        height: "80%",
+        height: "300px",
       },
       title: {
         text: "",
@@ -496,12 +356,12 @@ const AdminDashboard = (props) => {
           name: filterTribe?.label || filterTribeGroup?.label || "Content",
           color: "#3774d0",
           data: hasContentData
-          ? [
-              contentChartData?.hot_takes || 0,
-              contentChartData?.deep_dives || 0,
-              contentChartData?.vibe_checks || 0,
-            ]
-          : [], 
+            ? [
+                contentChartData?.hot_takes || 0,
+                contentChartData?.deep_dives || 0,
+                contentChartData?.vibe_checks || 0,
+              ]
+            : [],
         },
       ],
     }),
@@ -512,7 +372,7 @@ const AdminDashboard = (props) => {
     () => ({
       chart: {
         type: "column",
-        height: "80%",
+        height: "300px",
       },
       title: {
         text: "",
@@ -547,22 +407,53 @@ const AdminDashboard = (props) => {
           name: filterTribe?.label || filterTribeGroup?.label || "Engagement",
           color: "#00A870",
           data: hasEngagementData
-          ? [
-              engagementChartData?.likes || 0,
-              engagementChartData?.comments || 0,
-              engagementChartData?.followers || 0,
-            ]
-          : [],
+            ? [
+                engagementChartData?.likes || 0,
+                engagementChartData?.comments || 0,
+                engagementChartData?.followers || 0,
+              ]
+            : [],
         },
       ],
     }),
-    [engagementChartData, filterTribeGroup, filterTribe,hasEngagementData],
+    [engagementChartData, filterTribeGroup, filterTribe, hasEngagementData],
   );
 
   // Called only when DateRangePicker's Apply or Clear button is clicked.
   const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
     setStartDate(newStart);
     setEndDate(newEnd);
+  };
+
+  const openReport = (row) => {
+    setSelectedReport(row);
+    setModalType(
+      row?.post?.type ? row?.post?.type : row?.content_type
+    );
+    setEditPostId(row.id);
+  };
+
+  const closeModal = () => {
+    setSelectedReport(null);
+    setModalType(null);
+    setEditPostId(null);
+  };
+
+  // Called after the confirmation modal is confirmed
+  const handleModerationUpdate = async (payload) => {
+    try {
+      await authAxios().post(`/moderation/action`, payload);
+
+      toast.success("Moderation updated successfully.");
+
+      setIsModalOpen(false);
+      setSelectedReport(null);
+      setModalType(null);
+
+      fetchRecentModerationActivities();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update status.");
+    }
   };
 
   return (
@@ -605,25 +496,25 @@ const AdminDashboard = (props) => {
             <StatCard
               title="Suspended Users"
               value={allDashboardData?.total_suspended_users_count}
-              icon={FaUserCheck}
-              iconBg="bg-green-100"
-              iconColor="text-green-600"
+              icon={FaUserSlash}
+              iconColor="text-yellow-600"
+              iconBg="bg-yellow-100"
             />
 
             <StatCard
               title="Banned Users"
               value={allDashboardData?.total_banned_users_count}
-              icon={FaUserSlash}
-              iconBg="bg-yellow-100"
-              iconColor="text-yellow-600"
+              icon={FaBan}
+              iconColor="text-red-600"
+              iconBg="bg-red-100"
             />
 
             <StatCard
               title="New Users"
               value={allDashboardData?.total_new_users}
-              icon={FaBan}
-              iconBg="bg-red-100"
-              iconColor="text-red-600"
+              icon={LuUserPlus}
+              iconBg="bg-green-100"
+              iconColor="text-green-600"
             />
 
             <StatCard
@@ -643,10 +534,8 @@ const AdminDashboard = (props) => {
           </div>
 
           <div className="flex lg:flex-row flex-col justify-between lg:items-center lg:!mt-10  gap-2">
-            <h2 className="text-lg font-semibold">Content Analytics</h2>
-
             <div className="flex lg:justify-end gap-2 mb-4">
-              <div className="max-w-fit w-full">
+              <div className="min-w-[180px] w-full">
                 <Select
                   value={filterTribeGroup}
                   options={tribeGroupOptions}
@@ -657,7 +546,7 @@ const AdminDashboard = (props) => {
                 />
               </div>
 
-              <div className="max-w-fit w-full">
+              <div className="max-w-[210px] lg:min-w-[300px] w-full">
                 <Select
                   value={filterTribe}
                   options={tribeOptions}
@@ -665,6 +554,7 @@ const AdminDashboard = (props) => {
                   styles={customStyles}
                   placeholder="Select Tribe"
                   isClearable
+                  isDisabled={!filterTribeGroup}
                 />
               </div>
             </div>
@@ -672,6 +562,7 @@ const AdminDashboard = (props) => {
 
           <div className="grid lg:grid-cols-2 gap-2 !mt-0">
             <div className="bg-white rounded-xl border p-5 shadow-sm">
+              <h2 className="text-lg font-semibold mb-5">Posts</h2>
               <HighchartsReact
                 highcharts={Highcharts}
                 options={contentChartOptions}
@@ -679,6 +570,7 @@ const AdminDashboard = (props) => {
             </div>
 
             <div className="bg-white rounded-xl border p-5 shadow-sm">
+              <h2 className="text-lg font-semibold mb-5">Interactions</h2>
               <HighchartsReact
                 highcharts={Highcharts}
                 options={engagementChartOptions}
@@ -694,13 +586,15 @@ const AdminDashboard = (props) => {
               </h2>
 
               <div className="flex lg:flex-row flex-col lg:items-center pr-2">
-                <div className="w-fit flex items-center gap-2 lg:border-r">
+                {/* <div className="w-fit flex items-center gap-2 lg:border-r">
                   <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
                     <FaCircle className="text-[10px] text-[#009EB2]" />
                     <span>Total Posts Flagged</span>
                   </div>
                   <div className="pr-2 flex">
-                    <span className="text-[13px] font-semibold">{moderationStats.totalFlagged ?? "—"}</span>
+                    <span className="text-[13px] font-semibold">
+                      {moderationStats.totalFlagged ?? "—"}
+                    </span>
                   </div>
                 </div>
                 <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
@@ -709,7 +603,9 @@ const AdminDashboard = (props) => {
                     <span>Total Actions Pending</span>
                   </div>
                   <div className="pr-2 flex">
-                    <span className="text-[13px] font-semibold">{moderationStats.actionsPending ?? "—"}</span>
+                    <span className="text-[13px] font-semibold">
+                      {moderationStats.actionsPending ?? "—"}
+                    </span>
                   </div>
                 </div>
                 <div className="w-fit flex items-center gap-2 lg:pl-2">
@@ -718,30 +614,183 @@ const AdminDashboard = (props) => {
                     <span>Total Actions Taken</span>
                   </div>
                   <div className="pr-2 flex">
-                    <span className="text-[13px] font-semibold">{moderationStats.actionsTaken ?? "—"}</span>
+                    <span className="text-[13px] font-semibold">
+                      {moderationStats.actionsTaken ?? "—"}
+                    </span>
                   </div>
-                </div>
+                </div> */}
                 <div className="w-fit flex items-center gap-2 lg:pl-8">
-                  <div className="text-[13px] font-medium text-blue-600 flex gap-2 items-center underline">
-                    <Link to="/moderation-queue">View All</Link>
-                  </div>
+                  <Link to="/moderation-queue" className="custom--btn">
+                    <FiEye size={15} />{" "}
+                    <span className="text-[12px]">View All</span>
+                  </Link>
                 </div>
               </div>
             </div>
 
-            <div className="">
-              <CustomDataTable
-                columns={activityCol}
-                data={recentActions}
-                currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
-                rowsPerPage={rowsPerPage}
-                pagination={false}
-              />
+            <div className="mt-3">
+              <div className="box--shadow bg-white rounded-[15px] p-4">
+                <div className="relative overflow-x-auto">
+                  <table className="w-full text-sm text-left text-gray-500">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                      <tr>
+                        {/* <th className="px-2 py-4 min-w-[80px]">Report ID</th> */}
+                        <th className="px-2 py-4 min-w-[120px]">
+                          Reported Date
+                        </th>
+                        <th className="px-2 py-4 min-w-[120px]">
+                          Reported Time
+                        </th>
+                        <th className="px-2 py-4 min-w-[100px] ">Item Type</th>
+                        <th className="px-2 py-4 min-w-[150px] ">
+                          Flagged Keyword
+                        </th>
+                        <th className="px-2 py-4 min-w-[150px] ">
+                          Reported (User)
+                        </th>
+                        <th className="px-2 py-4 min-w-[150px]">Tribe</th>
+                        <th className="px-2 py-4 min-w-[150px]">
+                          Moderator Name
+                        </th>
+                        <th className="px-2 py-4 min-w-[130px]">
+                          Updated Time
+                        </th>
+                        <th className="px-2 py-4 min-w-[120px]">
+                          Action Taken
+                        </th>
+                        <th className="px-2 py-4 min-w-[120px] text-center">
+                          Status
+                        </th>
+                        <th className="px-2 py-4 min-w-[100px] text-center">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {recentActions?.length > 0 ? (
+                        recentActions.map((row, index) => (
+                          <tr
+                            key={row.id || index}
+                            className="border-b hover:bg-gray-50 text-xs"
+                          >
+                            <td className="px-2 py-4">
+                              {formatViewDate(row.created_at) || "--"}
+                            </td>
+
+                            <td className="px-2 py-4">
+                              {formatViewTime(row.reported_time) || "--"}
+                            </td>
+
+                            <td className="px-2 py-4">
+                              {row?.post?.type === "POST"
+                                ? "Hot Take"
+                                : row?.post?.type === "ARTICLE"
+                                  ? "Deep Dive"
+                                  : row?.content_type === "POLL"
+                                    ? "Vibe Check"
+                                    : "--"}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.matchedKeyword?.keyword
+                            ? row.matchedKeyword?.keyword
+                            : "--"}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row.user.name ? row.user.name : "--"}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row.tribe ? row.tribe : "--"}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.moderator_name ? row.moderator_name : "--"}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.updated_time ? row.updated_time : "--"}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.action_taken ? row.action_taken : "--"}
+                            </td>
+                            <td className="px-2 py-4 text-center">
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                  {
+                                    ACTIONED: "bg-green-100 text-green-700",
+                                    PENDING: "bg-yellow-100 text-yellow-700",
+                                  }[row.status] || "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {formatText(
+                                  row?.status === "ACTIONED"
+                                    ? "Resolved"
+                                    : row?.status,
+                                )}
+                              </span>
+                            </td>
+
+                            <td className="px-2 py-4 ">
+                              <Tooltip
+                                id={`tooltip-view-${row.id}`}
+                                content="View"
+                                place="top"
+                              >
+                                <button
+                                  onClick={() => openReport(row)}
+                                  className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-md mx-auto"
+                                >
+                                  <FiEye size={18} />
+                                </button>
+                              </Tooltip>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={12}
+                            className="px-4 py-6 text-center text-gray-500"
+                          >
+                            No records found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {modalType === "POST" && (
+        <PostModerationDetailModal
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {modalType === "ARTICLE" && (
+        <ArticleModerationDetailModal
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {modalType === "POLL" && (
+        <PollModerationDetailModal
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+        />
+      )}
     </>
   );
 };

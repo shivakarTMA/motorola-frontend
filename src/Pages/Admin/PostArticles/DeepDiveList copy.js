@@ -20,8 +20,6 @@ import { format } from "date-fns";
 import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 import Pagination from "../../../Components/Common/Pagination";
 import Select from "react-select";
-import { BiSortAlt2 } from "react-icons/bi";
-import { TiArrowSortedDown, TiArrowSortedUp } from "react-icons/ti";
 import ViewArticleDetails from "./ViewArticleDetails";
 
 const statusType = [
@@ -30,9 +28,9 @@ const statusType = [
   { label: "Under Review", value: "UNDER_REVIEW" },
 ];
 
-const HotTakeList = (props) => {
+const DeepDiveList = (props) => {
   const { setLoading } = props;
-  const [HotTakeList, setHotTakeList] = useState([]);
+  const [deepDiveList, setDeepDiveList] = useState([]);
   const [viewPostDetails, setViewPostDetails] = useState(false);
   const [editPostId, setEditPostId] = useState(null);
   const [startDate, setStartDate] = useState(null);
@@ -40,16 +38,11 @@ const HotTakeList = (props) => {
 
   const [tribeList, setTribeList] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
-  const [filterUserNameGroup, setFilterUserNameGroup] = useState(null);
   const [filterTribeGroup, setFilterTribeGroup] = useState(null);
   const [filterTribe, setFilterTribe] = useState(null);
 
-  const [sortBy, setSortBy] = useState(null); // 'likes_count' | 'comments_count'
-  const [sortOrder, setSortOrder] = useState("DESC"); // 'DESC' | 'ASC'
-
   const [tribeGroupOptions, setTribeGroupOptions] = useState([]);
   const [tribeOptions, setTribeOptions] = useState([]);
-  const [userOptions, setUserOptions] = useState([]);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -70,21 +63,12 @@ const HotTakeList = (props) => {
         params.status = statusFilter;
       }
 
-      if (filterUserNameGroup?.value) {
-        params.user_id = filterUserNameGroup.value;
-      }
-
       if (filterTribeGroup?.value) {
         params.circle_group_id = filterTribeGroup.value;
       }
 
       if (filterTribe?.value) {
         params.circle_id = filterTribe.value;
-      }
-
-      if (sortBy) {
-        params.sort_by = sortBy;
-        params.sort_order = sortOrder;
       }
 
       if (startDate && endDate) {
@@ -100,7 +84,7 @@ const HotTakeList = (props) => {
       const resData = response.data;
 
       if (resData.success) {
-        setHotTakeList(resData.data.items);
+        setDeepDiveList(resData.data.items);
         const paginationData = resData.data.pagination;
         setPage(paginationData.page);
         setTotalPages(paginationData.totalPages);
@@ -121,46 +105,7 @@ const HotTakeList = (props) => {
     }
 
     fetchDeepDiveList(page);
-  }, [
-    page,
-    startDate,
-    endDate,
-    statusFilter,
-    filterTribeGroup,
-    filterTribe,
-    filterUserNameGroup,
-    sortBy,
-    sortOrder,
-  ]);
-
-  const fetchUsersList = async () => {
-    try {
-      const params = {
-        limit: 5000,
-      };
-      const response = await authAxios().get("/user", {
-        params,
-      });
-      const resData = response?.data;
-
-      console.log(resData, "resData");
-
-      if (resData?.success) {
-        const options = (resData.data.items || []).map((group) => ({
-          value: group.id,
-          label: group.username,
-        }));
-        console.log(options, "options");
-        setUserOptions(options);
-      } else {
-        toast.error(response.data?.message);
-      }
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Unable to load tribe groups",
-      );
-    }
-  };
+  }, [page, startDate, endDate, statusFilter, filterTribeGroup, filterTribe]);
 
   const fetchTribeGroupList = async () => {
     try {
@@ -184,6 +129,7 @@ const HotTakeList = (props) => {
     }
   };
 
+  // ---- Tribe list API (populates filter2 when filter1 = "Tribes") ----
   const fetchTribeList = async (circleGroupId) => {
     try {
       const response = await authAxios().get("/tribe", {
@@ -209,6 +155,7 @@ const HotTakeList = (props) => {
     }
   };
 
+  // Whenever filter1 changes, refresh filter2's option list from the right API
   useEffect(() => {
     if (filterTribeGroup?.value) {
       fetchTribeList(filterTribeGroup.value);
@@ -221,7 +168,6 @@ const HotTakeList = (props) => {
 
   useEffect(() => {
     fetchTribeGroupList();
-    fetchUsersList();
   }, []);
 
   const groupOptions = tribeList.map((group) => ({
@@ -246,26 +192,9 @@ const HotTakeList = (props) => {
     setPage(1);
   };
 
-  const handleUserNameChange = (option) => {
-    setFilterUserNameGroup(option);
-    setPage(1);
-  };
-
   const handleTribeChange = (option) => {
     setFilterTribe(option);
     setPage(1);
-  };
-
-  const handleSortToggle = (column) => {
-    setPage(1);
-    if (sortBy === column) {
-      // same column clicked again -> flip order
-      setSortOrder((prev) => (prev === "DESC" ? "ASC" : "DESC"));
-    } else {
-      // new column -> default to DESC
-      setSortBy(column);
-      setSortOrder("DESC");
-    }
   };
 
   return (
@@ -290,16 +219,6 @@ const HotTakeList = (props) => {
                 onChange={handleStatusChange}
                 isClearable
                 styles={customStyles}
-              />
-            </div>
-            <div className="min-w-[180px] w-fit">
-              <Select
-                value={filterUserNameGroup}
-                options={userOptions}
-                onChange={handleUserNameChange}
-                styles={customStyles}
-                placeholder="Filter by Username"
-                isClearable
               />
             </div>
             <div className="min-w-[180px] w-fit">
@@ -340,53 +259,23 @@ const HotTakeList = (props) => {
                     </th> */}
                     <th className="px-2 py-4 min-w-[100px]">Content ID</th>
                     <th className="px-2 py-4 min-w-[100px]">Username</th>
-                    <th className="px-2 py-4 min-w-[100px]">Tribe Group</th>
+                    <th className="px-2 py-4 min-w-[150px]">Tribe Group</th>
                     <th className="px-2 py-4 min-w-[170px]">Tribe Name</th>
                     <th className="px-2 py-4 min-w-[150px]">Title</th>
-                    <th className="px-2 py-4 min-w-[150px] text-center">
-                      Status
-                    </th>
+                    <th className="px-2 py-4 min-w-[120px]">Status</th>
                     {/* <th className="px-2 py-4 min-w-[100px] text-center">
                       Pinned
                     </th> */}
-                    <th
-                      className="px-2 py-4 min-w-[80px] text-center cursor-pointer select-none"
-                      onClick={() => handleSortToggle("likes_count")}
-                    >
-                      <div className="flex gap-2 justify-center align-center">
-                        <span>Likes</span>
-                        <span>
-                          {sortBy === "likes_count" ? (
-                            sortOrder === "DESC" ? (
-                              <TiArrowSortedDown size={15} />
-                            ) : (
-                              <TiArrowSortedUp size={15} />
-                            )
-                          ) : (
-                            <BiSortAlt2 size={15} />
-                          )}
-                        </span>
-                      </div>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      Likes
                     </th>
-                    <th
-                      className="px-2 py-4 min-w-[100px] text-center cursor-pointer select-none"
-                      onClick={() => handleSortToggle("comments_count")}
-                    >
-                      <div className="flex gap-2 justify-center align-center">
-                        <span>Comments</span>
-                        <span>
-                          {sortBy === "comments_count" ? (
-                            sortOrder === "DESC" ? (
-                              <TiArrowSortedDown size={15} />
-                            ) : (
-                              <TiArrowSortedUp size={15} />
-                            )
-                          ) : (
-                            <BiSortAlt2 size={15} />
-                          )}
-                        </span>
-                      </div>
+                    <th className="px-2 py-4 min-w-[120px] text-center">
+                      Comments
                     </th>
+
+                    {/* <th className="px-2 py-4 min-w-[100px]">
+                      Created By
+                    </th> */}
 
                     <th className="px-2 py-4 min-w-[100px] text-center">
                       Actions
@@ -395,8 +284,8 @@ const HotTakeList = (props) => {
                 </thead>
 
                 <tbody>
-                  {HotTakeList?.length > 0 ? (
-                    HotTakeList.map((row, index) => (
+                  {deepDiveList?.length > 0 ? (
+                    deepDiveList.map((row, index) => (
                       <tr
                         key={row.id || index}
                         className="border-b hover:bg-gray-50 text-xs"
@@ -427,7 +316,7 @@ const HotTakeList = (props) => {
                         <td className="px-2 py-4">{row.circle?.name || "-"}</td>
                         <td className="px-2 py-4">{row.title || "-"}</td>
 
-                        <td className="px-2 py-4 text-center">
+                        <td className="px-2 py-4">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                               {
@@ -499,7 +388,7 @@ const HotTakeList = (props) => {
               totalPages={totalPages}
               rowsPerPage={rowsPerPage}
               totalCount={totalCount}
-              currentDataLength={HotTakeList.length}
+              currentDataLength={DeepDiveList.length}
               onPageChange={(newPage) => {
                 setPage(newPage);
                 fetchDeepDiveList(newPage);
@@ -522,4 +411,4 @@ const HotTakeList = (props) => {
   );
 };
 
-export default IsLoadingHOC(HotTakeList);
+export default IsLoadingHOC(DeepDiveList);

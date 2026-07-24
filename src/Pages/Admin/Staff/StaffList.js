@@ -5,11 +5,12 @@ import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { Link } from "react-router-dom";
 import Select from "react-select";
-import { customStyles } from "../../../Helper/helper";
+import { customStyles, formatViewDate } from "../../../Helper/helper";
 import CreateNewStaff from "./CreateNewStaff";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { authAxios } from "../../../Config/config";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
+import Pagination from "../../../Components/Common/Pagination";
 
 const StaffList = (props) => {
   const { setLoading } = props;
@@ -20,11 +21,12 @@ const StaffList = (props) => {
 
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-
-  const [pagination, setPagination] = useState(null);
   const [createStaff, setCreateStaff] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const columns = [
     {
@@ -102,7 +104,7 @@ const StaffList = (props) => {
     },
   ];
 
-  const handleFetchStaff = async (page = 1) => {
+  const handleFetchStaff = async (currentPage = page) => {
     try {
       setLoading(true);
 
@@ -116,7 +118,10 @@ const StaffList = (props) => {
       const resData = response?.data;
       if (resData?.success) {
         setUsers(resData.data.items || []);
-        setPagination(resData.data.pagination);
+        const paginationData = resData.data.pagination;
+        setPage(paginationData.page);
+        setTotalPages(paginationData.totalPages);
+        setTotalCount(paginationData.total);
       } else {
         console.error("Failed to fetch staff data:", resData?.message);
       }
@@ -156,13 +161,8 @@ const StaffList = (props) => {
   }, []);
 
   useEffect(() => {
-    handleFetchStaff(currentPage);
-  }, [currentPage]);
-
-  const handleEdit = (row) => {
-    console.log("Edit:", row);
-    // Open edit modal
-  };
+    handleFetchStaff();
+  }, []);
 
   const handleDelete = async () => {
     try {
@@ -175,7 +175,7 @@ const StaffList = (props) => {
         setDeleteId(null);
 
         // Refresh list
-        handleFetchStaff(currentPage);
+        handleFetchStaff();
       } else {
         alert(response.data.message);
       }
@@ -213,15 +213,111 @@ const StaffList = (props) => {
           </button>
         </div>
 
+
         <div className="mt-3">
-          <CustomDataTable
-            columns={columns}
-            data={users}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            rowsPerPage={rowsPerPage}
-            totalPages={pagination?.totalPages}
-          />
+          <div className="box--shadow bg-white rounded-[15px] p-4">
+            <div className="relative overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <tr>
+                    <th className="px-2 py-4 ">Staff ID</th>
+                    <th className="px-2 py-4 ">Name</th>
+                    <th className="px-2 py-4 ">Email</th>
+                    <th className="px-2 py-4 ">Mobile</th>
+                    <th className="px-2 py-4 ">Role</th>
+                    <th className="px-2 py-4 ">Status</th>
+                    <th className="px-2 py-4 ">Created At</th>
+                    <th className="px-2 py-4 text-center">Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {users?.length > 0 ? (
+                    users.map((row, index) => (
+                      <tr
+                        key={row.id || index}
+                        className="border-b hover:bg-gray-50 text-xs"
+                      >
+                        <td className="px-2 py-4">{row.id || "-"}</td>
+                        <td className="px-2 py-4">{row.name || "-"}</td>
+                        <td className="px-2 py-4">{row.email || "-"}</td>
+                        <td className="px-2 py-4">{row.mobile || "--"}</td>
+                        <td className="px-2 py-4">{row.role?.name || "--"}</td>
+                        <td className="px-2 py-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              row.status === "ACTIVE"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-2 py-4">{formatViewDate(row.created_at) || "--"}</td>
+                        <td className="px-2 py-4">
+                          <div className="flex items-center justify-center gap-[1px]">
+                            <Tooltip
+                              id={`tooltip-edit-${row.id}`}
+                              content="Edit"
+                              place="left"
+                            >
+                              <button
+                                onClick={() => {
+                                  setEditStaffId(row.id);
+                                  setCreateStaff(true);
+                                }}
+                                className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
+                              >
+                                <MdModeEdit size={18} />
+                              </button>
+                            </Tooltip>
+
+                            <Tooltip
+                              id={`tooltip-delete-${row.id}`}
+                              content="Delete"
+                              place="left"
+                            >
+                              <button
+                                onClick={() => {
+                                  setDeleteId(row.id);
+                                  setDeleteModal(true);
+                                }}
+                                className="text-red-500 bg-red-100 w-[30px] h-[30px] flex items-center justify-center rounded-r-md"
+                              >
+                                <FiTrash2 size={18} />
+                              </button>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={12}
+                        className="px-4 py-6 text-center text-gray-500"
+                      >
+                        No records found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage}
+              totalCount={totalCount}
+              currentDataLength={users.length}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                handleFetchStaff(newPage);
+              }}
+            />
+          </div>
         </div>
       </div>
       <CreateNewStaff
@@ -232,7 +328,7 @@ const StaffList = (props) => {
         }}
         editId={editStaffId}
         roleOptions={roleOptions}
-        onSuccess={() => handleFetchStaff(currentPage)}
+        onSuccess={() => handleFetchStaff()}
       />
       <Dialog
         open={deleteModal}

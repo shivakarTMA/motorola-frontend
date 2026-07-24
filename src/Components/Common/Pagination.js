@@ -9,9 +9,6 @@ const Pagination = ({
   currentDataLength,
   onPageChange,
 }) => {
-  if (totalCount <= rowsPerPage) {
-    return null;
-  }
 
   const start = currentDataLength === 0 ? 0 : (page - 1) * rowsPerPage + 1;
   const end =
@@ -30,13 +27,15 @@ const Pagination = ({
   }
 
   return (
-    <div className="flex justify-between items-center mt-4 gap-2 flex-wrap">
+    <div className="flex justify-between items-center mt-4 gap-2">
       {/* Showing Info */}
       <p className="text-gray-700 text-sm">
-        Showing {start} to {end} of {totalCount} entries
+        {/* Showing {start} to {end} of {totalCount} entries */}
+        {totalCount} entries found.
       </p>
 
       {/* Pagination Controls */}
+      {totalCount > rowsPerPage && (
       <div className="flex items-center gap-1">
         {/* Prev */}
         <button
@@ -66,7 +65,7 @@ const Pagination = ({
             onClick={() => onPageChange(p)}
             className={`px-3 py-1 border rounded transition ${
               page === p
-                ? "bg-[var(--primarycolor)] text-white font-[500] text-sm"
+                ? "bg-black text-white font-[500]"
                 : "hover:bg-gray-100"
             }`}
           >
@@ -95,6 +94,7 @@ const Pagination = ({
           <FaAngleRight />
         </button>
       </div>
+      )}
     </div>
   );
 };

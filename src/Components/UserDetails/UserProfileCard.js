@@ -87,6 +87,7 @@ export default function UserProfileCard({ basicInfoUser }) {
         <div className="flex justify-between">
           <span>Last Active on:</span>
           <span>{timeAgo(basicInfoUser?.last_login_at)}</span>
+          {/* <span>{basicInfoUser?.last_login_at}</span> */}
         </div>
       </div>
     </div>

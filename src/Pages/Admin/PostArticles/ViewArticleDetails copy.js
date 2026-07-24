@@ -1,12 +1,21 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { customStyles, formatWithTimeDate } from "../../../Helper/helper";
 import { authAxios } from "../../../Config/config";
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 import { format } from "date-fns";
-import { FiHeart, FiMessageSquare } from "react-icons/fi";
+import {
+  FiHeart,
+  FiMessageSquare,
+  FiChevronLeft,
+  FiChevronRight,
+} from "react-icons/fi";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
 
 const statusOptions = [
   { value: "PUBLISHED", label: "Published" },
@@ -22,29 +31,6 @@ const statusColors = {
   BANNED: "bg-yellow-100 text-yellow-700",
 };
 
-const optionPalette = [
-  {
-    bar: "bg-[#685BC730]",
-    text: "text-[#685BC7]",
-    chip: "bg-[#685BC730] text-[#685BC7]",
-  },
-  {
-    bar: "bg-[#685BC730]",
-    text: "text-[#685BC7]",
-    chip: "bg-[#685BC730] text-[#685BC7]",
-  },
-  {
-    bar: "bg-[#685BC730]",
-    text: "text-[#685BC7]",
-    chip: "bg-[#685BC730] text-[#685BC7]",
-  },
-  {
-    bar: "bg-[#685BC730]",
-    text: "text-[#685BC7]",
-    chip: "bg-[#685BC730] text-[#685BC7]",
-  },
-];
-
 // Central "show value or --" helper so every field in the info panel behaves the same way.
 const showValue = (value) => {
   if (value === null || value === undefined) return "--";
@@ -52,12 +38,19 @@ const showValue = (value) => {
   return value;
 };
 
-const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
+// NOTE: the API response doesn't include a dedicated "content_id" field.
+// This derives a display code from the post id (e.g. POST-004) as a placeholder —
+// swap this for the real field name once the backend exposes one.
+
+const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
   const [postDetails, setPostDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [remark, setRemark] = useState("");
   const [remarkError, setRemarkError] = useState("");
+
+  const prevRef = useRef(null);
+  const nextRef = useRef(null);
 
   const filteredStatusOptions = statusOptions.filter(
     (opt) => opt.value !== postDetails?.status,
@@ -70,14 +63,14 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
       try {
         setLoading(true);
 
-        const res = await authAxios().get(`/poll/${editId}`);
+        const res = await authAxios().get(`/post/${editId}`);
 
         if (res.data.success) {
           setPostDetails(res.data.data);
         }
       } catch (err) {
         toast.error(
-          err.response?.data?.message || "Failed to fetch poll details",
+          err.response?.data?.message || "Failed to fetch post details",
         );
       } finally {
         setLoading(false);
@@ -86,14 +79,6 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
 
     fetchPostDetails();
   }, [editId, open]);
-
-  const handleClose = () => {
-    setPostDetails(null);
-    setSelectedStatus(null);
-    setRemark("");
-    setRemarkError("");
-    onClose();
-  };
 
   const handleUpdateStatus = async () => {
     if (!selectedStatus) {
@@ -109,7 +94,7 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
     try {
       setLoading(true);
 
-      const res = await authAxios().put(`/poll/${editId}`, {
+      const res = await authAxios().put(`/post/${editId}`, {
         status: selectedStatus.value,
         remark: remark.trim(),
       });
@@ -117,7 +102,7 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
       if (res.data.success) {
         toast.success(res.data.message || "Status updated successfully");
 
-        onSuccess?.(); // Refresh the list
+      onSuccess?.(); // Refresh the list
         handleClose();
       }
     } catch (err) {
@@ -127,30 +112,52 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
     }
   };
 
-  // help_text arrives as a Quill delta JSON string, same shape as a post's `content`.
-  const getHelpTextHtml = () => {
-    if (!postDetails?.help_text) return "";
+  const handleClose = () => {
+    setPostDetails(null);
+    setSelectedStatus(null);
+    setRemark("");
+    setRemarkError("");
+    onClose();
+  };
+
+  const getHtmlContent = () => {
+    if (!postDetails?.content) return "";
 
     try {
-      const ops = JSON.parse(postDetails.help_text);
-      const converter = new QuillDeltaToHtmlConverter(ops, {});
+      const ops = JSON.parse(postDetails.content);
+
+      const convertedOps = ops.flatMap((op) => {
+        if (op.insert?.atomicLink) {
+          const link = JSON.parse(op.insert.atomicLink);
+
+          return [
+            {
+              insert: link.text,
+              attributes: {
+                link: link.url,
+              },
+            },
+          ];
+        }
+
+        return [op];
+      });
+
+      const converter = new QuillDeltaToHtmlConverter(convertedOps, {});
       return converter.convert();
     } catch (err) {
       console.error(err);
-      return postDetails.help_text;
+      return postDetails.content;
     }
   };
 
-  const helpTextHtml = getHelpTextHtml();
-  const options = postDetails?.options || [];
-  const totalVotes = postDetails?.total_votes || 0;
-  const hasImageOptions = options.some((opt) => opt.poll_option_image);
+  const html = getHtmlContent();
+  const media = postDetails?.media || [];
 
   const infoRows = [
     ["Created By", showValue(postDetails?.user?.name)],
     ["Username", showValue(postDetails?.user?.username)],
     ["Created at", formatWithTimeDate(postDetails?.created_at)],
-    ["Ending at", formatWithTimeDate(postDetails?.poll_ends_at)],
     ["Content ID", showValue(postDetails?.content_id)],
     ["Tribe Group", showValue(postDetails?.circle?.circleGroup?.name)],
     ["Tribe Name", showValue(postDetails?.circle?.name)],
@@ -185,125 +192,89 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
             >
               <Dialog.Panel className="w-full max-w-[1100px] rounded-xl bg-white shadow-xl overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2">
-                  {/* Left: question + options + engagement */}
+                  {/* Left: media + description + engagement */}
                   <div className="border-b md:border-b-0 md:border-r border-gray-100">
                     <Dialog.Title className="text-lg font-semibold text-gray-900 border-b p-5">
-                      Vibe Check Details
+                      Deep Dive Details
                     </Dialog.Title>
+
                     <div className="px-5 py-3">
-                      {postDetails?.question && (
-                        <h3 className="mb-2 lg:text-[24px] text-lg font-semibold text-gray-900">
-                          {showValue(postDetails?.question)}
-                        </h3>
-                      )}
-                      {helpTextHtml ? (
-                        <div className="article--content">
-                          <div
-                            className="ql-editor p-0"
-                            dangerouslySetInnerHTML={{ __html: helpTextHtml }}
-                          />
-                        </div>
-                      ) : null}
-
-                      <div className="mt-4">
-                        {options.length ? (
-                          hasImageOptions ? (
-                            // Image-grid style options
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                              {options.map((opt, index) => {
-                                const palette =
-                                  optionPalette[index % optionPalette.length];
-                                const votePercent =
-                                  totalVotes > 0
-                                    ? Math.round(
-                                        (opt.votes_count / totalVotes) * 100,
-                                      )
-                                    : 0;
-
-                                return (
-                                  <div key={opt.id} className="space-y-1.5">
-                                    <span
-                                      className={`inline-block max-w-full truncate px-2 py-1 rounded-md text-[11px] font-semibold ${palette.chip}`}
-                                    >
-                                      {opt.option_text} {votePercent}%
-                                    </span>
-
-                                    {opt.poll_option_image ? (
-                                      <img
-                                        src={opt.poll_option_image}
-                                        alt={opt.option_text}
-                                        className="w-full h-24 object-cover rounded-lg border"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-24 rounded-lg border flex items-center justify-center text-gray-400 text-xs">
-                                        No Image
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            // Text-only options with vote-share bars
-                            <div className="space-y-3">
-                              {options.map((opt, index) => {
-                                const palette =
-                                  optionPalette[index % optionPalette.length];
-                                const votePercent =
-                                  totalVotes > 0
-                                    ? Math.round(
-                                        (opt.votes_count / totalVotes) * 100,
-                                      )
-                                    : 0;
-
-                                return (
-                                  <div
-                                    key={opt.id}
-                                    className="relative rounded-lg overflow-hidden border border-gray-100"
-                                  >
-                                    <div
-                                      className={`absolute inset-y-0 left-0 ${palette.bar}`}
-                                      style={{ width: `${votePercent}%` }}
-                                    />
-
-                                    <div className="relative flex items-center justify-between px-3 py-2.5">
-                                      <span
-                                        className={`text-sm font-medium ${palette.text}`}
-                                      >
-                                        {opt.option_text}
-                                      </span>
-                                      <span
-                                        className={`text-sm font-semibold ${palette.text}`}
-                                      >
-                                        {votePercent}%
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )
-                        ) : (
-                          <div className="text-sm text-gray-500">
-                            No options available
-                          </div>
+                      <div className="max-h-[40vh] overflow-auto">
+                        {postDetails?.title && (
+                          <p className="mb-2 lg:text-[24px] text-lg font-semibold text-gray-900">
+                            {showValue(postDetails?.title)}
+                          </p>
                         )}
+                        {html ? (
+                            <div className="article--content">
+                              <div
+                                className="ql-editor p-0"
+                                dangerouslySetInnerHTML={{ __html: html }}
+                              />
+                            </div>
+                        ) : null}
+                      
+                        <div className="relative mt-4">
+                          {media.length > 0 && (
+                            <>
+                              <Swiper
+                                modules={[Navigation]}
+                                spaceBetween={12}
+                                slidesPerView={media.length > 1 ? 1.4 : 1}
+                                navigation={{
+                                  prevEl: prevRef.current,
+                                  nextEl: nextRef.current,
+                                }}
+                                onBeforeInit={(swiper) => {
+                                  // Attach custom nav buttons before Swiper initializes navigation
+                                  swiper.params.navigation.prevEl = prevRef.current;
+                                  swiper.params.navigation.nextEl = nextRef.current;
+                                }}
+                              >
+                                {media.map((item) => (
+                                  <SwiperSlide key={item.id}>
+                                    <img
+                                      src={item.media}
+                                      alt="Post media"
+                                      className="w-full h-56 object-cover"
+                                    />
+                                  </SwiperSlide>
+                                ))}
+                              </Swiper>
+
+                              {media.length > 1 && (
+                                <>
+                                  <button
+                                    ref={prevRef}
+                                    type="button"
+                                    aria-label="Previous media"
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow flex items-center justify-center text-black hover:bg-gray-50"
+                                  >
+                                    <FiChevronLeft size={18} />
+                                  </button>
+                                  <button
+                                    ref={nextRef}
+                                    type="button"
+                                    aria-label="Next media"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow flex items-center justify-center text-black hover:bg-gray-50"
+                                  >
+                                    <FiChevronRight size={18} />
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between text-black px-2">
-                        <div className="flex items-center gap-5">
-                          <span className="flex items-center gap-2 text-sm">
-                            <FiHeart size={20} />
-                            {showValue(postDetails?.likes_count)}
-                          </span>
-                          <span className="flex items-center gap-2 text-sm">
-                            <FiMessageSquare size={20} />
-                            {showValue(postDetails?.comments_count)}
-                          </span>
-                        </div>
-
-                        <span className="text-sm text-black">
-                          {totalVotes} votes
+                      <div className="mt-3 flex items-center gap-5 text-black px-2">
+                        <span className="flex items-center gap-2 text-sm">
+                          <FiHeart size={20} />
+                          {showValue(postDetails?.likes_count)}
+                        </span>
+                        <span className="flex items-center gap-2 text-sm">
+                          <FiMessageSquare size={20} />
+                          {showValue(postDetails?.comments_count)}
                         </span>
                       </div>
                     </div>
@@ -328,7 +299,7 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
 
                       <div className="flex items-center justify-between gap-4 text-sm">
                         <span className="font-semibold text-black">
-                          Status
+                          Status<span className="text-red-500">*</span>
                         </span>
                         <span
                           className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
@@ -344,12 +315,14 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
                     {/* <div className="mt-5 bg-gray-50 rounded-lg p-4 space-y-4">
                       <div>
                         <label className="block mb-2 text-sm font-medium">
-                          Update Status<span className="text-red-500">*</span>
+                          Update Status
                         </label>
                         <Select
                           options={filteredStatusOptions}
                           value={selectedStatus}
-                          onChange={setSelectedStatus}
+                          onChange={(val) => {
+                            setSelectedStatus(val);
+                          }}
                           placeholder="Select status"
                           styles={customStyles}
                         />
@@ -409,4 +382,4 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
   );
 };
 
-export default ViewPollDetails;
+export default ViewArticleDetails;

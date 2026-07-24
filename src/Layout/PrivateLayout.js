@@ -32,6 +32,9 @@ export default function PrivateLayout({ children }) {
     { path: "/deep-dive", title: "Deep Dive" },
     { path: "/vibe-check", title: "Vibe Check" },
     { path: "/moderation-queue", title: "Moderation Queue" },
+    { path: "/device-brands", title: "Device Brands" },
+    { path: "/device-models", title: "Device Models" },
+    { path: "/top-pics", title: "Top Pics" },
   ];
 
   const pageTitle =

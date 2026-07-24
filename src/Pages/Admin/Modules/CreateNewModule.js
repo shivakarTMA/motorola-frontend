@@ -117,13 +117,14 @@ const CreateNewModule = ({ open, onClose, onSuccess }) => {
                       type="text"
                       name="name"
                       value={formik.values.name}
-                      onKeyDown={blockOnlyTextKeys}
-                      onChange={(e) =>
-                        formik.setFieldValue(
-                          "name",
-                          sanitizeOnlyText(e.target.value),
-                        )
-                      }
+                      // onKeyDown={blockOnlyTextKeys}
+                      // onChange={(e) =>
+                      //   formik.setFieldValue(
+                      //     "name",
+                      //     sanitizeOnlyText(e.target.value),
+                      //   )
+                      // }
+                      onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Enter Module Name"

@@ -109,6 +109,20 @@ export function formatViewDate(dateString) {
   return `${day}/${month}/${year}`;
 }
 
+export function formatViewTime(timeString) {
+  if (!timeString) return "";
+
+  const date = new Date(`1970-01-01T${timeString}`);
+
+  const hours = String(date.getHours() % 12 || 12).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const period = date.getHours() >= 12 ? "PM" : "AM";
+
+  return `${hours}:${minutes} ${period}`;
+}
+
+
+
 export function formatCapitalText(status) {
   if (!status) return "";
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();

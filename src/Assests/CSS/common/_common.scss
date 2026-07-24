@@ -315,69 +315,242 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+/* ==========================
+   Article Typography
+========================== */
+
+.article--content {
+  color: #333;
+  font-size: 16px;
+  line-height: 1.8;
+  word-wrap: break-word;
+}
+
+/* ==========================
+   Headings
+========================== */
 
 .article--content h1,
 .article--content h2,
 .article--content h3,
 .article--content h4,
 .article--content h5,
-.article--content h6{
-  font-weight: bold;
+.article--content h6 {
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 32px 0 16px;
+  color: #111;
 }
 
 .article--content h1 {
-  font-size: 2rem; /* was 2.25rem */
-  line-height: 1.2;
+  font-size: 2rem;
 }
 
 .article--content h2 {
-  font-size: 1.625rem; /* was 1.875rem */
-  line-height: 1.25;
+  font-size: 1.625rem;
 }
 
 .article--content h3 {
-  font-size: 1.375rem; /* was 1.5rem */
-  line-height: 1.3;
+  font-size: 1.375rem;
 }
 
 .article--content h4 {
-  font-size: 1.125rem; /* was 1.25rem */
-  line-height: 1.35;
+  font-size: 1.125rem;
 }
 
 .article--content h5 {
-  font-size: 1rem; /* was 1.125rem */
-  line-height: 1.4;
+  font-size: 1rem;
 }
 
 .article--content h6 {
-  font-size: 0.9375rem; /* was 1rem */
-  line-height: 1.4;
+  font-size: 0.9375rem;
 }
 
+/* ==========================
+   Paragraph
+========================== */
+
+.article--content p {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+/* ==========================
+   Lists
+========================== */
+
+.article--content ul,
+.article--content ol {
+  margin: 0 0 20px 24px;
+  padding: 0;
+}
+
+.article--content li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.article--content ul li {
+  list-style: disc;
+}
+
+.article--content ol li {
+  list-style: decimal;
+}
+
+.article--content li > ul,
+.article--content li > ol {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* ==========================
+   Links
+========================== */
+
+.article--content a {
+  color: #0d6efd;
+  text-decoration: underline;
+  transition: .3s;
+}
+
+.article--content a:hover {
+  color: #084298;
+}
+
+
+/* ==========================
+   Blockquote
+========================== */
+
+.article--content blockquote {
+  margin: 24px 0;
+  padding: 16px 20px;
+  border-left: 4px solid #0d6efd;
+  background: #f8f9fa;
+  font-style: italic;
+}
+
+/* ==========================
+   Code
+========================== */
+
+.article--content code {
+  background: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: .9em;
+}
+
+.article--content pre {
+  background: #222;
+  color: #fff;
+  padding: 16px;
+  overflow-x: auto;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.article--content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* ==========================
+   Tables
+========================== */
+
+.article--content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+}
+
+.article--content th,
+.article--content td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.article--content th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+/* ==========================
+   Horizontal Rule
+========================== */
+
+.article--content hr {
+  border: 0;
+  border-top: 1px solid #ddd;
+  margin: 32px 0;
+}
+
+/* ==========================
+   Strong & Emphasis
+========================== */
+
+.article--content strong {
+  font-weight: 700;
+}
+
+.article--content em {
+  font-style: italic;
+}
+
+.article--content mark {
+  background: #fff3cd;
+  padding: 2px 4px;
+}
+
+/* ==========================
+   Responsive
+========================== */
+
 @media (max-width: 768px) {
+
+  .article--content {
+    font-size: 14px;
+  }
+
   .article--content h1 {
-    font-size: 1.5rem; /* was 1.75rem */
+    font-size: 1.5rem;
   }
 
   .article--content h2 {
-    font-size: 1.25rem; /* was 1.5rem */
+    font-size: 1.25rem;
   }
 
   .article--content h3 {
-    font-size: 1.125rem; /* was 1.25rem */
+    font-size: 1.125rem;
   }
 
   .article--content h4 {
-    font-size: 1rem; /* was 1.125rem */
+    font-size: 1rem;
   }
 
   .article--content h5 {
-    font-size: 0.9375rem; /* was 1rem */
+    font-size: 0.9375rem;
   }
 
   .article--content h6 {
-    font-size: 0.875rem; /* unchanged (already small) */
+    font-size: 0.875rem;
+  }
+
+  .article--content p,
+  .article--content li {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .article--content table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
 
@@ -394,4 +567,8 @@ input.number--appearance-none[type="number"]::-webkit-outer-spin-button {
 .rdt_headRow {
     background: transparent !important;
     border-bottom: none !important;
+}
+
+.box--shadow {
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 }

@@ -48,11 +48,17 @@ const AddNewTribesGroup = ({ open, onClose, onSuccess, editId }) => {
           return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
         }),
       icon: Yup.mixed()
-        .nullable()
+        .required("Icon is required")
         .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
           if (!value || typeof value === "string") return true;
           return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
         }),
+      // icon: Yup.mixed()
+      //   .nullable()
+      //   .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+      //     if (!value || typeof value === "string") return true;
+      //     return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+      //   }),
       status: Yup.object().nullable().required("Status is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
@@ -269,7 +275,7 @@ const AddNewTribesGroup = ({ open, onClose, onSuccess, editId }) => {
                   {/* Icon Image */}
                   <div>
                     <label className="block mb-2 text-sm font-medium">
-                      Icon Image
+                      Icon Image<span className="text-red-600">*</span>
                     </label>
 
                     {iconPreview && (
@@ -330,11 +336,12 @@ const AddNewTribesGroup = ({ open, onClose, onSuccess, editId }) => {
                       type="text"
                       name="name"
                       value={formik.values.name}
-                      onKeyDown={blockOnlyTextKeys}
-                      onChange={(e) => {
-                        const cleaned = sanitizeOnlyText(e.target.value);
-                        formik.setFieldValue("name", cleaned);
-                      }}
+                      // onKeyDown={blockOnlyTextKeys}
+                      // onChange={(e) => {
+                      //   const cleaned = sanitizeOnlyText(e.target.value);
+                      //   formik.setFieldValue("name", cleaned);
+                      // }}
+                      onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Enter name"

@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import Select from "react-select";
 import { customStyles } from "../../../Helper/helper";
 import CreateNewModule from "./CreateNewModule";
+import Pagination from "../../../Components/Common/Pagination";
 
 const modules = [
   {
@@ -75,11 +76,13 @@ const modules = [
   },
 ];
 
-
 const ModulesList = () => {
   const [createModule, setCreateModule] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const columns = [
     {
@@ -176,13 +179,103 @@ const ModulesList = () => {
         </div>
 
         <div className="mt-3">
-          <CustomDataTable
-            columns={columns}
-            data={modules}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            rowsPerPage={rowsPerPage}
-          />
+          <div className="box--shadow bg-white rounded-[15px] p-4">
+            <div className="relative overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <tr>
+                    <th className="px-2 py-4 min-w-[150px]">Name</th>
+                    <th className="px-2 py-4 min-w-[80px]">Slug</th>
+                    <th className="px-2 py-4 min-w-[120px]">Position</th>
+                    <th className="px-2 py-4 min-w-[120px]">Menu</th>
+                    <th className="px-2 py-4 min-w-[120px]">Status</th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {modules?.length > 0 ? (
+                    modules.map((row, index) => (
+                      <tr
+                        key={row.id || index}
+                        className="border-b hover:bg-gray-50 text-xs"
+                      >
+                        <td className="px-2 py-4">{row.name || "--"}</td>
+
+                        <td className="px-2 py-4">{row.slug || "--"}</td>
+                        <td className="px-2 py-4">{row.position || "--"}</td>
+                        <td className="px-2 py-4">{row.Menu?.name || "--"}</td>
+                        <td className="px-2 py-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              row.status === "ACTIVE"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {row.status}
+                          </span>
+                        </td>
+
+                        <td className="px-2 py-4">
+                          <div className="flex items-center justify-center gap-[1px]">
+                            <Tooltip
+                              id={`tooltip-edit-${row.id}`}
+                              content="Edit"
+                              place="left"
+                            >
+                              <button
+                                onClick={() => handleEdit(row)}
+                                className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
+                              >
+                                <MdModeEdit size={18} />
+                              </button>
+                            </Tooltip>
+
+                            <Tooltip
+                              id={`tooltip-delete-${row.id}`}
+                              content="Delete"
+                              place="left"
+                            >
+                              <button
+                                onClick={() => handleDelete(row.id)}
+                                className="text-red-500 bg-red-100 w-[30px] h-[30px] flex items-center justify-center rounded-r-md"
+                              >
+                                <FiTrash2 size={18} />
+                              </button>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={12}
+                        className="px-4 py-6 text-center text-gray-500"
+                      >
+                        No records found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage}
+              totalCount={totalCount}
+              currentDataLength={modules.length}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                // handleFetchRoles(newPage);
+              }}
+            />
+          </div>
         </div>
       </div>
       <CreateNewModule

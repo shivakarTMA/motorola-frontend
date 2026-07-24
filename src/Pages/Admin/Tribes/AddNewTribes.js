@@ -81,11 +81,17 @@ const AddNewCircle = ({
           return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
         }),
       icon_image: Yup.mixed()
-        .nullable()
+        .required("Icon is required")
         .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
           if (!value || typeof value === "string") return true;
           return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
         }),
+      // icon_image: Yup.mixed()
+      //   .nullable()
+      //   .test("fileType", "Only JPG, PNG, or WEBP allowed", (value) => {
+      //     if (!value || typeof value === "string") return true;
+      //     return ["image/jpeg", "image/png", "image/webp"].includes(value.type);
+      //   }),
       status: Yup.string().required("Status is required"),
     }),
     onSubmit: async (values, { resetForm }) => {
@@ -421,7 +427,7 @@ const AddNewCircle = ({
                   {/* Icon Image */}
                   <div>
                     <label className="block mb-2 text-sm font-medium">
-                      Icon Image
+                      Icon Image<span className="text-red-600">*</span>
                     </label>
 
                     {iconPreview && (

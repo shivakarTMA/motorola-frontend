@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { formatText, formatWithTimeDate } from "../../../Helper/helper";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
+import Pagination from "../../../Components/Common/Pagination";
 
 const AppBannerList = (props) => {
   const { setLoading } = props;
@@ -19,9 +20,10 @@ const AppBannerList = (props) => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
-  const [pagination, setPagination] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const columns = [
     {
@@ -113,19 +115,22 @@ const AppBannerList = (props) => {
     },
   ];
 
-  const fetchBanners = async (page = 1) => {
+  const fetchBanners = async (currentPage = page) => {
     try {
       setLoading(true);
       const response = await authAxios().get("/app-banner", {
         params: {
-          page,
+          page: currentPage,
           limit: rowsPerPage,
         },
       });
       const resData = response.data;
       if (resData.success) {
         setBanners(resData.data.items);
-        setPagination(resData.data.pagination);
+        const paginationData = resData.data.pagination;
+        setPage(paginationData.page);
+        setTotalPages(paginationData.totalPages);
+        setTotalCount(paginationData.total);
       } else {
         toast.error(resData.message);
       }
@@ -137,8 +142,8 @@ const AppBannerList = (props) => {
   };
 
   useEffect(() => {
-    fetchBanners(currentPage);
-  }, [currentPage]);
+    fetchBanners();
+  }, []);
 
   const handleDelete = async () => {
     try {
@@ -151,7 +156,7 @@ const AppBannerList = (props) => {
         setDeleteId(null);
 
         // Refresh list
-        fetchBanners(currentPage);
+        fetchBanners();
       } else {
         alert(response.data.message);
       }
@@ -174,14 +179,142 @@ const AppBannerList = (props) => {
         </div>
 
         <div className="mt-3">
-          <CustomDataTable
-            columns={columns}
-            data={banners}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            rowsPerPage={rowsPerPage}
-            paginationTotalRows={pagination?.total}
-          />
+          <div className="box--shadow bg-white rounded-[15px] p-4">
+            <div className="relative overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <tr>
+                    <th className="px-2 py-4 min-w-[80px] text-center">
+                      Banner
+                    </th>
+                    <th className="px-2 py-4 min-w-[150px]">Title</th>
+                    <th className="px-2 py-4 min-w-[80px]">Link Type</th>
+                    <th className="px-2 py-4 min-w-[120px] text-center">Position</th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      Start Date
+                    </th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      End Date
+                    </th>
+                    <th className="px-2 py-4 min-w-[120px] text-center">
+                      Status
+                    </th>
+                    <th className="px-2 py-4 min-w-[100px] text-center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {banners?.length > 0 ? (
+                    banners.map((row, index) => (
+                      <tr
+                        key={row.id || index}
+                        className="border-b hover:bg-gray-50 text-xs"
+                      >
+                        <td className="px-2 py-4 text-center">
+                          <div className="p-1">
+                            <img
+                              src={row.image}
+                              alt={row.title}
+                              className="w-20 h-12 rounded object-cover"
+                            />
+                          </div>
+                        </td>
+
+                        <td className="px-2 py-4">{row.title || "-"}</td>
+
+                        <td className="px-2 py-4">
+                          {formatText(row.link_type) || "-"}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          {row.position || "--"}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          {formatWithTimeDate(row.starts_at)}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          {formatWithTimeDate(row.ends_at)}
+                        </td>
+
+                        <td className="px-2 py-4 text-center">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${
+                              row.status === "ACTIVE"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {row.status}
+                          </span>
+                        </td>
+
+                        <td className="px-2 py-4">
+                          <div className="flex items-center justify-center gap-[1px]">
+                            <Tooltip
+                              id={`tooltip-edit-${row.id}`}
+                              content="Edit"
+                              place="left"
+                            >
+                              <button
+                                onClick={() => {
+                                  setEditBannerId(row.id);
+                                  setAddNewBanner(true);
+                                }}
+                                className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
+                              >
+                                <MdModeEdit size={18} />
+                              </button>
+                            </Tooltip>
+
+                            <Tooltip
+                              id={`tooltip-delete-${row.id}`}
+                              content="Delete"
+                              place="left"
+                            >
+                              <button
+                                onClick={() => {
+                                  setDeleteId(row.id);
+                                  setDeleteModal(true);
+                                }}
+                                className="text-red-500 bg-red-100 w-[30px] h-[30px] flex items-center justify-center rounded-r-md"
+                              >
+                                <FiTrash2 size={18} />
+                              </button>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={12}
+                        className="px-4 py-6 text-center text-gray-500"
+                      >
+                        No records found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage}
+              totalCount={totalCount}
+              currentDataLength={banners.length}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                fetchBanners(newPage);
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -192,7 +325,7 @@ const AppBannerList = (props) => {
           setEditBannerId(null);
         }}
         editId={editBannerId}
-        onSuccess={() => fetchBanners(currentPage)}
+        onSuccess={() => fetchBanners()}
       />
 
       <Dialog

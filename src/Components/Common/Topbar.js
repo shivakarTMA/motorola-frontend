@@ -144,7 +144,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
                         <p className="font-semibold text-sm">{user.name}</p>
 
                         <p className="text-xs text-gray-500">
-                          @{user.username} - {user.email}
+                          @{user.username}
                         </p>
                       </div>
                     ))}

@@ -177,13 +177,14 @@ const CreateNewKeyword = ({ open, onClose, onSuccess, editId }) => {
                         type="text"
                         name="keyword"
                         value={formik.values.keyword}
-                        onKeyDown={blockOnlyTextKeys}
-                        onChange={(e) =>
-                          formik.setFieldValue(
-                            "keyword",
-                            sanitizeOnlyText(e.target.value),
-                          )
-                        }
+                        // onKeyDown={blockOnlyTextKeys}
+                        // onChange={(e) =>
+                        //   formik.setFieldValue(
+                        //     "keyword",
+                        //     sanitizeOnlyText(e.target.value),
+                        //   )
+                        // }
+                        onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                         placeholder="Enter Keyword"
