@@ -37,78 +37,13 @@ const getStatusStyle = (status) =>
   statusStyles[status?.toLowerCase()] ||
   "bg-gray-100 text-gray-600 border border-gray-200";
 
-// const dummyModerationList = [
-//   {
-//     id: 1,
-//     post_title: "ABC tiuo mljnkjsce",
-//     post_description: "I got a new app",
-//     report_id: "RPT-1001",
-//     reported_date: "2026-07-15",
-//     reported_time: "2026-07-15T09:24:00",
-//     item_type: "Post",
-//     reported_user: "john.doe",
-//     tribe: "Tech Talk",
-//     status: "PENDING",
-//     moderator_name: "Ankit Gupta",
-//   },
-//   {
-//     id: 2,
-//     report_id: "RPT-1002",
-//     reported_date: "2026-07-14",
-//     reported_time: "2026-07-14T14:10:00",
-//     item_type: "Comment",
-//     reported_user: "sarah_k",
-//     tribe: "Foodies",
-//     status: "resolved",
-//   },
-//   {
-//     id: 3,
-//     report_id: "RPT-1003",
-//     reported_date: "2026-07-13",
-//     reported_time: "2026-07-13T18:45:00",
-//     item_type: "Profile",
-//     reported_user: "mike_lee",
-//     tribe: "Travel Buddies",
-//     status: "reviewing",
-//   },
-//   {
-//     id: 4,
-//     report_id: "RPT-1004",
-//     reported_date: "2026-07-12",
-//     reported_time: "2026-07-12T11:05:00",
-//     item_type: "Post",
-//     reported_user: "anna_r",
-//     tribe: "Fitness Freaks",
-//     status: "rejected",
-//   },
-//   {
-//     id: 5,
-//     report_id: "RPT-1005",
-//     reported_date: "2026-07-11",
-//     reported_time: "2026-07-11T20:30:00",
-//     item_type: "Message",
-//     reported_user: "chris99",
-//     tribe: "Book Club",
-//     status: "PENDING",
-//   },
-//   {
-//     id: 6,
-//     report_id: "RPT-1006",
-//     reported_date: "2026-07-10",
-//     reported_time: "2026-07-10T08:15:00",
-//     item_type: "Comment",
-//     reported_user: "priya_s",
-//     tribe: "Gamers United",
-//     status: "resolved",
-//   },
-// ];
-
 const ModerationHistory = (props) => {
   const { setLoading } = props;
   const { id } = useParams();
   const [moderationList, setModerationList] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [moderationStats, setModerationStats] = useState({})
 
   const [editPostId, setEditPostId] = useState(null);
   const [modalType, setModalType] = useState(null);
@@ -134,7 +69,9 @@ const ModerationHistory = (props) => {
 
       if (resData.success) {
         const items = resData.data.items;
+        const stats = resData.data.stats;
         setModerationList(items);
+        setModerationStats(stats);
         const paginationData = resData.data.pagination;
         setPage(paginationData.page);
         setTotalPages(paginationData.totalPages);
@@ -149,9 +86,14 @@ const ModerationHistory = (props) => {
     }
   };
 
+  console.log(moderationStats,'moderationStats')
+
   useEffect(() => {
-    fetchModerationList();
-  }, []);
+    if (!id) return;
+
+    setPage(1);
+    fetchModerationList(1);
+  }, [id]);
 
   const openReport = (row) => {
     setSelectedReport(row);
@@ -193,7 +135,7 @@ const ModerationHistory = (props) => {
             <span>Total Approved Posts</span>
           </div>
           <div className="pr-2 flex">
-            <span className="text-[13px] font-semibold">0</span>
+            <span className="text-[13px] font-semibold">{moderationStats?.total_approved_posts}</span>
           </div>
         </div>
         <div className="w-fit flex items-center gap-2 lg:pl-2">
@@ -202,7 +144,7 @@ const ModerationHistory = (props) => {
             <span>Total Rejected Posts</span>
           </div>
           <div className="pr-2 flex">
-            <span className="text-[13px] font-semibold">0</span>
+            <span className="text-[13px] font-semibold">{moderationStats?.total_rejected_posts}</span>
           </div>
         </div>
         <div className="w-fit flex items-center gap-2 lg:pl-2">
@@ -211,7 +153,7 @@ const ModerationHistory = (props) => {
             <span>Total Warnings</span>
           </div>
           <div className="pr-2 flex">
-            <span className="text-[13px] font-semibold">0</span>
+            <span className="text-[13px] font-semibold">{moderationStats?.total_warnings}</span>
           </div>
         </div>
       </div>
@@ -281,7 +223,7 @@ const ModerationHistory = (props) => {
                     <span className="text-gray-500">Moderator Name:</span>
                   </span>
                   <span className="font-medium">
-                    {row.moderator_name ? row.moderator_name : "--"}
+                    {row.reviewer?.name ? row.reviewer?.name : "--"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 justify-between">
@@ -290,7 +232,7 @@ const ModerationHistory = (props) => {
                     <span className="text-gray-500">Updated Time:</span>
                   </span>
                   <span className="font-medium">
-                    {row.updated_time ? row.updated_time : "--"}
+                    {row.reviewed_time ? row.reviewed_time : "--"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 justify-between">
@@ -308,7 +250,7 @@ const ModerationHistory = (props) => {
                     <span className="text-gray-500">Action Taken:</span>
                   </span>
                   <span className="font-medium">
-                    {row.action_taken ? row.action_taken : "--"}
+                    {row.action ? row.action : "--"}
                   </span>
                 </div>
               </div>

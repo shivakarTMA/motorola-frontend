@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 import Pagination from "../../../Components/Common/Pagination";
 import {
+  customStyles,
   formatText,
   formatViewDate,
   formatViewTime,
@@ -19,43 +20,41 @@ import ModerationDetailModal from "./ModerationDetailModal";
 import PostModerationDetailModal from "./PostModerationDetailModal";
 import ArticleModerationDetailModal from "./ArticleModerationDetailModal";
 import PollModerationDetailModal from "./PollModerationDetailModal";
+import Select from "react-select";
+import { useSearchParams } from "react-router-dom";
+import { FaCircle } from "react-icons/fa6";
 
-const ACTION_LABELS = {
-  WARNING: "Warned",
-  HIDE_CONTENT: "Removed",
-  SUSPEND_USER: "Suspended",
-  BAN_USER: "Banned",
-  DEACTIVATE_USER: "Deactivated",
-};
+const statusType = [
+  { label: "Resolved", value: "ACTIONED" },
+  { label: "Pending", value: "PENDING" },
+];
 
-const SOURCE_LABELS = {
-  KEYWORD: "Keyword auto-flag",
-  USER_REPORT: "User report",
-};
-
-const STATUS_LABELS = {
-  PENDING: "Pending",
-  ACTIONED: "Resolved",
-  DISMISSED: "Dismissed",
-};
-
-const CONTENT_TYPE_LABELS = {
-  POST: "Post",
-  POLL: "Poll",
-  COMMENT: "Comment",
-};
+const itemType = [
+  { label: "Hot Take", value: "POST" },
+  { label: "Deep Dive", value: "ARTICLE" },
+  { label: "Vibe Check", value: "POLL" },
+];
 
 const ModerationQueue = (props) => {
   const { setLoading } = props;
-
+  const [searchParams, setSearchParams] = useSearchParams();
   const [moderationList, setModerationList] = useState([]);
+  const [moderationStats, setModerationStats] = useState({});
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [editPostId, setEditPostId] = useState(null);
 
+  // const [statusFilter, setStatusFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(
+    () => searchParams.get("status") || null,
+  );
+  const [itemTypeFilter, setItemTypeFilter] = useState(null);
+  const [filterTribe, setFilterTribe] = useState(null);
+
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
+  const [tribeOptions, setTribeOptions] = useState([]);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -71,6 +70,18 @@ const ModerationQueue = (props) => {
         limit: rowsPerPage,
       };
 
+      if (statusFilter) {
+        params.status = statusFilter;
+      }
+
+      if (itemTypeFilter) {
+        params.item_type = itemTypeFilter;
+      }
+
+      if (filterTribe?.value) {
+        params.circle_id = filterTribe.value;
+      }
+
       if (startDate && endDate) {
         params.date_from = format(startDate, "yyyy-MM-dd");
         params.date_to = format(endDate, "yyyy-MM-dd");
@@ -82,7 +93,9 @@ const ModerationQueue = (props) => {
 
       if (resData.success) {
         const items = resData.data.items;
+        const stats = resData.data.stats;
         setModerationList(items);
+        setModerationStats(stats);
         const paginationData = resData.data.pagination;
         setPage(paginationData.page);
         setTotalPages(paginationData.totalPages);
@@ -104,7 +117,45 @@ const ModerationQueue = (props) => {
     }
 
     fetchModerationList();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, filterTribe, itemTypeFilter, statusFilter]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+
+    if (statusFilter) {
+      params.set("status", statusFilter);
+    } else {
+      params.delete("status");
+    }
+
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  const fetchTribeList = async () => {
+    try {
+      const response = await authAxios().get("/tribe");
+
+      const resData = response?.data;
+
+      if (resData?.success) {
+        const options = (resData.data.items || []).map((tribe) => ({
+          value: tribe.id,
+          label: tribe.name,
+        }));
+
+        setTribeOptions(options);
+      } else {
+        toast.error(resData?.message);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to load tribes");
+    }
+  };
+
+  useEffect(() => {
+    fetchTribeList();
+  }, []);
 
   const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
     setStartDate(newStart);
@@ -114,9 +165,7 @@ const ModerationQueue = (props) => {
 
   const openReport = (row) => {
     setSelectedReport(row);
-    setModalType(
-      row?.post?.type ? row?.post?.type : row?.content_type
-    );
+    setModalType(row?.post?.type ? row?.post?.type : row?.content_type);
     setEditPostId(row.id);
   };
 
@@ -143,18 +192,134 @@ const ModerationQueue = (props) => {
     }
   };
 
+  const handleTribeChange = (option) => {
+    setFilterTribe(option);
+    setPage(1);
+  };
+
+  const handleStatusChange = (option) => {
+    setPage(1);
+    setStatusFilter(option?.value || null);
+  };
+
+  const handleItemTypeChange = (option) => {
+    setPage(1);
+    setItemTypeFilter(option?.value || null);
+  };
+
   return (
     <>
       <div className="space-y-6">
         <div className="flex justify-between gap-4 relative">
-          <div className="w-full max-w-[180px]">
-            <div className="custom--date">
-              <DateRangePicker
-                onChange={handleDateRangeChange}
-                defaultPreset="Today"
-                panelOffsetTop={100}
-                panelOffsetLeft={0}
+          <div className="lg:flex lg:flex-row grid grid-cols-2 gap-2 flex-1">
+            <div className="lg:min-w-[200px] lg:w-fit w-full col-span-2">
+              <div className="custom--date">
+                <DateRangePicker
+                  onChange={handleDateRangeChange}
+                  defaultPreset="Today"
+                  panelOffsetTop={100}
+                  panelOffsetLeft={0}
+                />
+              </div>
+            </div>
+            <div className="lg:min-w-[250px] lg:w-fit w-full">
+              <Select
+                value={filterTribe}
+                options={tribeOptions}
+                onChange={handleTribeChange}
+                styles={customStyles}
+                placeholder="Filter by Tribe"
+                isClearable
               />
+            </div>
+            <div className="lg:min-w-[180px] lg:w-fit w-full">
+              <Select
+                placeholder="Filter by Item Type"
+                value={itemType.find((o) => o.value === itemTypeFilter) || null}
+                options={itemType}
+                onChange={handleItemTypeChange}
+                isClearable
+                styles={customStyles}
+              />
+            </div>
+            <div className="lg:min-w-[180px] lg:w-fit w-full">
+              <Select
+                placeholder="Filter by status"
+                value={statusType.find((o) => o.value === statusFilter) || null}
+                options={statusType}
+                onChange={handleStatusChange}
+                isClearable
+                styles={customStyles}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex lg:flex-row flex-col lg:items-center py-3">
+          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#F59E0B]" />
+              <span>Total Flagged Posts</span>
+            </div>
+            <div className="pr-2 flex">
+              <span className="text-[13px] font-semibold">
+                {moderationStats?.total_flaggged_posts}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#1F9254]" />
+              <span>Total Approved Posts</span>
+            </div>
+            <div className="pr-2 flex">
+              <span className="text-[13px] font-semibold">
+                {moderationStats?.total_approved_posts}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#ff9900]" />
+              <span>Total Rejected Posts</span>
+            </div>
+            <div className="pr-2 flex">
+              <span className="text-[13px] font-semibold">
+                {moderationStats?.total_rejected_posts}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#ff9900]" />
+              <span>Total Warnings</span>
+            </div>
+            <div className="pr-2 flex">
+              <span className="text-[13px] font-semibold">
+                {moderationStats?.total_warnings}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#EF4444]" />
+              <span>Total Suspended users</span>
+            </div>
+            <div className="pr-2 flex">
+              <span className="text-[13px] font-semibold">
+                {moderationStats?.total_suspended_users}
+              </span>
+            </div>
+          </div>
+          <div className="w-fit flex items-center gap-2 lg:pl-2">
+            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+              <FaCircle className="text-[10px] text-[#B91C1C]" />
+              <span>Total Banned Users</span>
+            </div>
+            <div className="pr-2 flex">
+              <span className="text-[13px] font-semibold">
+                {moderationStats?.total_banned_users}
+              </span>
             </div>
           </div>
         </div>
@@ -241,7 +406,11 @@ const ModerationQueue = (props) => {
                               }[row.status] || "bg-gray-100 text-gray-600"
                             }`}
                           >
-                            {formatText(row?.status === "ACTIONED" ? "Resolved" : row?.status)}
+                            {formatText(
+                              row?.status === "ACTIONED"
+                                ? "Resolved"
+                                : row?.status,
+                            )}
                           </span>
                         </td>
 

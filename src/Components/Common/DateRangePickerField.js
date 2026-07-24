@@ -217,6 +217,7 @@ function Month({
 // Payload: { startDate: Date|null, endDate: Date|null, label: string|null }
 export default function DateRangePicker({
   onChange,
+  value,
   defaultPreset = "Last 7 days",
   align = "left", // "left" | "right" — which side of the trigger the panel hangs from
   panelOffsetTop = 10, // gap between trigger and panel, in px
@@ -231,6 +232,16 @@ export default function DateRangePicker({
       presets.find((p) => p.label === defaultPreset)?.range || presets[2].range,
     [presets, defaultPreset],
   );
+
+   // NEW: if `value` is supplied on first render, seed committed/draft state from
+  // it instead of the default preset.
+  const hasIncomingValue = Boolean(value?.startDate && value?.endDate);
+  const initialRange = hasIncomingValue
+    ? [value.startDate, value.endDate]
+    : defaultRange;
+  const initialLabel = hasIncomingValue
+    ? value.label || "Custom range"
+    : defaultPreset;
 
   // Draft state: what the user is actively selecting inside the open panel.
   const [range, setRange] = useState(defaultRange);
@@ -248,6 +259,31 @@ export default function DateRangePicker({
 
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
+
+  // NEW: re-sync if the parent updates `value` after mount (e.g. same page,
+  // different `?date_from=&date_to=` navigation). Only reacts to actual
+  // timestamp changes so it won't loop against our own onChange calls.
+  const incomingStartTime = value?.startDate ? value.startDate.getTime() : null;
+  const incomingEndTime = value?.endDate ? value.endDate.getTime() : null;
+
+  useEffect(() => {
+    if (incomingStartTime && incomingEndTime) {
+      const s = new Date(incomingStartTime);
+      const e = new Date(incomingEndTime);
+      setCommittedRange([s, e]);
+      setCommittedLabel(value.label || "Custom range");
+      setRange([s, e]);
+      setActiveLabel(value.label || "Custom range");
+      setLeftMonth(new Date(s.getFullYear(), s.getMonth(), 1));
+    } else if (value && value.startDate === null && value.endDate === null) {
+      // Parent explicitly cleared it
+      setCommittedRange([null, null]);
+      setCommittedLabel(null);
+      setRange(defaultRange);
+      setActiveLabel(defaultPreset);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingStartTime, incomingEndTime]);
 
   useEffect(() => {
     function onDocClick(e) {

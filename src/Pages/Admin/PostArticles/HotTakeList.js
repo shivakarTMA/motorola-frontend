@@ -273,7 +273,7 @@ const HotTakeList = (props) => {
       <div className="space-y-6">
         <div className="flex justify-between gap-4 relative">
           <div className="flex lg:flex-row flex-col gap-2 flex-1">
-            <div className="lg:min-w-[200px] w-fit">
+            <div className="lg:min-w-[200px] lg:w-fit w-full">
               <DateRangePicker
                 onChange={handleDateRangeChange}
                 defaultPreset="Today"
@@ -282,7 +282,7 @@ const HotTakeList = (props) => {
               />
             </div>
 
-            <div className="min-w-[180px] w-fit">
+            <div className="min-w-[180px] lg:w-fit w-full">
               <Select
                 placeholder="Filter by status"
                 value={statusType.find((o) => o.value === statusFilter) || null}
@@ -292,7 +292,7 @@ const HotTakeList = (props) => {
                 styles={customStyles}
               />
             </div>
-            <div className="min-w-[180px] w-fit">
+            <div className="min-w-[180px] lg:w-fit w-full">
               <Select
                 value={filterUserNameGroup}
                 options={userOptions}
@@ -302,7 +302,7 @@ const HotTakeList = (props) => {
                 isClearable
               />
             </div>
-            <div className="min-w-[180px] w-fit">
+            <div className="min-w-[180px] lg:w-fit w-full">
               <Select
                 value={filterTribeGroup}
                 options={tribeGroupOptions}
@@ -313,7 +313,7 @@ const HotTakeList = (props) => {
               />
             </div>
 
-            <div className="min-w-[170px] w-fit">
+            <div className="min-w-[170px] lg:w-fit w-full">
               <Select
                 value={filterTribe}
                 options={tribeOptions}

@@ -350,8 +350,12 @@ const VibeCheckList = (props) => {
                 />
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="flex-1 flex lg:justify-end">
+        <div className="">
+          <div className="box--shadow bg-white rounded-[15px] p-4">
+            <div className="mt-0 mb-5">
               {/* Search */}
               <div className="lg:max-w-[300px] w-full ">
                 <input
@@ -363,11 +367,6 @@ const VibeCheckList = (props) => {
                 />
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="mt-3">
-          <div className="box--shadow bg-white rounded-[15px] p-4">
             <div className="relative overflow-x-auto">
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">

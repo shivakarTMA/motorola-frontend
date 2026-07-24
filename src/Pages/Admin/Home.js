@@ -12,7 +12,7 @@ import {
   formatViewDate,
   formatWithTimeDate,
 } from "../../Helper/helper";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LuCalendar, LuUserPlus } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { authAxios } from "../../Config/config";
@@ -46,11 +46,15 @@ const StatCard = ({
   iconBg = "bg-blue-100",
   iconColor = "text-blue-600",
   highlight = false,
+  onClick,
 }) => {
   return (
     <div
+      onClick={onClick}
       className={`relative rounded-xl border p-3 shadow-sm transition-all duration-300 hover:shadow-md
-      ${highlight ? "border-red-200 bg-red-50" : "border-gray-200 bg-white"}`}
+      ${highlight ? "border-red-200 bg-red-50" : "border-gray-200 bg-white"}
+      ${onClick ? "cursor-pointer hover:shadow-md" : ""}
+      `}
     >
       {/* Icon */}
       {Icon && (
@@ -83,6 +87,8 @@ const AdminDashboard = (props) => {
   const [allDashboardData, setAllDashboardData] = useState({});
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+
+  const navigate = useNavigate();
 
   const [editPostId, setEditPostId] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
@@ -427,9 +433,7 @@ const AdminDashboard = (props) => {
 
   const openReport = (row) => {
     setSelectedReport(row);
-    setModalType(
-      row?.post?.type ? row?.post?.type : row?.content_type
-    );
+    setModalType(row?.post?.type ? row?.post?.type : row?.content_type);
     setEditPostId(row.id);
   };
 
@@ -454,6 +458,22 @@ const AdminDashboard = (props) => {
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update status.");
     }
+  };
+
+  const goToUsers = (cardKey) => {
+    const params = new URLSearchParams();
+    if (cardKey) params.set("card", cardKey); // ACTIVE | SUSPENDED | BANNED | NEW
+    if (startDate && endDate) {
+      params.set("date_from", format(startDate, "yyyy-MM-dd"));
+      params.set("date_to", format(endDate, "yyyy-MM-dd"));
+    }
+    navigate(`/all-users?${params.toString()}`);
+  };
+
+  const goToModerationQueue = (statusValue) => {
+    const params = new URLSearchParams();
+    if (statusValue) params.set("status", statusValue);
+    navigate(`/moderation-queue?${params.toString()}`);
   };
 
   return (
@@ -491,6 +511,7 @@ const AdminDashboard = (props) => {
               icon={FaUsers}
               iconBg="bg-blue-100"
               iconColor="text-blue-600"
+              onClick={() => goToUsers("ACTIVE")}
             />
 
             <StatCard
@@ -499,6 +520,7 @@ const AdminDashboard = (props) => {
               icon={FaUserSlash}
               iconColor="text-yellow-600"
               iconBg="bg-yellow-100"
+              onClick={() => goToUsers("SUSPENDED")}
             />
 
             <StatCard
@@ -507,6 +529,7 @@ const AdminDashboard = (props) => {
               icon={FaBan}
               iconColor="text-red-600"
               iconBg="bg-red-100"
+              onClick={() => goToUsers("BANNED")}
             />
 
             <StatCard
@@ -515,6 +538,7 @@ const AdminDashboard = (props) => {
               icon={LuUserPlus}
               iconBg="bg-green-100"
               iconColor="text-green-600"
+              onClick={() => goToUsers("NEW")}
             />
 
             <StatCard
@@ -523,6 +547,7 @@ const AdminDashboard = (props) => {
               icon={FaFlag}
               iconBg="bg-orange-100"
               iconColor="text-orange-600"
+              onClick={() => goToModerationQueue("PENDING")}
             />
             <StatCard
               title="Posts Reviewed"
@@ -530,6 +555,7 @@ const AdminDashboard = (props) => {
               icon={FaClipboardCheck}
               iconBg="bg-green-100"
               iconColor="text-green-600"
+              onClick={() => goToModerationQueue("ACTIONED")}
             />
           </div>
 
@@ -693,8 +719,8 @@ const AdminDashboard = (props) => {
                             </td>
                             <td className="px-2 py-4">
                               {row?.matchedKeyword?.keyword
-                            ? row.matchedKeyword?.keyword
-                            : "--"}
+                                ? row.matchedKeyword?.keyword
+                                : "--"}
                             </td>
                             <td className="px-2 py-4">
                               {row.user.name ? row.user.name : "--"}

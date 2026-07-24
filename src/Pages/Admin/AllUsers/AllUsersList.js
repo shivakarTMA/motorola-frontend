@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"; // Import React hooks
 import Select from "react-select"; // Import react-select for dropdowns
-import { Link } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { LuUserPlus } from "react-icons/lu";
 import { toast } from "react-toastify";
 import {
@@ -77,7 +77,6 @@ const StatusBadge = ({ status }) => {
 // FIX: 'SUSPENDED' -> 'SUSPEND' to match the API enum used for filtering.
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
-  { value: "DEACTIVATED", label: "Inactive" },
   { value: "SUSPENDED", label: "Suspended" },
   { value: "BANNED", label: "Banned" },
 ];
@@ -85,7 +84,8 @@ const statusOptions = [
 const actionStyles = {
   view: "text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100",
   ACTIVE: "text-green-600 bg-green-50 border-green-200 hover:bg-green-100",
-  SUSPENDED:"text-yellow-600 bg-yellow-100 border-yellow-200 hover:bg-yellow-100",
+  SUSPENDED:
+    "text-yellow-600 bg-yellow-100 border-yellow-200 hover:bg-yellow-100",
   BANNED: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100",
 };
 
@@ -122,12 +122,34 @@ const getActionItems = (status) => {
   }
 };
 
+const parseUrlParams = () => {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    card: params.get("card"),
+    dateFrom: params.get("date_from"),
+    dateTo: params.get("date_to"),
+  };
+};
+
 const AllUsersList = (props) => {
   const { setLoading } = props;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [cardFilter, setCardFilter] = useState(null);
 
   const [allUsersData, setAllUsersData] = useState([]);
   const [allUserCount, setAllUserCount] = useState({});
-  const [status, setStatus] = useState(null);
+  // const [status, setStatus] = useState(null);
+  const [status, setStatus] = useState(() => {
+    const card = searchParams.get("card");
+    return card && card !== "NEW"
+      ? statusOptions.find((o) => o.value === card) || null
+      : null;
+  });
+
+  const [isNewUsersFilter, setIsNewUsersFilter] = useState(
+    () => searchParams.get("card") === "NEW",
+  );
   const [consent, setConsent] = useState(null);
 
   const [statusModal, setStatusModal] = useState(false);
@@ -136,11 +158,25 @@ const AllUsersList = (props) => {
 
   // These now only change when the DateRangePicker's Apply/Clear fires,
   // so no fetch happens mid-selection anymore.
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  // NEW: startDate/endDate/dateFilterField initialized from the URL too
+  const [startDate, setStartDate] = useState(() => {
+    const from = searchParams.get("date_from");
+    return from ? new Date(from) : null;
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const to = searchParams.get("date_to");
+    return to ? new Date(to) : null;
+  });
+  const [dateFilterField, setDateFilterField] = useState(() => {
+    if (searchParams.get("date_from") && searchParams.get("date_to"))
+      return "created_at";
+    if (searchParams.get("last_date_from") && searchParams.get("last_date_to"))
+      return "last_active_at";
+    return null;
+  });
   const [lastStartDate, setLastStartDate] = useState(null);
   const [lastEndDate, setLastEndDate] = useState(null);
-  const [dateFilterField, setDateFilterField] = useState(null);
+  // const [dateFilterField, setDateFilterField] = useState(null);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -219,21 +255,35 @@ const AllUsersList = (props) => {
         params.search = searchText;
       }
 
+      // status is now the single source of truth
       if (status?.value) {
-        params.status = status?.value;
+        params.status = status.value;
       }
 
       if (consent !== null) {
         params.user_consent = consent.value;
       }
 
-      if (dateFilterField === "created_at" && startDate && endDate) {
+      // "New Users" card -> filter by created_at, falling back to last 30 days
+      if (isNewUsersFilter) {
+        params.date_filter_field = "created_at";
+        if (startDate && endDate) {
+          params.date_from = format(startDate, "yyyy-MM-dd");
+          params.date_to = format(endDate, "yyyy-MM-dd");
+        } else {
+          const from = new Date();
+          from.setDate(from.getDate() - 30);
+          params.date_from = format(from, "yyyy-MM-dd");
+          params.date_to = format(new Date(), "yyyy-MM-dd");
+        }
+      } else if (dateFilterField === "created_at" && startDate && endDate) {
         params.date_from = format(startDate, "yyyy-MM-dd");
         params.date_to = format(endDate, "yyyy-MM-dd");
         params.date_filter_field = "created_at";
       }
 
       if (
+        !isNewUsersFilter &&
         dateFilterField === "last_active_at" &&
         lastStartDate &&
         lastEndDate
@@ -243,10 +293,7 @@ const AllUsersList = (props) => {
         params.date_filter_field = "last_active_at";
       }
 
-      const response = await authAxios().get("/user", {
-        params,
-      });
-
+      const response = await authAxios().get("/user", { params });
       const resData = response.data;
 
       if (resData.success) {
@@ -267,8 +314,6 @@ const AllUsersList = (props) => {
   };
 
   useEffect(() => {
-    // FIX: was fetchAllUsers(debouncedSearch) — passing the search string into the
-    // "currentPage" argument slot, which set params.page to a string instead of a number.
     fetchAllUsers(1, debouncedSearch);
   }, [
     debouncedSearch,
@@ -278,7 +323,69 @@ const AllUsersList = (props) => {
     lastEndDate,
     status,
     consent,
+    isNewUsersFilter,
   ]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+
+    // status / card filter
+    if (isNewUsersFilter) {
+      params.set("card", "NEW");
+    } else if (status?.value) {
+      params.set("card", status.value);
+    } else {
+      params.delete("card");
+    }
+
+    // "Registered on" date range
+    if (dateFilterField === "created_at" && startDate && endDate) {
+      params.set("date_from", format(startDate, "yyyy-MM-dd"));
+      params.set("date_to", format(endDate, "yyyy-MM-dd"));
+    } else {
+      params.delete("date_from");
+      params.delete("date_to");
+    }
+
+    // "Last active" date range
+    if (dateFilterField === "last_active_at" && lastStartDate && lastEndDate) {
+      params.set("last_date_from", format(lastStartDate, "yyyy-MM-dd"));
+      params.set("last_date_to", format(lastEndDate, "yyyy-MM-dd"));
+    } else {
+      params.delete("last_date_from");
+      params.delete("last_date_to");
+    }
+
+    // replace: true -> updates the URL without pushing a new history entry
+    // per keystroke/click, so Back doesn't have to click through every filter change
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    status,
+    isNewUsersFilter,
+    startDate,
+    endDate,
+    lastStartDate,
+    lastEndDate,
+    dateFilterField,
+  ]);
+
+  //   useEffect(() => {
+  //   const params = new URLSearchParams(location.search);
+  //   const card = params.get("card");
+  //   const dFrom = params.get("date_from");
+  //   const dTo = params.get("date_to");
+
+  //   if (dFrom && dTo) {
+  //     setStartDate(new Date(dFrom));
+  //     setEndDate(new Date(dTo));
+  //     setDateFilterField("created_at");
+  //   }
+  //   if (card) {
+  //     setCardFilter(card); // "ACTIVE" | "SUSPENDED" | "BANNED" | "NEW"
+  //   }
+  //   // run once on mount
+  // }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -298,12 +405,20 @@ const AllUsersList = (props) => {
     setStartDate(newStart);
     setEndDate(newEnd);
     setDateFilterField("created_at");
+    setIsNewUsersFilter(false); // manual date pick overrides the "New Users" card
+
+    // Clear Last Active filter
+    setLastStartDate(null);
+    setLastEndDate(null);
   };
 
   const handleLastActiveDate = ({ startDate: newStart, endDate: newEnd }) => {
     setLastStartDate(newStart);
     setLastEndDate(newEnd);
     setDateFilterField("last_active_at");
+    // Clear Registered On filter
+    setStartDate(null);
+    setEndDate(null);
   };
 
   // FIX: now receives the fully-built payload (status + reason + suspend dates, as applicable)
@@ -397,7 +512,10 @@ const AllUsersList = (props) => {
                 styles={customStyles}
                 options={statusOptions}
                 value={status}
-                onChange={setStatus}
+                onChange={(val) => {
+                  setStatus(val);
+                  setIsNewUsersFilter(false);
+                }}
                 isSearchable={false}
                 placeholder="Select Status"
                 isClearable
@@ -407,6 +525,16 @@ const AllUsersList = (props) => {
             <div className="relative">
               <DateRangePicker
                 onChange={handleDateRangeChange}
+                // value={
+                //   dateFilterField === "created_at"
+                //     ? { startDate, endDate, label: "Custom range" }
+                //     : { startDate: null, endDate: null }
+                // }
+                value={{
+                  startDate,
+                  endDate,
+                  label: startDate && endDate ? "Custom range" : "",
+                }}
                 defaultPreset="Today"
                 panelOffsetTop={100}
                 panelOffsetLeft={0}
@@ -417,6 +545,11 @@ const AllUsersList = (props) => {
             <div className="relative">
               <DateRangePicker
                 onChange={handleLastActiveDate}
+                value={{
+                  startDate: lastStartDate,
+                  endDate: lastEndDate,
+                  label: lastStartDate && lastEndDate ? "Custom range" : "",
+                }}
                 defaultPreset="Today"
                 panelOffsetTop={100}
                 panelOffsetRight={0}
