@@ -44,16 +44,18 @@ const ModerationQueue = (props) => {
   const [endDate, setEndDate] = useState(null);
   const [editPostId, setEditPostId] = useState(null);
 
-  // const [statusFilter, setStatusFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState(
     () => searchParams.get("status") || null,
   );
   const [itemTypeFilter, setItemTypeFilter] = useState(null);
+  const [filterTribeGroup, setFilterTribeGroup] = useState(null);
   const [filterTribe, setFilterTribe] = useState(null);
 
+  const [tribeList, setTribeList] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
+  const [tribeGroupOptions, setTribeGroupOptions] = useState([]);
   const [tribeOptions, setTribeOptions] = useState([]);
 
   const [page, setPage] = useState(1);
@@ -76,6 +78,10 @@ const ModerationQueue = (props) => {
 
       if (itemTypeFilter) {
         params.item_type = itemTypeFilter;
+      }
+
+      if (filterTribeGroup?.value) {
+        params.circle_group_id = filterTribeGroup.value;
       }
 
       if (filterTribe?.value) {
@@ -117,7 +123,7 @@ const ModerationQueue = (props) => {
     }
 
     fetchModerationList();
-  }, [startDate, endDate, filterTribe, itemTypeFilter, statusFilter]);
+  }, [startDate, endDate, filterTribeGroup, filterTribe, itemTypeFilter, statusFilter]);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
@@ -132,9 +138,35 @@ const ModerationQueue = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
-  const fetchTribeList = async () => {
+  const fetchTribeGroupList = async () => {
     try {
-      const response = await authAxios().get("/tribe");
+      const response = await authAxios().get("/tribe-group");
+      const resData = response?.data;
+
+      if (resData?.success) {
+        const options = (resData.data.items || []).map((group) => ({
+          value: group.id,
+          label: group.name,
+        }));
+        console.log(options, "options");
+        setTribeGroupOptions(options);
+      } else {
+        toast.error(response.data?.message);
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Unable to load tribe groups",
+      );
+    }
+  };
+
+  const fetchTribeList = async (circleGroupId) => {
+    try {
+      const response = await authAxios().get("/tribe", {
+        params: {
+          circle_group_id: circleGroupId,
+        },
+      });
 
       const resData = response?.data;
 
@@ -154,8 +186,23 @@ const ModerationQueue = (props) => {
   };
 
   useEffect(() => {
-    fetchTribeList();
+    if (filterTribeGroup?.value) {
+      fetchTribeList(filterTribeGroup.value);
+      setFilterTribe(null); // Clear previous selection
+    } else {
+      setTribeOptions([]);
+      setFilterTribe(null);
+    }
+  }, [filterTribeGroup]);
+
+  useEffect(() => {
+    fetchTribeGroupList();
   }, []);
+
+  const groupOptions = tribeList.map((group) => ({
+    value: group.id,
+    label: group.name,
+  }));
 
   const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
     setStartDate(newStart);
@@ -197,6 +244,12 @@ const ModerationQueue = (props) => {
     setPage(1);
   };
 
+  const handleTribeGroupChange = (option) => {
+    setFilterTribeGroup(option);
+    setFilterTribe(null);
+    setPage(1);
+  };
+
   const handleStatusChange = (option) => {
     setPage(1);
     setStatusFilter(option?.value || null);
@@ -222,14 +275,26 @@ const ModerationQueue = (props) => {
                 />
               </div>
             </div>
-            <div className="lg:min-w-[250px] lg:w-fit w-full">
+            <div className="min-w-[180px] lg:w-fit w-full">
+              <Select
+                value={filterTribeGroup}
+                options={tribeGroupOptions}
+                onChange={handleTribeGroupChange}
+                styles={customStyles}
+                placeholder="Select Tribe Group"
+                isClearable
+              />
+            </div>
+
+            <div className="min-w-[170px] lg:w-fit w-full">
               <Select
                 value={filterTribe}
                 options={tribeOptions}
                 onChange={handleTribeChange}
                 styles={customStyles}
-                placeholder="Filter by Tribe"
+                placeholder="Select Tribe"
                 isClearable
+                isDisabled={!filterTribeGroup}
               />
             </div>
             <div className="lg:min-w-[180px] lg:w-fit w-full">
@@ -340,7 +405,8 @@ const ModerationQueue = (props) => {
                     <th className="px-2 py-4 min-w-[150px] ">
                       Reported (User)
                     </th>
-                    <th className="px-2 py-4 min-w-[150px]">Tribe</th>
+                    <th className="px-2 py-4 min-w-[120px]">Tribe Group</th>
+                    <th className="px-2 py-4 min-w-[180px]">Tribe Name</th>
                     <th className="px-2 py-4 min-w-[150px]">Moderator Name</th>
                     <th className="px-2 py-4 min-w-[130px]">Updated Time</th>
                     <th className="px-2 py-4 min-w-[120px]">Action Taken</th>
@@ -370,12 +436,14 @@ const ModerationQueue = (props) => {
 
                         <td className="px-2 py-4">
                           {row?.post?.type === "POST"
-                            ? "Hot Take"
-                            : row?.post?.type === "ARTICLE"
-                              ? "Deep Dive"
-                              : row?.content_type === "POLL"
-                                ? "Vibe Check"
-                                : "--"}
+                                ? "Hot Take"
+                                : row?.post?.type === "ARTICLE"
+                                  ? "Deep Dive"
+                                  : row?.content_type === "POLL"
+                                    ? "Vibe Check"
+                                    : row?.content_type === "COMMENT"
+                                    ? "Comment"
+                                    : "--"}
                         </td>
                         <td className="px-2 py-4">
                           {row?.matchedKeyword?.keyword
@@ -386,16 +454,29 @@ const ModerationQueue = (props) => {
                           {row.user.name ? row.user.name : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row.tribe ? row.tribe : "--"}
+                          {row.post?.circle?.circleGroup?.name ||
+                          row.poll?.circle?.circleGroup?.name ||
+                          row.comment?.poll?.circle?.circleGroup?.name ||
+                          row.comment?.post?.circle?.circleGroup?.name ||
+                          "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.moderator_name ? row.moderator_name : "--"}
+                          {row.post?.circle?.name ||
+                          row.poll?.circle?.name ||
+                          row.comment?.poll?.circle?.name ||
+                          row.comment?.post?.circle?.name ||
+                          "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.updated_time ? row.updated_time : "--"}
+                          {row?.reviewer?.name ? row.reviewer?.name : "--"}
                         </td>
                         <td className="px-2 py-4">
-                          {row?.action_taken ? row.action_taken : "--"}
+                          {row?.reviewed_time
+                            ? formatViewTime(row.reviewed_time)
+                            : "--"}
+                        </td>
+                        <td className="px-2 py-4">
+                          {row?.action ? row.action : "--"}
                         </td>
                         <td className="px-2 py-4 text-center">
                           <span
@@ -485,6 +566,7 @@ const ModerationQueue = (props) => {
           onClose={closeModal}
           report={selectedReport}
           editId={editPostId}
+          onSubmit={handleModerationUpdate}
         />
       )}
     </>

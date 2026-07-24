@@ -113,10 +113,6 @@ const PollModerationDetailModal = ({
   const [pendingPayload, setPendingPayload] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
 
-  //   const filteredStatusOptions = statusOptions.filter(
-  //     (opt) => opt.value !== postDetails?.status,
-  //   );
-
   useEffect(() => {
     if (!editId || !isOpen) return;
 
@@ -171,6 +167,7 @@ const PollModerationDetailModal = ({
     ["Tribe Group", showValue(postDetails?.poll?.circle?.circleGroup?.name)],
     ["Tribe Name", showValue(postDetails?.poll?.circle?.name)],
     ["Flagged Keywords", showValue(postDetails?.matchedKeyword?.keyword)],
+    ["Action Take", showValue(postDetails?.action)],
   ];
 
   if (!postDetails) return null;
@@ -328,7 +325,7 @@ const PollModerationDetailModal = ({
   };
 
   const handleConfirm = () => {
-    // console.log(pendingPayload, "pendingPayload");
+    console.log(pendingPayload, "pendingPayload");
     if (pendingPayload) {
       onSubmit?.(pendingPayload);
     }
@@ -362,384 +359,388 @@ const PollModerationDetailModal = ({
 
   return (
     <>
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleClose}>
-        {/* Backdrop */}
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/40" />
-        </Transition.Child>
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={handleClose}>
+          {/* Backdrop */}
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/40" />
+          </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-[1100px] rounded-xl bg-white shadow-xl overflow-hidden">
-                <div className="grid grid-cols-1 md:grid-cols-2">
-                  {/* Left: question + options + engagement */}
-                  <div className="border-b md:border-b-0 md:border-r border-gray-100">
-                    <Dialog.Title className="text-lg font-semibold text-gray-900 border-b p-5">
-                      Vibe Check Details
-                    </Dialog.Title>
-                    <div className="px-5 py-3">
-                      {postDetails?.poll?.question && (
-                        <h3 className="mb-2 lg:text-[24px] text-lg font-semibold text-gray-900">
-                          {showValue(postDetails?.poll?.question)}
-                        </h3>
-                      )}
-                      {helpTextHtml ? (
-                        <div className="article--content">
-                          <div
-                            className="ql-editor p-0"
-                            dangerouslySetInnerHTML={{ __html: helpTextHtml }}
-                          />
-                        </div>
-                      ) : null}
-
-                      <div className="mt-4">
-                        {options.length ? (
-                          hasImageOptions ? (
-                            // Image-grid style options
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                              {options.map((opt, index) => {
-                                const palette =
-                                  optionPalette[index % optionPalette.length];
-                                const votePercent =
-                                  totalVotes > 0
-                                    ? Math.round(
-                                        (opt.votes_count / totalVotes) * 100,
-                                      )
-                                    : 0;
-
-                                return (
-                                  <div key={opt.id} className="space-y-1.5">
-                                    <span
-                                      className={`inline-block max-w-full truncate px-2 py-1 rounded-md text-[11px] font-semibold ${palette.chip}`}
-                                    >
-                                      {opt.option_text} {votePercent}%
-                                    </span>
-
-                                    {opt.poll_option_image ? (
-                                      <img
-                                        src={opt.poll_option_image}
-                                        alt={opt.option_text}
-                                        className="w-full h-24 object-cover rounded-lg border"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-24 rounded-lg border flex items-center justify-center text-gray-400 text-xs">
-                                        No Image
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            // Text-only options with vote-share bars
-                            <div className="space-y-3">
-                              {options.map((opt, index) => {
-                                const palette =
-                                  optionPalette[index % optionPalette.length];
-                                const votePercent =
-                                  totalVotes > 0
-                                    ? Math.round(
-                                        (opt.votes_count / totalVotes) * 100,
-                                      )
-                                    : 0;
-
-                                return (
-                                  <div
-                                    key={opt.id}
-                                    className="relative rounded-lg overflow-hidden border border-gray-100"
-                                  >
-                                    <div
-                                      className={`absolute inset-y-0 left-0 ${palette.bar}`}
-                                      style={{ width: `${votePercent}%` }}
-                                    />
-
-                                    <div className="relative flex items-center justify-between px-3 py-2.5">
-                                      <span
-                                        className={`text-sm font-medium ${palette.text}`}
-                                      >
-                                        {opt.option_text}
-                                      </span>
-                                      <span
-                                        className={`text-sm font-semibold ${palette.text}`}
-                                      >
-                                        {votePercent}%
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )
-                        ) : (
-                          <div className="text-sm text-gray-500">
-                            No options available
-                          </div>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-3 sm:p-5">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-[1100px] rounded-xl bg-white shadow-xl overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-2">
+                    {/* Left: question + options + engagement */}
+                    <div className="border-b md:border-b-0 md:border-r border-gray-100">
+                      <Dialog.Title className="text-lg font-semibold text-gray-900 border-b p-5">
+                        Vibe Check Details
+                      </Dialog.Title>
+                      <div className="px-5 py-3">
+                        {postDetails?.poll?.question && (
+                          <h3 className="mb-2 lg:text-[24px] text-lg font-semibold text-gray-900">
+                            {showValue(postDetails?.poll?.question)}
+                          </h3>
                         )}
-                      </div>
+                        {helpTextHtml ? (
+                          <div className="article--content">
+                            <div
+                              className="ql-editor p-0"
+                              dangerouslySetInnerHTML={{ __html: helpTextHtml }}
+                            />
+                          </div>
+                        ) : null}
 
-                      <div className="mt-4 flex items-center justify-between text-black px-2">
-                        <div className="flex items-center gap-5">
-                          <span className="flex items-center gap-2 text-sm">
-                            <FiHeart size={20} />
-                            {showValue(postDetails?.poll?.likes_count)}
-                          </span>
-                          <span className="flex items-center gap-2 text-sm">
-                            <FiMessageSquare size={20} />
-                            {showValue(postDetails?.poll?.comments_count)}
-                          </span>
-                        </div>
+                        <div className="mt-4">
+                          {options.length ? (
+                            hasImageOptions ? (
+                              // Image-grid style options
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {options.map((opt, index) => {
+                                  const palette =
+                                    optionPalette[index % optionPalette.length];
+                                  const votePercent =
+                                    totalVotes > 0
+                                      ? Math.round(
+                                          (opt.votes_count / totalVotes) * 100,
+                                        )
+                                      : 0;
 
-                        <span className="text-sm text-black">
-                          {totalVotes} votes
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                                  return (
+                                    <div key={opt.id} className="space-y-1.5">
+                                      <span
+                                        className={`inline-block max-w-full truncate px-2 py-1 rounded-md text-[11px] font-semibold ${palette.chip}`}
+                                      >
+                                        {opt.option_text} {votePercent}%
+                                      </span>
 
-                  {/* Right: info + status update */}
-                  <div className="p-6 flex flex-col">
-                    <div className="space-y-3">
-                      {infoRows.map(([label, value]) => (
-                        <div
-                          key={label}
-                          className="flex items-center justify-between gap-4 text-sm"
-                        >
-                          <span className="font-semibold text-black">
-                            {label}
-                          </span>
-                          <span className="text-black text-right">{value}</span>
-                        </div>
-                      ))}
+                                      {opt.poll_option_image ? (
+                                        <img
+                                          src={opt.poll_option_image}
+                                          alt={opt.option_text}
+                                          className="w-full h-24 object-cover rounded-lg border"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-24 rounded-lg border flex items-center justify-center text-gray-400 text-xs">
+                                          No Image
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              // Text-only options with vote-share bars
+                              <div className="space-y-3">
+                                {options.map((opt, index) => {
+                                  const palette =
+                                    optionPalette[index % optionPalette.length];
+                                  const votePercent =
+                                    totalVotes > 0
+                                      ? Math.round(
+                                          (opt.votes_count / totalVotes) * 100,
+                                        )
+                                      : 0;
 
-                      <div className="flex items-center justify-between gap-4 text-sm">
-                        <span className="font-semibold text-black">Status</span>
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                            statusColors[postDetails?.status] ||
-                            "bg-gray-100 text-black"
-                          }`}
-                        >
-                          {postDetails?.status === "ACTIONED"
-                            ? "Resolved"
-                            : postDetails?.status}
-                        </span>
-                      </div>
-                    </div>
+                                  return (
+                                    <div
+                                      key={opt.id}
+                                      className="relative rounded-lg overflow-hidden border border-gray-100"
+                                    >
+                                      <div
+                                        className={`absolute inset-y-0 left-0 ${palette.bar}`}
+                                        style={{ width: `${votePercent}%` }}
+                                      />
 
-                    {isPending && (
-                      <div className="border-t border-gray-100 pt-4 mt-3 space-y-4">
-                        <div>
-                          <label className="block mb-2 text-sm font-medium">
-                            Action<span className="text-red-600">*</span>
-                          </label>
-                          <Select
-                            options={actionOptions}
-                            value={selectedAction}
-                            onChange={handleActionSelect}
-                            placeholder="Choose an action..."
-                            classNamePrefix="react-select"
-                            styles={selectStyles}
-                            menuPortalTarget={document.body}
-                            menuPosition="fixed"
-                          />
-                          {validationErrors.action && (
-                            <p className="text-[11px] text-red-500 mt-1">
-                              {validationErrors.action}
-                            </p>
+                                      <div className="relative flex items-center justify-between px-3 py-2.5">
+                                        <span
+                                          className={`text-sm font-medium ${palette.text}`}
+                                        >
+                                          {opt.option_text}
+                                        </span>
+                                        <span
+                                          className={`text-sm font-semibold ${palette.text}`}
+                                        >
+                                          {votePercent}%
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )
+                          ) : (
+                            <div className="text-sm text-gray-500">
+                              No options available
+                            </div>
                           )}
                         </div>
 
-                        {/* {(selectedAction?.value === "HIDDEN" ||
+                        <div className="mt-4 flex items-center justify-between text-black px-2">
+                          <div className="flex items-center gap-5">
+                            <span className="flex items-center gap-2 text-sm">
+                              <FiHeart size={20} />
+                              {showValue(postDetails?.poll?.likes_count)}
+                            </span>
+                            <span className="flex items-center gap-2 text-sm">
+                              <FiMessageSquare size={20} />
+                              {showValue(postDetails?.poll?.comments_count)}
+                            </span>
+                          </div>
+
+                          <span className="text-sm text-black">
+                            {totalVotes} votes
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: info + status update */}
+                    <div className="p-6 flex flex-col">
+                      <div className="space-y-3">
+                        {infoRows.map(([label, value]) => (
+                          <div
+                            key={label}
+                            className="flex items-center justify-between gap-4 text-sm"
+                          >
+                            <span className="font-semibold text-black">
+                              {label}
+                            </span>
+                            <span className="text-black text-right">
+                              {value}
+                            </span>
+                          </div>
+                        ))}
+
+                        <div className="flex items-center justify-between gap-4 text-sm">
+                          <span className="font-semibold text-black">
+                            Status
+                          </span>
+                          <span
+                            className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                              statusColors[postDetails?.status] ||
+                              "bg-gray-100 text-black"
+                            }`}
+                          >
+                            {postDetails?.status === "ACTIONED"
+                              ? "Resolved"
+                              : postDetails?.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {isPending && (
+                        <div className="border-t border-gray-100 pt-4 mt-3 space-y-4">
+                          <div>
+                            <label className="block mb-2 text-sm font-medium">
+                              Action<span className="text-red-600">*</span>
+                            </label>
+                            <Select
+                              options={actionOptions}
+                              value={selectedAction}
+                              onChange={handleActionSelect}
+                              placeholder="Choose an action..."
+                              classNamePrefix="react-select"
+                              styles={selectStyles}
+                              menuPortalTarget={document.body}
+                              menuPosition="fixed"
+                            />
+                            {validationErrors.action && (
+                              <p className="text-[11px] text-red-500 mt-1">
+                                {validationErrors.action}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* {(selectedAction?.value === "HIDDEN" ||
                             selectedAction?.value === "PUBLISHED") && (
                             <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
                               {AUTOMATED_MESSAGES[selectedAction.value]}
                             </p>
                           )} */}
 
-                        {selectedAction?.value === "WARNED" && (
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block mb-2 text-sm font-medium">
-                                Remarks (sent to user)
-                                <span className="text-red-600">*</span>
-                              </label>
-                              <textarea
-                                rows={3}
-                                value={remarks}
-                                onChange={(e) => {
-                                  setRemarks(e.target.value);
-                                  clearError("remarks");
-                                }}
-                                className="custom--input w-full"
-                              />
-                              {validationErrors.remarks && (
-                                <p className="text-[11px] text-red-500 mt-1">
-                                  {validationErrors.remarks}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {selectedAction?.value === "SUSPENDED" && (
-                          <div className="space-y-3">
-                            <div className="grid lg:grid-cols-2 grid-cols-1 gap-3">
-                              <div className="">
+                          {selectedAction?.value === "WARNED" && (
+                            <div className="space-y-3">
+                              <div>
                                 <label className="block mb-2 text-sm font-medium">
-                                  Suspend from
+                                  Remarks (sent to user)
                                   <span className="text-red-600">*</span>
                                 </label>
-                                <div className="custom--date w-full">
-                                  <DatePicker
-                                    selected={suspendStart}
-                                    onChange={handleSuspendStartChange}
-                                    showTimeSelect
-                                    timeIntervals={TIME_INTERVAL}
-                                    minDate={now}
-                                    minTime={startMinTime}
-                                    maxTime={startMaxTime}
-                                    dateFormat="MMM d, yyyy h:mm aa"
-                                    placeholderText="Start date & time"
-                                    className="custom--input w-full"
-                                  />
-                                </div>
-                                {validationErrors.suspendStart && (
+                                <textarea
+                                  rows={3}
+                                  value={remarks}
+                                  onChange={(e) => {
+                                    setRemarks(e.target.value);
+                                    clearError("remarks");
+                                  }}
+                                  className="custom--input w-full"
+                                />
+                                {validationErrors.remarks && (
                                   <p className="text-[11px] text-red-500 mt-1">
-                                    {validationErrors.suspendStart}
+                                    {validationErrors.remarks}
                                   </p>
                                 )}
+                              </div>
+                            </div>
+                          )}
+
+                          {selectedAction?.value === "SUSPENDED" && (
+                            <div className="space-y-3">
+                              <div className="grid lg:grid-cols-2 grid-cols-1 gap-3">
+                                <div className="">
+                                  <label className="block mb-2 text-sm font-medium">
+                                    Suspend from
+                                    <span className="text-red-600">*</span>
+                                  </label>
+                                  <div className="custom--date w-full">
+                                    <DatePicker
+                                      selected={suspendStart}
+                                      onChange={handleSuspendStartChange}
+                                      showTimeSelect
+                                      timeIntervals={TIME_INTERVAL}
+                                      minDate={now}
+                                      minTime={startMinTime}
+                                      maxTime={startMaxTime}
+                                      dateFormat="MMM d, yyyy h:mm aa"
+                                      placeholderText="Start date & time"
+                                      className="custom--input w-full"
+                                    />
+                                  </div>
+                                  {validationErrors.suspendStart && (
+                                    <p className="text-[11px] text-red-500 mt-1">
+                                      {validationErrors.suspendStart}
+                                    </p>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium">
+                                    Suspend until
+                                    <span className="text-red-600">*</span>
+                                  </label>
+                                  <div className="custom--date w-full">
+                                    <DatePicker
+                                      selected={suspendEnd}
+                                      onChange={handleSuspendEndChange}
+                                      showTimeSelect
+                                      timeIntervals={TIME_INTERVAL}
+                                      disabled={!suspendStart}
+                                      minDate={suspendStart || now}
+                                      minTime={endMinTime}
+                                      maxTime={endMaxTime}
+                                      dateFormat="MMM d, yyyy h:mm aa"
+                                      placeholderText={
+                                        suspendStart
+                                          ? "End date & time"
+                                          : "Pick a start date first"
+                                      }
+                                      className="custom--input w-full"
+                                    />
+                                  </div>
+                                  {validationErrors.suspendEnd && (
+                                    <p className="text-[11px] text-red-500 mt-1">
+                                      {validationErrors.suspendEnd}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                               <div>
                                 <label className="block mb-2 text-sm font-medium">
-                                  Suspend until
+                                  Reason for suspension
                                   <span className="text-red-600">*</span>
                                 </label>
-                                <div className="custom--date w-full">
-                                  <DatePicker
-                                    selected={suspendEnd}
-                                    onChange={handleSuspendEndChange}
-                                    showTimeSelect
-                                    timeIntervals={TIME_INTERVAL}
-                                    disabled={!suspendStart}
-                                    minDate={suspendStart || now}
-                                    minTime={endMinTime}
-                                    maxTime={endMaxTime}
-                                    dateFormat="MMM d, yyyy h:mm aa"
-                                    placeholderText={
-                                      suspendStart
-                                        ? "End date & time"
-                                        : "Pick a start date first"
-                                    }
-                                    className="custom--input w-full"
-                                  />
-                                </div>
-                                {validationErrors.suspendEnd && (
+                                <textarea
+                                  rows={2}
+                                  value={reason}
+                                  onChange={(e) => {
+                                    setReason(e.target.value);
+                                    clearError("reason");
+                                  }}
+                                  placeholder="Explain why the user is being suspended..."
+                                  className="custom--input w-full"
+                                />
+                                {validationErrors.reason && (
                                   <p className="text-[11px] text-red-500 mt-1">
-                                    {validationErrors.suspendEnd}
+                                    {validationErrors.reason}
                                   </p>
                                 )}
                               </div>
                             </div>
-                            <div>
-                              <label className="block mb-2 text-sm font-medium">
-                                Reason for suspension
-                                <span className="text-red-600">*</span>
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={reason}
-                                onChange={(e) => {
-                                  setReason(e.target.value);
-                                  clearError("reason");
-                                }}
-                                placeholder="Explain why the user is being suspended..."
-                                className="custom--input w-full"
-                              />
-                              {validationErrors.reason && (
-                                <p className="text-[11px] text-red-500 mt-1">
-                                  {validationErrors.reason}
-                                </p>
-                              )}
+                          )}
+
+                          {selectedAction?.value === "BANNED" && (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block mb-2 text-sm font-medium">
+                                  Reason for ban
+                                  <span className="text-red-600">*</span>
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={reason}
+                                  onChange={(e) => {
+                                    setReason(e.target.value);
+                                    clearError("reason");
+                                  }}
+                                  placeholder="Explain why the user is being banned..."
+                                  className="custom--input w-full"
+                                />
+                                {validationErrors.reason && (
+                                  <p className="text-[11px] text-red-500 mt-1">
+                                    {validationErrors.reason}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-
-                        {selectedAction?.value === "BANNED" && (
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block mb-2 text-sm font-medium">
-                                Reason for ban
-                                <span className="text-red-600">*</span>
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={reason}
-                                onChange={(e) => {
-                                  setReason(e.target.value);
-                                  clearError("reason");
-                                }}
-                                placeholder="Explain why the user is being banned..."
-                                className="custom--input w-full"
-                              />
-                              {validationErrors.reason && (
-                                <p className="text-[11px] text-red-500 mt-1">
-                                  {validationErrors.reason}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Footer */}
-                {isPending && (
-                  <div className="flex justify-end gap-3 p-4 border-t">
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className="custom--btn !bg-white !text-black border !border-black"
-                    >
-                      Cancel
-                    </button>
+                  {/* Footer */}
+                  {isPending && (
+                    <div className="flex justify-end gap-3 p-4 border-t">
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="custom--btn !bg-white !text-black border !border-black"
+                      >
+                        Cancel
+                      </button>
 
-                    <button
-                      type="button"
-                      disabled={!selectedAction}
-                      onClick={handleSubmit}
-                      className="custom--btn disabled:opacity-60"
-                    >
-                      Submit
-                    </button>
-                  </div>
-                )}
-              </Dialog.Panel>
-            </Transition.Child>
+                      <button
+                        type="button"
+                        disabled={!selectedAction}
+                        onClick={handleSubmit}
+                        className="custom--btn disabled:opacity-60"
+                      >
+                        Submit
+                      </button>
+                    </div>
+                  )}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
           </div>
-        </div>
-      </Dialog>
-    </Transition>
-{/* Confirmation modal */}
+        </Dialog>
+      </Transition>
+      {/* Confirmation modal */}
       <Transition appear show={confirmOpen} as={Fragment}>
         <Dialog
           as="div"

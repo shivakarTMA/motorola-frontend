@@ -674,7 +674,8 @@ const AdminDashboard = (props) => {
                         <th className="px-2 py-4 min-w-[150px] ">
                           Reported (User)
                         </th>
-                        <th className="px-2 py-4 min-w-[150px]">Tribe</th>
+                        <th className="px-2 py-4 min-w-[150px]">Tribe Group</th>
+                        <th className="px-2 py-4 min-w-[150px]">Tribe Name</th>
                         <th className="px-2 py-4 min-w-[150px]">
                           Moderator Name
                         </th>
@@ -709,12 +710,14 @@ const AdminDashboard = (props) => {
                             </td>
 
                             <td className="px-2 py-4">
-                              {row?.post?.type === "POST"
+                              {row?.content_type === "POST"
                                 ? "Hot Take"
-                                : row?.post?.type === "ARTICLE"
+                                : row?.content_type === "ARTICLE"
                                   ? "Deep Dive"
                                   : row?.content_type === "POLL"
                                     ? "Vibe Check"
+                                    : row?.content_type === "COMMENT"
+                                    ? "Comment"
                                     : "--"}
                             </td>
                             <td className="px-2 py-4">
@@ -726,16 +729,27 @@ const AdminDashboard = (props) => {
                               {row.user.name ? row.user.name : "--"}
                             </td>
                             <td className="px-2 py-4">
-                              {row.tribe ? row.tribe : "--"}
+                              {row.post?.circle?.circleGroup?.name ||
+                              row.poll?.circle?.circleGroup?.name ||
+                              row.comment?.poll?.circle?.circleGroup?.name ||
+                              row.comment?.post?.circle?.circleGroup?.name ||
+                              "--"}
                             </td>
                             <td className="px-2 py-4">
-                              {row?.moderator_name ? row.moderator_name : "--"}
+                              {row.post?.circle?.name ||
+                              row.poll?.circle?.name ||
+                              row.comment?.poll?.circle?.name ||
+                              row.comment?.post?.circle?.name ||
+                              "--"}
                             </td>
                             <td className="px-2 py-4">
-                              {row?.updated_time ? row.updated_time : "--"}
+                              {row?.reviewer?.name ? row.reviewer?.name : "--"}
                             </td>
                             <td className="px-2 py-4">
-                              {row?.action_taken ? row.action_taken : "--"}
+                              {row?.reviewed_time ? formatViewTime(row.reviewed_time) : "--"}
+                            </td>
+                            <td className="px-2 py-4">
+                              {row?.action ? row.action : "--"}
                             </td>
                             <td className="px-2 py-4 text-center">
                               <span
@@ -815,6 +829,7 @@ const AdminDashboard = (props) => {
           onClose={closeModal}
           report={selectedReport}
           editId={editPostId}
+          onSubmit={handleModerationUpdate}
         />
       )}
     </>

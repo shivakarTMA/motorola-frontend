@@ -184,6 +184,7 @@ const PostModerationDetailModal = ({
     ["Tribe Group", showValue(postDetails?.post?.circle?.circleGroup?.name)],
     ["Tribe Name", showValue(postDetails?.post?.circle?.name)],
     ["Flagged Keywords", showValue(postDetails?.matchedKeyword?.keyword)],
+    ["Action Take", showValue(postDetails?.action)],
   ];
 
   if (!postDetails) return null;

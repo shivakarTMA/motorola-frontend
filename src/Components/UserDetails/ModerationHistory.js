@@ -25,6 +25,8 @@ import { useParams } from "react-router-dom";
 import PollModerationDetailModal from "../../Pages/Admin/Moderation/PollModerationDetailModal";
 import ArticleModerationDetailModal from "../../Pages/Admin/Moderation/ArticleModerationDetailModal";
 import PostModerationDetailModal from "../../Pages/Admin/Moderation/PostModerationDetailModal";
+import { GrTransaction } from "react-icons/gr";
+import { VscSymbolKeyword } from "react-icons/vsc";
 
 const statusStyles = {
   pending: "bg-amber-50 text-amber-700 border border-amber-200",
@@ -176,7 +178,7 @@ const ModerationHistory = (props) => {
               </div>
 
               {/* Date / Time */}
-              <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
                 <div className="flex items-center gap-1.5">
                   <span className="text-gray-500">Reported Date:</span>
                   <FiCalendar className="w-3.5 h-3.5" />
@@ -205,16 +207,35 @@ const ModerationHistory = (props) => {
                         ? "Deep Dive"
                         : row?.content_type === "POLL"
                           ? "Vibe Check"
+                          : row?.content_type === "COMMENT"
+                          ? "Comment"
                           : "--"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 justify-between">
                   <span className="flex items-center gap-2">
                     <PiSignpost className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500">Tribe:</span>
+                    <span className="text-gray-500">Tribe Group:</span>
                   </span>
                   <span className="font-medium">
-                    {row.post?.circle?.name ? row.post?.circle?.name : "--"}
+                    {row.post?.circle?.circleGroup?.name ||
+                          row.poll?.circle?.circleGroup?.name ||
+                          row.comment?.poll?.circle?.circleGroup?.name ||
+                          row.comment?.post?.circle?.circleGroup?.name ||
+                          "--"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 justify-between">
+                  <span className="flex items-center gap-2">
+                    <PiSignpost className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-500">Tribe Name:</span>
+                  </span>
+                  <span className="font-medium">
+                    {row.post?.circle?.name ||
+                          row.poll?.circle?.name ||
+                          row.comment?.poll?.circle?.name ||
+                          row.comment?.post?.circle?.name ||
+                          "--"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 justify-between">
@@ -232,12 +253,12 @@ const ModerationHistory = (props) => {
                     <span className="text-gray-500">Updated Time:</span>
                   </span>
                   <span className="font-medium">
-                    {row.reviewed_time ? row.reviewed_time : "--"}
+                    {row.reviewed_time ? formatViewTime(row.reviewed_time) : "--"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 justify-between">
                   <span className="flex items-center gap-2">
-                    <FiClock className="w-4 h-4 text-gray-400" />
+                    <VscSymbolKeyword className="w-4 h-4 text-gray-400" />
                     <span className="text-gray-500">Flagged Keywords:</span>
                   </span>
                   <span className="font-medium">
@@ -246,7 +267,7 @@ const ModerationHistory = (props) => {
                 </div>
                 <div className="flex items-center gap-2 justify-between">
                   <span className="flex items-center gap-2">
-                    <FiClock className="w-4 h-4 text-gray-400" />
+                    <GrTransaction className="w-4 h-4 text-gray-400" />
                     <span className="text-gray-500">Action Taken:</span>
                   </span>
                   <span className="font-medium">
@@ -315,6 +336,7 @@ const ModerationHistory = (props) => {
           onClose={closeModal}
           report={selectedReport}
           editId={editPostId}
+          onSubmit={handleModerationUpdate}
         />
       )}
     </div>
