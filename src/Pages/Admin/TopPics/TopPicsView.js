@@ -70,7 +70,7 @@ const TopPicsView = ({ open, onClose, onSuccess, editId, rowData }) => {
 
         if (isEdit) {
           await authAxios().put(`/top-pick/${editId}`, formData, config);
-          toast.success("Top Pics updated successfully");
+          toast.success("Top Picks updated successfully");
         }
 
         onSuccess?.();
@@ -153,7 +153,7 @@ const TopPicsView = ({ open, onClose, onSuccess, editId, rowData }) => {
               <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
                 <div className="border-b px-6 py-4">
                   <Dialog.Title className="text-lg font-semibold">
-                    Edit Top Pics
+                    Edit Top Picks
                   </Dialog.Title>
                 </div>
 

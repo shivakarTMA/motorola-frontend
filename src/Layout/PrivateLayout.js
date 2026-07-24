@@ -34,7 +34,7 @@ export default function PrivateLayout({ children }) {
     { path: "/moderation-queue", title: "Moderation Queue" },
     { path: "/device-brands", title: "Device Brands" },
     { path: "/device-models", title: "Device Models" },
-    { path: "/top-pics", title: "Top Pics" },
+    { path: "/top-pics", title: "Top Picks" },
   ];
 
   const pageTitle =

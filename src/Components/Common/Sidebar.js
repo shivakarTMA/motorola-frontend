@@ -244,7 +244,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             className={`nav-link ${location.pathname === "/top-pics" ? "active" : ""}`}
           >
             <RiPushpin2Fill className="menu--icon" />
-            <span className="nav-text">Top Pics</span>
+            <span className="nav-text">Top Picks</span>
           </Link>
 
           <div

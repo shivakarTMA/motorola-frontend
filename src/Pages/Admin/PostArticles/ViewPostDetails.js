@@ -363,7 +363,7 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
                         </div>
                         <div className="flex items-center justify-between gap-4 text-sm">
                           <span className="font-semibold text-black">
-                            Top Pics
+                            Top Picks
                           </span>
                           <Switch
                             checked={enabled}
@@ -482,13 +482,13 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
                 <Dialog.Panel className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
                   <Dialog.Title className="text-lg font-semibold text-gray-800 mb-2">
                     {pendingValue
-                      ? "Top Pics this Deep Dive?"
-                      : "Remove top pics Deep Dive?"}
+                      ? "Top Picks this Deep Dive?"
+                      : "Remove Top Picks Deep Dive?"}
                   </Dialog.Title>
                   <p className="text-xs text-gray-500 mb-5">
                     {pendingValue
-                      ? "Are you sure you want to mark this Deep Dive as top pics?"
-                      : "Are you sure you want to remove this Deep Dive from top pics?"}
+                      ? "Are you sure you want to mark this Deep Dive as Top Picks?"
+                      : "Are you sure you want to remove this Deep Dive from Top Picks?"}
                   </p>
                   <div className="flex justify-end gap-3 ">
                     <button

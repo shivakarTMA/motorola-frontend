@@ -491,12 +491,12 @@ const AdminDashboard = (props) => {
             </div>
             <div className="border px-2 py-1 rounded-lg">
               <div className="w-fit flex items-center gap-2">
-                <div className="text-[13px] font-medium text-gray-500 flex gap-2 items-center">
-                  <FaCircle className="text-[10px] text-[#3774d0]" />
+                <div className="text-[18px] font-medium text-gray-500 flex gap-2 items-center">
+                  <FaCircle className="text-[12px] text-[#3774d0]" />
                   <span className="leading-1">Total Users</span>
                 </div>
                 <div className="flex">
-                  <span className="text-[13px] font-semibold leading-1">
+                  <span className="text-[20px] font-semibold leading-1">
                     {allDashboardData?.total_users_count}
                   </span>
                 </div>

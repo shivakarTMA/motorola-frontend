@@ -224,6 +224,7 @@ export default function DateRangePicker({
   panelOffsetLeft = 0, // extra horizontal nudge, in px (added to left, or subtracted on the right side)
   panelOffsetRight = 0,
   placeholder,
+  disabled = false,
 }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const presets = useMemo(() => getPresets(today), [today]);
@@ -233,7 +234,7 @@ export default function DateRangePicker({
     [presets, defaultPreset],
   );
 
-   // NEW: if `value` is supplied on first render, seed committed/draft state from
+  // NEW: if `value` is supplied on first render, seed committed/draft state from
   // it instead of the default preset.
   const hasIncomingValue = Boolean(value?.startDate && value?.endDate);
   const initialRange = hasIncomingValue
@@ -382,12 +383,21 @@ export default function DateRangePicker({
         }
       : { top: `${panelOffsetTop}%`, left: `${panelOffsetLeft}%` };
 
+  useEffect(() => {
+    if (disabled) {
+      setOpen(false);
+    }
+  }, [disabled]);
+
   return (
     <div className="drp-root" ref={rootRef}>
       <button
         type="button"
-        className="drp-trigger"
-        onClick={() => (open ? setOpen(false) : openPanel())}
+        className={`${disabled ? 'disabled-drp-trigger' : ''} drp-trigger`}
+        onClick={() => {
+          if (disabled) return;
+          open ? setOpen(false) : openPanel();
+        }}
       >
         <FiCalendar size={15} className="drp-trigger-icon" />
         <span className="drp-trigger-text">
@@ -404,7 +414,7 @@ export default function DateRangePicker({
         <FiChevronDown size={13} className="drp-trigger-chevron" />
       </button>
 
-      {isApplied && (
+      {isApplied && !disabled && (
         <button
           type="button"
           className="drp-clear-x"
@@ -780,6 +790,36 @@ export default function DateRangePicker({
         .drp-btn--solid:disabled {
           background: var(--slate-soft);
           cursor: not-allowed;
+        }
+        .drp-trigger:disabled {
+          background: #f9fafb;
+          color: #9ca3af;
+          border-color: #e5e7eb;
+          cursor: not-allowed;
+        }
+
+        .drp-trigger:disabled .drp-trigger-icon,
+        .drp-trigger:disabled .drp-trigger-chevron,
+        .drp-trigger:disabled .drp-trigger-text {
+          color: #9ca3af;
+          opacity: 0.7;
+        }
+
+        .drp-clear-x:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+        .disabled-drp-trigger.drp-trigger {
+            background: #f1f1f1;
+            cursor: unset;
+        }
+
+        .disabled-drp-trigger.drp-trigger .drp-trigger-text {
+            color: #878787;
+        }
+
+        .disabled-drp-trigger.drp-trigger svg {
+            color: #878787;
         }
 
         @media(max-width:992px){

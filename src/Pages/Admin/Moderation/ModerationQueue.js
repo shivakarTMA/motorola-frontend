@@ -255,7 +255,7 @@ const ModerationQueue = (props) => {
           </div>
         </div>
 
-        <div className="flex lg:flex-row flex-col lg:items-center py-3">
+        <div className="flex flex-wrap gap-y-2 py-0">
           <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
             <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
               <FaCircle className="text-[10px] text-[#F59E0B]" />
@@ -263,7 +263,7 @@ const ModerationQueue = (props) => {
             </div>
             <div className="pr-2 flex">
               <span className="text-[13px] font-semibold">
-                {moderationStats?.total_flaggged_posts}
+                {moderationStats?.total_flagged_posts}
               </span>
             </div>
           </div>
