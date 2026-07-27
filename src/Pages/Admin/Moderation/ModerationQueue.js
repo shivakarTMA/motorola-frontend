@@ -23,6 +23,9 @@ import PollModerationDetailModal from "./PollModerationDetailModal";
 import Select from "react-select";
 import { useSearchParams } from "react-router-dom";
 import { FaCircle } from "react-icons/fa6";
+import CommentArticleDetails from "./CommentModeration/CommentArticleDetails";
+import CommentPostDetails from "./CommentModeration/CommentPostDetails";
+import CommentPollDetails from "./CommentModeration/CommentPollDetails";
 
 const statusType = [
   { label: "Resolved", value: "ACTIONED" },
@@ -55,6 +58,8 @@ const ModerationQueue = (props) => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
+  const [modalCommentType, setModalCommentType] = useState(null);
+  const [modalCommentParentType, setModalCommentParentType] = useState(null);
   const [tribeGroupOptions, setTribeGroupOptions] = useState([]);
   const [tribeOptions, setTribeOptions] = useState([]);
 
@@ -213,6 +218,8 @@ const ModerationQueue = (props) => {
   const openReport = (row) => {
     setSelectedReport(row);
     setModalType(row?.post?.type ? row?.post?.type : row?.content_type);
+    setModalCommentType(row?.content_type);
+    setModalCommentParentType(row?.content_parent_type);
     setEditPostId(row.id);
   };
 
@@ -220,6 +227,8 @@ const ModerationQueue = (props) => {
     setSelectedReport(null);
     setModalType(null);
     setEditPostId(null);
+    setModalCommentType(null);
+    setModalCommentParentType(null);
   };
 
   // Called after the confirmation modal is confirmed
@@ -569,6 +578,38 @@ const ModerationQueue = (props) => {
           onSubmit={handleModerationUpdate}
         />
       )}
+
+      {(modalCommentParentType === "ARTICLE" && modalCommentType === "COMMENT") && (
+        <CommentArticleDetails
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {(modalCommentParentType === "POST" && modalCommentType === "COMMENT") && (
+        <CommentPostDetails
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {(modalCommentParentType === "POLL" && modalCommentType === "COMMENT") && (
+        <CommentPollDetails
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+
     </>
   );
 };

@@ -127,8 +127,12 @@ const getActionItems = (status) => {
 };
 
 // Top row card: icon circle + big number + label, with left accent bar
-const ActivityCard = ({ icon, iconBg, accentColor, value, label }) => (
-  <div className="relative bg-white rounded-xl box--shadow p-4 flex items-center gap-4 overflow-hidden">
+const ActivityCard = ({ icon, iconBg, accentColor, value, label, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`relative bg-white rounded-xl box--shadow p-4 flex items-center gap-4 overflow-hidden
+    ${onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
+  >
     <span
       className="absolute left-0 top-0 h-full w-1"
       style={{ backgroundColor: accentColor }}
@@ -239,6 +243,13 @@ const ViewUser = (props) => {
     }
   };
 
+  const goToUserContent = (path) => {
+    if (!basicInfoUser?.id) return;
+    const params = new URLSearchParams();
+    params.set("user_id", basicInfoUser.id);
+    navigate(`${path}?${params.toString()}`);
+  };
+
   return (
     <div className="w-full">
       <div className="mb-6 flex items-center justify-between">
@@ -329,6 +340,7 @@ const ViewUser = (props) => {
                         accentColor="#6366F1"
                         value={basicInfoUser?.posts_count}
                         label="Hot takes posted"
+                        onClick={() => goToUserContent("/hot-take")}
                       />
                       <ActivityCard
                         icon={
@@ -341,6 +353,7 @@ const ViewUser = (props) => {
                         accentColor="#059669"
                         value={basicInfoUser?.articles_count}
                         label="Deep Dives posted"
+                        onClick={() => goToUserContent("/deep-dive")}
                       />
                       <ActivityCard
                         icon={
@@ -353,6 +366,7 @@ const ViewUser = (props) => {
                         accentColor="#7C3AED"
                         value={basicInfoUser?.polls_count}
                         label="Vibe Checks posted"
+                        onClick={() => goToUserContent("/vibe-check")}
                       />
                     </div>
 

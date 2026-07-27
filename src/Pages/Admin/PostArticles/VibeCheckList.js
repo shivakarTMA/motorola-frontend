@@ -22,6 +22,7 @@ import Pagination from "../../../Components/Common/Pagination";
 import Select from "react-select";
 import { TiArrowSortedDown, TiArrowSortedUp } from "react-icons/ti";
 import { BiSortAlt2 } from "react-icons/bi";
+import { useSearchParams } from "react-router-dom";
 
 const statusType = [
   { label: "Published", value: "PUBLISHED" },
@@ -31,18 +32,34 @@ const statusType = [
 
 const VibeCheckList = (props) => {
   const { setLoading } = props;
+  const [searchParams, setSearchParams] = useSearchParams();
   const [hotTakeList, setHotTakeList] = useState([]);
   const [viewPostDetails, setViewPostDetails] = useState(false);
   const [editPostId, setEditPostId] = useState(null);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+
+  const [startDate, setStartDate] = useState(() => {
+    const from = searchParams.get("date_from");
+    return from ? new Date(from) : null;
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const to = searchParams.get("date_to");
+    return to ? new Date(to) : null;
+  });
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [tribeList, setTribeList] = useState([]);
-  const [statusFilter, setStatusFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(
+    () => searchParams.get("status") || null,
+  );
+  const [userIdFromUrl] = useState(() => searchParams.get("user_id"));
   const [filterUserNameGroup, setFilterUserNameGroup] = useState(null);
+  const [tribeGroupIdFromUrl] = useState(() =>
+    searchParams.get("circle_group_id"),
+  );
+  const [tribeIdFromUrl] = useState(() => searchParams.get("circle_id"));
+
   const [filterTribeGroup, setFilterTribeGroup] = useState(null);
   const [filterTribe, setFilterTribe] = useState(null);
 
@@ -174,6 +191,13 @@ const VibeCheckList = (props) => {
         }));
         console.log(options, "options");
         setUserOptions(options);
+        // NEW: resolve pending user_id from the URL now that we have labels
+        if (userIdFromUrl) {
+          const match = options.find(
+            (o) => String(o.value) === String(userIdFromUrl),
+          );
+          if (match) setFilterUserNameGroup(match);
+        }
       } else {
         toast.error(response.data?.message);
       }
@@ -196,6 +220,13 @@ const VibeCheckList = (props) => {
         }));
         console.log(options, "options");
         setTribeGroupOptions(options);
+          // NEW: resolve pending tribe-group id from the URL
+        if (tribeGroupIdFromUrl) {
+          const match = options.find(
+            (o) => String(o.value) === String(tribeGroupIdFromUrl),
+          );
+          if (match) setFilterTribeGroup(match);
+        }
       } else {
         toast.error(response.data?.message);
       }
@@ -224,6 +255,19 @@ const VibeCheckList = (props) => {
         }));
 
         setTribeOptions(options);
+        // NEW: resolve pending tribe id from the URL, but only the very
+        // first time (once resolved, normal setFilterTribe(null) resets
+        // on subsequent group changes should win instead).
+        if (tribeIdFromUrl && !filterTribe) {
+          const match = options.find(
+            (o) => String(o.value) === String(tribeIdFromUrl),
+          );
+          if (match) {
+            setFilterTribe(match);
+            return;
+          }
+        }
+        setFilterTribe(null);
       } else {
         toast.error(resData?.message);
       }
@@ -247,6 +291,36 @@ const VibeCheckList = (props) => {
     fetchTribeGroupList();
     fetchUsersList();
   }, []);
+
+  
+  useEffect(() => {
+  const params = new URLSearchParams(searchParams);
+
+  if (statusFilter) params.set("status", statusFilter);
+  else params.delete("status");
+
+  if (filterUserNameGroup?.value)
+    params.set("user_id", filterUserNameGroup.value);
+  else params.delete("user_id");
+
+  if (filterTribeGroup?.value)
+    params.set("circle_group_id", filterTribeGroup.value);
+  else params.delete("circle_group_id");
+
+  if (filterTribe?.value) params.set("circle_id", filterTribe.value);
+  else params.delete("circle_id");
+
+  if (startDate && endDate) {
+    params.set("date_from", format(startDate, "yyyy-MM-dd"));
+    params.set("date_to", format(endDate, "yyyy-MM-dd"));
+  } else {
+    params.delete("date_from");
+    params.delete("date_to");
+  }
+
+  setSearchParams(params, { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [statusFilter, filterUserNameGroup, filterTribeGroup, filterTribe, startDate, endDate]);
 
   const groupOptions = tribeList.map((group) => ({
     value: group.id,
@@ -298,12 +372,13 @@ const VibeCheckList = (props) => {
         <div>
           <div className="flex lg:flex-row flex-col-reverse justify-between lg:gap-3 gap-2 w-full relative">
             <div className="flex lg:flex-nowrap flex-wrap gap-2 lg:items-center">
-              <div className="md:min-w-[200px] w-full">
+              <div className="md:min-w-[200px] w-fit">
                 <DateRangePicker
                   onChange={handleDateRangeChange}
                   defaultPreset="Today"
                   panelOffsetTop={100}
                   panelOffsetLeft={0}
+                  value={{ startDate, endDate }}
                 />
               </div>
               <div className="lg:min-w-[180px] lg:w-fit w-[48%]">

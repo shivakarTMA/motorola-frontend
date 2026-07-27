@@ -22,6 +22,7 @@ import Pagination from "../../../Components/Common/Pagination";
 import Select from "react-select";
 import { BiSortAlt2 } from "react-icons/bi";
 import { TiArrowSortedDown, TiArrowSortedUp } from "react-icons/ti";
+import { useSearchParams } from "react-router-dom";
 import ViewArticleDetails from "./ViewArticleDetails";
 
 const statusType = [
@@ -30,17 +31,34 @@ const statusType = [
   { label: "Under Review", value: "UNDER_REVIEW" },
 ];
 
-const HotTakeList = (props) => {
+const DeepDiveList = (props) => {
   const { setLoading } = props;
-  const [HotTakeList, setHotTakeList] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [DeepDiveList, setDeepDiveList] = useState([]);
   const [viewPostDetails, setViewPostDetails] = useState(false);
   const [editPostId, setEditPostId] = useState(null);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+
+  const [startDate, setStartDate] = useState(() => {
+    const from = searchParams.get("date_from");
+    return from ? new Date(from) : null;
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const to = searchParams.get("date_to");
+    return to ? new Date(to) : null;
+  });
 
   const [tribeList, setTribeList] = useState([]);
-  const [statusFilter, setStatusFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(
+    () => searchParams.get("status") || null,
+  );
+  const [userIdFromUrl] = useState(() => searchParams.get("user_id"));
   const [filterUserNameGroup, setFilterUserNameGroup] = useState(null);
+  const [tribeGroupIdFromUrl] = useState(() =>
+    searchParams.get("circle_group_id"),
+  );
+  const [tribeIdFromUrl] = useState(() => searchParams.get("circle_id"));
+
   const [filterTribeGroup, setFilterTribeGroup] = useState(null);
   const [filterTribe, setFilterTribe] = useState(null);
 
@@ -100,7 +118,7 @@ const HotTakeList = (props) => {
       const resData = response.data;
 
       if (resData.success) {
-        setHotTakeList(resData.data.items);
+        setDeepDiveList(resData.data.items);
         const paginationData = resData.data.pagination;
         setPage(paginationData.page);
         setTotalPages(paginationData.totalPages);
@@ -152,6 +170,13 @@ const HotTakeList = (props) => {
         }));
         console.log(options, "options");
         setUserOptions(options);
+        // NEW: resolve pending user_id from the URL now that we have labels
+        if (userIdFromUrl) {
+          const match = options.find(
+            (o) => String(o.value) === String(userIdFromUrl),
+          );
+          if (match) setFilterUserNameGroup(match);
+        }
       } else {
         toast.error(response.data?.message);
       }
@@ -174,6 +199,13 @@ const HotTakeList = (props) => {
         }));
         console.log(options, "options");
         setTribeGroupOptions(options);
+        // NEW: resolve pending tribe-group id from the URL
+      if (tribeGroupIdFromUrl) {
+        const match = options.find(
+          (o) => String(o.value) === String(tribeGroupIdFromUrl),
+        );
+        if (match) setFilterTribeGroup(match);
+      }
       } else {
         toast.error(response.data?.message);
       }
@@ -201,6 +233,20 @@ const HotTakeList = (props) => {
         }));
 
         setTribeOptions(options);
+
+        // NEW: resolve pending tribe id from the URL, but only the very
+      // first time (once resolved, normal setFilterTribe(null) resets
+      // on subsequent group changes should win instead).
+      if (tribeIdFromUrl && !filterTribe) {
+        const match = options.find(
+          (o) => String(o.value) === String(tribeIdFromUrl),
+        );
+        if (match) {
+          setFilterTribe(match);
+          return;
+        }
+      }
+      setFilterTribe(null);
       } else {
         toast.error(resData?.message);
       }
@@ -223,6 +269,35 @@ const HotTakeList = (props) => {
     fetchTribeGroupList();
     fetchUsersList();
   }, []);
+
+  useEffect(() => {
+  const params = new URLSearchParams(searchParams);
+
+  if (statusFilter) params.set("status", statusFilter);
+  else params.delete("status");
+
+    if (filterUserNameGroup?.value)
+    params.set("user_id", filterUserNameGroup.value);
+  else params.delete("user_id");
+
+  if (filterTribeGroup?.value)
+    params.set("circle_group_id", filterTribeGroup.value);
+  else params.delete("circle_group_id");
+
+  if (filterTribe?.value) params.set("circle_id", filterTribe.value);
+  else params.delete("circle_id");
+
+  if (startDate && endDate) {
+    params.set("date_from", format(startDate, "yyyy-MM-dd"));
+    params.set("date_to", format(endDate, "yyyy-MM-dd"));
+  } else {
+    params.delete("date_from");
+    params.delete("date_to");
+  }
+
+  setSearchParams(params, { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [statusFilter,filterUserNameGroup, filterTribeGroup, filterTribe, startDate, endDate]);
 
   const groupOptions = tribeList.map((group) => ({
     value: group.id,
@@ -279,6 +354,7 @@ const HotTakeList = (props) => {
                 defaultPreset="Today"
                 panelOffsetTop={100}
                 panelOffsetLeft={0}
+                value={{ startDate, endDate }}
               />
             </div>
 
@@ -335,9 +411,6 @@ const HotTakeList = (props) => {
                   <tr>
                     <th className="px-2 py-4 min-w-[120px]">Created Date</th>
 
-                    {/* <th className="px-2 py-4 min-w-[80px] text-center">
-                      Media
-                    </th> */}
                     <th className="px-2 py-4 min-w-[100px]">Content ID</th>
                     <th className="px-2 py-4 min-w-[100px]">Username</th>
                     <th className="px-2 py-4 min-w-[100px]">Tribe Group</th>
@@ -346,9 +419,6 @@ const HotTakeList = (props) => {
                     <th className="px-2 py-4 min-w-[150px] text-center">
                       Status
                     </th>
-                    {/* <th className="px-2 py-4 min-w-[100px] text-center">
-                      Pinned
-                    </th> */}
                     <th
                       className="px-2 py-4 min-w-[80px] text-center cursor-pointer select-none"
                       onClick={() => handleSortToggle("likes_count")}
@@ -395,8 +465,8 @@ const HotTakeList = (props) => {
                 </thead>
 
                 <tbody>
-                  {HotTakeList?.length > 0 ? (
-                    HotTakeList.map((row, index) => (
+                  {DeepDiveList?.length > 0 ? (
+                    DeepDiveList.map((row, index) => (
                       <tr
                         key={row.id || index}
                         className="border-b hover:bg-gray-50 text-xs"
@@ -404,18 +474,6 @@ const HotTakeList = (props) => {
                         <td className="px-2 py-4">
                           {formatViewDate(row.created_at)}
                         </td>
-
-                        {/* <td className="px-2 py-4 text-center">
-                          {row.media?.[0]?.media ? (
-                            <img
-                              src={row.media[0].media}
-                              alt="Post"
-                              className="w-8 h-8 object-cover rounded-full mx-auto"
-                            />
-                          ) : (
-                            <span className="text-gray-400">No Media</span>
-                          )}
-                        </td> */}
 
                         <td className="px-2 py-4">{row.content_id || "-"}</td>
                         <td className="px-2 py-4">
@@ -499,7 +557,7 @@ const HotTakeList = (props) => {
               totalPages={totalPages}
               rowsPerPage={rowsPerPage}
               totalCount={totalCount}
-              currentDataLength={HotTakeList.length}
+              currentDataLength={DeepDiveList.length}
               onPageChange={(newPage) => {
                 setPage(newPage);
                 fetchDeepDiveList(newPage);
@@ -522,4 +580,4 @@ const HotTakeList = (props) => {
   );
 };
 
-export default IsLoadingHOC(HotTakeList);
+export default IsLoadingHOC(DeepDiveList);

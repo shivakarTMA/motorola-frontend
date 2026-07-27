@@ -37,6 +37,9 @@ import ModerationDetailModal from "./Moderation/ModerationDetailModal";
 import PollModerationDetailModal from "./Moderation/PollModerationDetailModal";
 import ArticleModerationDetailModal from "./Moderation/ArticleModerationDetailModal";
 import PostModerationDetailModal from "./Moderation/PostModerationDetailModal";
+import CommentArticleDetails from "./Moderation/CommentModeration/CommentArticleDetails";
+import CommentPostDetails from "./Moderation/CommentModeration/CommentPostDetails";
+import CommentPollDetails from "./Moderation/CommentModeration/CommentPollDetails";
 
 const StatCard = ({
   title,
@@ -94,6 +97,8 @@ const AdminDashboard = (props) => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null);
+  const [modalCommentType, setModalCommentType] = useState(null);
+  const [modalCommentParentType, setModalCommentParentType] = useState(null);
 
   const [filterTribeGroup, setFilterTribeGroup] = useState(null);
   const [filterTribe, setFilterTribe] = useState(null);
@@ -322,57 +327,84 @@ const AdminDashboard = (props) => {
     fetchRecentModerationActivities();
   }, []);
 
+  // NEW: maps a clicked bar's category to the right route + carries current filters
+const handleContentBarClick = (category) => {
+  const routeByCategory = {
+    "Hot Takes": "/hot-take",
+    "Deep Dives": "/deep-dive",   // adjust if your actual route differs
+    "Vibe Checks": "/vibe-check", // adjust if your actual route differs
+  };
+
+  const path = routeByCategory[category];
+  if (!path) return;
+
+  const params = new URLSearchParams();
+
+  if (startDate && endDate) {
+    params.set("date_from", format(startDate, "yyyy-MM-dd"));
+    params.set("date_to", format(endDate, "yyyy-MM-dd"));
+  }
+  if (filterTribeGroup?.value) {
+    params.set("circle_group_id", filterTribeGroup.value);
+  }
+  if (filterTribe?.value) {
+    params.set("circle_id", filterTribe.value);
+  }
+
+  navigate(`${path}?${params.toString()}`);
+};
+
   const contentChartOptions = useMemo(
-    () => ({
-      chart: {
-        type: "column",
-        height: "300px",
-      },
-      title: {
-        text: "",
-      },
-      credits: {
-        enabled: false,
-      },
-      lang: {
-        noData: "No content data for the selected filters",
-      },
-      noData: {
-        style: {
-          fontWeight: "500",
-          fontSize: "13px",
-          color: "#9ca3af",
+  () => ({
+    chart: {
+      type: "column",
+      height: "300px",
+    },
+    title: { text: "" },
+    credits: { enabled: false },
+    lang: { noData: "No content data for the selected filters" },
+    noData: {
+      style: { fontWeight: "500", fontSize: "13px", color: "#9ca3af" },
+    },
+    xAxis: {
+      categories: ["Hot Takes", "Deep Dives", "Vibe Checks"],
+    },
+    yAxis: {
+      min: 0,
+      title: { text: null },
+    },
+    legend: { enabled: false },
+    plotOptions: {
+      // NEW: whole-series click behavior
+      series: {
+        cursor: "pointer",
+        point: {
+          events: {
+            click: function () {
+              // `this.category` is the x-axis label of the clicked bar,
+              // e.g. "Hot Takes" — matches routeByCategory keys above.
+              handleContentBarClick(this.category);
+            },
+          },
         },
       },
-      xAxis: {
-        categories: ["Hot Takes", "Deep Dives", "Vibe Checks"],
+    },
+    series: [
+      {
+        name: filterTribe?.label || filterTribeGroup?.label || "Content",
+        color: "#3774d0",
+        data: hasContentData
+          ? [
+              contentChartData?.hot_takes || 0,
+              contentChartData?.deep_dives || 0,
+              contentChartData?.vibe_checks || 0,
+            ]
+          : [],
       },
-      yAxis: {
-        min: 0,
-        title: {
-          // text: "Count",
-          text: null,
-        },
-      },
-      legend: {
-        enabled: false,
-      },
-      series: [
-        {
-          name: filterTribe?.label || filterTribeGroup?.label || "Content",
-          color: "#3774d0",
-          data: hasContentData
-            ? [
-                contentChartData?.hot_takes || 0,
-                contentChartData?.deep_dives || 0,
-                contentChartData?.vibe_checks || 0,
-              ]
-            : [],
-        },
-      ],
-    }),
-    [contentChartData, filterTribeGroup, filterTribe, hasContentData],
-  );
+    ],
+  }),
+  [contentChartData, filterTribeGroup, filterTribe, hasContentData],
+);
 
   const engagementChartOptions = useMemo(
     () => ({
@@ -434,6 +466,8 @@ const AdminDashboard = (props) => {
   const openReport = (row) => {
     setSelectedReport(row);
     setModalType(row?.post?.type ? row?.post?.type : row?.content_type);
+    setModalCommentType(row?.content_type);
+    setModalCommentParentType(row?.content_parent_type);
     setEditPostId(row.id);
   };
 
@@ -441,6 +475,8 @@ const AdminDashboard = (props) => {
     setSelectedReport(null);
     setModalType(null);
     setEditPostId(null);
+    setModalCommentType(null);
+    setModalCommentParentType(null);
   };
 
   // Called after the confirmation modal is confirmed
@@ -825,6 +861,36 @@ const AdminDashboard = (props) => {
 
       {modalType === "POLL" && (
         <PollModerationDetailModal
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {(modalCommentParentType === "ARTICLE" && modalCommentType === "COMMENT") && (
+        <CommentArticleDetails
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {(modalCommentParentType === "POST" && modalCommentType === "COMMENT") && (
+        <CommentPostDetails
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {(modalCommentParentType === "POLL" && modalCommentType === "COMMENT") && (
+        <CommentPollDetails
           isOpen={true}
           onClose={closeModal}
           report={selectedReport}

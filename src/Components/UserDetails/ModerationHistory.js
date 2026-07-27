@@ -27,6 +27,9 @@ import ArticleModerationDetailModal from "../../Pages/Admin/Moderation/ArticleMo
 import PostModerationDetailModal from "../../Pages/Admin/Moderation/PostModerationDetailModal";
 import { GrTransaction } from "react-icons/gr";
 import { VscSymbolKeyword } from "react-icons/vsc";
+import CommentArticleDetails from "../../Pages/Admin/Moderation/CommentModeration/CommentArticleDetails";
+import CommentPostDetails from "../../Pages/Admin/Moderation/CommentModeration/CommentPostDetails";
+import CommentPollDetails from "../../Pages/Admin/Moderation/CommentModeration/CommentPollDetails";
 
 const statusStyles = {
   pending: "bg-amber-50 text-amber-700 border border-amber-200",
@@ -49,6 +52,8 @@ const ModerationHistory = (props) => {
 
   const [editPostId, setEditPostId] = useState(null);
   const [modalType, setModalType] = useState(null);
+  const [modalCommentType, setModalCommentType] = useState(null);
+  const [modalCommentParentType, setModalCommentParentType] = useState(null);
 
   const [page, setPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -99,9 +104,9 @@ const ModerationHistory = (props) => {
 
   const openReport = (row) => {
     setSelectedReport(row);
-        setModalType(
-      row?.post?.type ? row?.post?.type : row?.content_type
-    );
+    setModalType(row?.post?.type ? row?.post?.type : row?.content_type);
+    setModalCommentType(row?.content_type);
+    setModalCommentParentType(row?.content_parent_type);
     setEditPostId(row.id);
   };
 
@@ -109,6 +114,8 @@ const ModerationHistory = (props) => {
     setSelectedReport(null);
     setModalType(null);
     setEditPostId(null);
+    setModalCommentType(null);
+    setModalCommentParentType(null);
   };
 
   // Called after the confirmation modal is confirmed
@@ -178,14 +185,16 @@ const ModerationHistory = (props) => {
               </div>
 
               {/* Date / Time */}
+              <div className="text-sm font-semibold">Reported Date & Time</div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-gray-500">Reported Date:</span>
                   <FiCalendar className="w-3.5 h-3.5" />
                   <span>{formatViewDate(row.reported_at) || "--"}</span>
                 </div>
+                <div>
+                /
+                </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-gray-500">Reported Time:</span>
                   <FiClock className="w-3.5 h-3.5" />
                   <span>{formatViewTime(row.reported_time) || "--"}</span>
                 </div>
@@ -332,6 +341,36 @@ const ModerationHistory = (props) => {
 
       {modalType === "POLL" && (
         <PollModerationDetailModal
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {(modalCommentParentType === "ARTICLE" && modalCommentType === "COMMENT") && (
+        <CommentArticleDetails
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {(modalCommentParentType === "POST" && modalCommentType === "COMMENT") && (
+        <CommentPostDetails
+          isOpen={true}
+          onClose={closeModal}
+          report={selectedReport}
+          editId={editPostId}
+          onSubmit={handleModerationUpdate}
+        />
+      )}
+
+      {(modalCommentParentType === "POLL" && modalCommentType === "COMMENT") && (
+        <CommentPollDetails
           isOpen={true}
           onClose={closeModal}
           report={selectedReport}
