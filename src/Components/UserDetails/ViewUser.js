@@ -27,6 +27,7 @@ import { FaBan, FaHeart, FaUserSlash } from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
 import { HiOutlineDocumentText } from "react-icons/hi";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
+import UserTribeList from "./UserTribeList";
 
 const formatDOB = (dob) => {
   if (!dob) return "";
@@ -293,13 +294,17 @@ const ViewUser = (props) => {
 
         <div className="lg:col-span-3">
           <TabGroup>
-            <TabList className="mb-3 flex gap-3 border-b border-b-gray-300">
-              <Tab className="rounded-t-lg lg:px-5 px-4 py-2 lg:text-sm text-[12px] font-medium transition outline-none data-[selected]:bg-black data-[selected]:text-white data-[hover]:bg-blue-50">
+            <TabList className="mb-3 flex lg:gap-3 gap-2 border-b border-b-gray-300">
+              <Tab className="rounded-t-lg lg:px-5 px-2 py-2 lg:text-sm text-[12px] font-medium transition outline-none data-[selected]:bg-black data-[selected]:text-white data-[hover]:bg-blue-50">
                 Profile Details
               </Tab>
 
-              <Tab className="rounded-t-lg lg:px-5 px-4 py-2 lg:text-sm text-[12px] font-medium transition outline-none data-[selected]:bg-black data-[selected]:text-white data-[hover]:bg-blue-50">
+              <Tab className="rounded-t-lg lg:px-5 px-2 py-2 lg:text-sm text-[12px] font-medium transition outline-none data-[selected]:bg-black data-[selected]:text-white data-[hover]:bg-blue-50">
                 Moderation History
+              </Tab>
+
+              <Tab className="rounded-t-lg lg:px-5 px-2 py-2 lg:text-sm text-[12px] font-medium transition outline-none data-[selected]:bg-black data-[selected]:text-white data-[hover]:bg-blue-50">
+                Tribes followed
               </Tab>
             </TabList>
             <TabPanels>
@@ -413,6 +418,11 @@ const ViewUser = (props) => {
 
               <TabPanel>
                 <ModerationHistory />
+              </TabPanel>
+              {/* end Moderation History */}
+
+              <TabPanel>
+                <UserTribeList />
               </TabPanel>
               {/* end Moderation History */}
             </TabPanels>
