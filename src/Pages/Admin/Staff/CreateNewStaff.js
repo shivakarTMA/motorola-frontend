@@ -16,6 +16,7 @@ import { RiImageAddLine } from "react-icons/ri";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { authAxios } from "../../../Config/config";
 // import { authAxios } from "../../../config/config";
+import { sanitizeInput } from "../../../Helper/helper";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -182,7 +183,10 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
                       //     sanitizeOnlyText(e.target.value),
                       //   )
                       // }
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        const cleaned = sanitizeInput(e.target.value);
+                        formik.setFieldValue(e.target.name, cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Enter Name"
@@ -204,7 +208,10 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
                       type="email"
                       name="email"
                       value={formik.values.email}
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        const cleaned = sanitizeInput(e.target.value);
+                        formik.setFieldValue(e.target.name, cleaned);
+                      }}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Enter Email"

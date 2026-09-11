@@ -11,6 +11,7 @@ import {
   blockOnlyNumericKeys,
   sanitizePositiveInteger,
   sanitizeFreeText,
+  handleNumericPaste,
 } from "../../../Helper/Inputhelpers";
 import { RiImageAddLine } from "react-icons/ri";
 import DatePicker from "react-datepicker";
@@ -224,6 +225,7 @@ const TopPicsView = ({ open, onClose, onSuccess, editId, rowData }) => {
                     <input
                       type="number"
                       name="position"
+                      onPaste={(e) => handleNumericPaste(e, (val) => formik.setFieldValue("position", val))}
                       value={formik.values.position}
                       onKeyDown={blockOnlyNumericKeys}
                       onChange={(e) => {

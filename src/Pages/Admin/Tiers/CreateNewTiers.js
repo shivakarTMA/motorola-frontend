@@ -11,11 +11,13 @@ import {
   blockOnlyNumericKeys,
   sanitizePositiveInteger,
   sanitizeFreeText,
+  handleNumericPaste,
 } from "../../../Helper/Inputhelpers";
 import { RiImageAddLine } from "react-icons/ri";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { authAxios } from "../../../Config/config";
 // import { authAxios } from "../../../config/config";
+import { sanitizeInput } from "../../../Helper/helper";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -182,7 +184,10 @@ const CreateNewTiers = ({ open, onClose, onSuccess, editId }) => {
                         //     sanitizeOnlyText(e.target.value),
                         //   )
                         // }
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          const cleaned = sanitizeInput(e.target.value);
+                          formik.setFieldValue(e.target.name, cleaned);
+                        }}
                         className="custom--input w-full"
                         placeholder="Enter Tier Name"
                       />
@@ -202,6 +207,7 @@ const CreateNewTiers = ({ open, onClose, onSuccess, editId }) => {
                       <input
                         type="number"
                         name="level"
+                        onPaste={(e) => handleNumericPaste(e, (val) => formik.setFieldValue("position", val))}
                         value={formik.values.level}
                         onKeyDown={blockOnlyNumericKeys}
                         onChange={(e) =>
@@ -229,6 +235,7 @@ const CreateNewTiers = ({ open, onClose, onSuccess, editId }) => {
                       <input
                         type="number"
                         name="min_points"
+                        onPaste={(e) => handleNumericPaste(e, (val) => formik.setFieldValue("position", val))}
                         value={formik.values.min_points}
                         onKeyDown={blockOnlyNumericKeys}
                         onChange={(e) =>
@@ -281,7 +288,7 @@ const CreateNewTiers = ({ open, onClose, onSuccess, editId }) => {
                       name="benefits"
                       value={formik.values.benefits}
                       onChange={(e) => {
-                        const cleaned = sanitizeFreeText(e.target.value);
+                        const cleaned = sanitizeFreeText(sanitizeInput(e.target.value));
                         formik.setFieldValue("benefits", cleaned);
                       }}
                       className="custom--input w-full resize-none"

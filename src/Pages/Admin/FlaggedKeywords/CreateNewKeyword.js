@@ -15,6 +15,7 @@ import {
 import { RiImageAddLine } from "react-icons/ri";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { authAxios } from "../../../Config/config";
+import { sanitizeInput } from "../../../Helper/helper";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -184,7 +185,10 @@ const CreateNewKeyword = ({ open, onClose, onSuccess, editId }) => {
                         //     sanitizeOnlyText(e.target.value),
                         //   )
                         // }
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          const cleaned = sanitizeInput(e.target.value);
+                          formik.setFieldValue(e.target.name, cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                         placeholder="Enter Keyword"

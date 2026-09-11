@@ -11,6 +11,7 @@ import {
   blockOnlyNumericKeys,
   sanitizePositiveInteger,
   sanitizeFreeText,
+  handleNumericPaste,
 } from "../../../Helper/Inputhelpers";
 import { RiImageAddLine } from "react-icons/ri";
 import { FiEye, FiEyeOff } from "react-icons/fi";
@@ -171,6 +172,7 @@ const CreateNewModule = ({ open, onClose, onSuccess }) => {
                     <input
                       type="number"
                       name="position"
+                      onPaste={(e) => handleNumericPaste(e, (val) => formik.setFieldValue("position", val))}
                       value={formik.values.position}
                       onKeyDown={blockOnlyNumericKeys}
                       onChange={(e) =>

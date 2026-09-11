@@ -63,6 +63,9 @@ export const sanitizeOnlyText = (value) => {
 // (e.g. Position, Quantity, OTP)
 
 export const blockOnlyNumericKeys = (e) => {
+  if (["e", "E", "+", "-", ".", ","].includes(e.key)) {
+   e.preventDefault();
+ }
   if (isNavOrShortcutKey(e)) return;
   if (!/^[0-9]$/.test(e.key)) {
     e.preventDefault();
@@ -80,6 +83,13 @@ export const sanitizePositiveInteger = (value) => {
   const digitsOnly = value.replace(/\D/g, "");
   const noLeadingZeros = digitsOnly.replace(/^0+(?=\d)/, "");
   return noLeadingZeros;
+};
+
+export const handleNumericPaste = (e, setValue) => {
+  e.preventDefault();
+  const pastedText = e.clipboardData.getData("text");
+  const cleaned = sanitizePositiveInteger(pastedText);
+  setValue(cleaned);
 };
 
 // Block "-", "+", "e", "E", "." which the native number input still allows

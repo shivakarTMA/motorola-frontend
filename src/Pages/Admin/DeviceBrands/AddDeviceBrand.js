@@ -16,6 +16,7 @@ import { RiImageAddLine } from "react-icons/ri";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { authAxios } from "../../../Config/config";
+import { sanitizeInput } from "../../../Helper/helper";
 
 const linkTypeOptions = [
   { value: "NONE", label: "None" },
@@ -246,7 +247,10 @@ const AddDeviceBrand = ({ open, onClose, onSuccess, editId }) => {
                         //   const cleaned = sanitizeOnlyText(e.target.value);
                         //   formik.setFieldValue("name", cleaned);
                         // }}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          const cleaned = sanitizeInput(e.target.value);
+                          formik.setFieldValue(e.target.name, cleaned);
+                        }}
                         onBlur={formik.handleBlur}
                         className="custom--input w-full"
                         placeholder="Name"

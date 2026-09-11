@@ -172,3 +172,5 @@ export const filterActiveItems = (data) => {
     (item) => String(item?.status || "").toUpperCase() === "ACTIVE",
   );
 };
+export const sanitizeInput = (value = "") =>
+  value.replace(/[^a-zA-Z0-9 @&*()_–—,.|:"'-]/g, "");

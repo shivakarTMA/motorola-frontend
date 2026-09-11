@@ -11,10 +11,12 @@ import {
   blockOnlyNumericKeys,
   sanitizePositiveInteger,
   sanitizeFreeText,
+  handleNumericPaste,
 } from "../../../Helper/Inputhelpers";
 import { RiImageAddLine } from "react-icons/ri";
 import { authAxios } from "../../../Config/config";
 // import { authAxios } from "../../../config/config";
+import { sanitizeInput } from "../../../Helper/helper";
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
@@ -285,7 +287,9 @@ const AddNewCircle = ({
                       //   const cleaned = sanitizeOnlyText(e.target.value);
                       //   formik.setFieldValue("name", cleaned);
                       // }}
-                      onChange={formik.handleChange}
+                      onChange={(e) =>
+                        formik.setFieldValue(e.target.name, sanitizeInput(e.target.value))
+                      }
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Name"
@@ -353,7 +357,7 @@ const AddNewCircle = ({
                       rows={4}
                       value={formik.values.bio}
                       onChange={(e) => {
-                        const cleaned = sanitizeFreeText(e.target.value);
+                        const cleaned = sanitizeFreeText(sanitizeInput(e.target.value));
                         formik.setFieldValue("bio", cleaned);
                       }}
                       onBlur={formik.handleBlur}
@@ -487,6 +491,7 @@ const AddNewCircle = ({
                     <input
                       type="number"
                       name="position"
+                      onPaste={(e) => handleNumericPaste(e, (val) => formik.setFieldValue("position", val))}
                       value={formik.values.position}
                       onKeyDown={blockOnlyNumericKeys}
                       onChange={(e) => {
