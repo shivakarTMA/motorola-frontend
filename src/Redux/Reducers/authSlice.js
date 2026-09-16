@@ -5,6 +5,7 @@ const initialState = {
   user: {},
   userType: "",
   isAuthenticated: false,
+  sessionExpiresAt: null, // ISO string from login response, e.g. "2026-09-23T10:28:23.176Z"
 };
 
 export const authSlice = createSlice({
@@ -24,12 +25,16 @@ export const authSlice = createSlice({
     setIsAuthenticated: (state, action) => {
       state.isAuthenticated = action.payload;
     },
+    setSessionExpiresAt: (state, action) => {
+      state.sessionExpiresAt = action.payload;
+    },
 
-    logout: (state, action) => {
+    logout: (state) => {
       state.user = {};
       state.accessToken = "";
       state.userType = "";
       state.isAuthenticated = false;
+      state.sessionExpiresAt = null;
     },
   },
 });
@@ -39,6 +44,7 @@ export const {
   setUser,
   setUserType,
   setIsAuthenticated,
+  setSessionExpiresAt,
   logout,
 } = authSlice.actions;
 
