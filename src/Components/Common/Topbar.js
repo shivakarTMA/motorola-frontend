@@ -73,9 +73,15 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
     setToggleMenuBar(!toggleMenuBar);
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await authAxios().get("/auth/expires/token");
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      dispatch(logout());
+      navigate("/login", { replace: true });
+    }
   };
   const handleSubmit = (e) => {
     e.preventDefault();
