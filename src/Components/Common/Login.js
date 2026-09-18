@@ -156,7 +156,7 @@ const Login = (props) => {
           mobile: nationalNumber,
         });
 
-        if (sessionResponse.data.status === false) {
+        if (sessionResponse.data.success === false) {
           // Show confirmation modal
           setSessionMessage(sessionResponse.data.message);
           setShowSessionModal(true);
