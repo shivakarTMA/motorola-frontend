@@ -275,7 +275,6 @@ const Login = (props) => {
             alt="logo"
             width={50}
             height={50}
-            className="rounded-lg"
           />
         </div>
 
