@@ -62,7 +62,12 @@ const DeviceModelList = (props) => {
     try {
       setLoading(true);
 
-      const response = await authAxios().get("/device-brand");
+      const response = await authAxios().get("/device-brand",{
+        params: {
+          page: 1,
+          limit: 100,
+        },
+      });
       const resData = response?.data;
       if (resData?.success) {
         let data = resData.data.items || [];
