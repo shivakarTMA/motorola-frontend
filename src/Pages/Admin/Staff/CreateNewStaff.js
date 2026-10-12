@@ -24,7 +24,7 @@ const statusOptions = [
 ];
 
 const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
-  const [showPassword, setShowPassword] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false);
   const isEdit = !!editId;
 
   const formik = useFormik({
@@ -33,7 +33,7 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
       name: "",
       email: "",
       mobile: "",
-      password: "",
+      // password: "",
       role_id: null,
       status: null,
     },
@@ -48,15 +48,15 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
         .matches(/^[0-9]{10}$/, "Mobile must be 10 digits")
         .required("Mobile is required"),
 
-      password: Yup.string().when([], {
-        is: () => !isEdit,
-        then: (schema) =>
-          schema
-            .min(6, "Password must be at least 6 characters")
-            .required("Password is required"),
-        otherwise: (schema) =>
-          schema.min(6, "Password must be at least 6 characters").notRequired(),
-      }),
+      // password: Yup.string().when([], {
+      //   is: () => !isEdit,
+      //   then: (schema) =>
+      //     schema
+      //       .min(6, "Password must be at least 6 characters")
+      //       .required("Password is required"),
+        // otherwise: (schema) =>
+        //   schema.min(6, "Password must be at least 6 characters").notRequired(),
+      // }),
 
       role_id: Yup.object().nullable().required("Role is required"),
 
@@ -70,7 +70,7 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
           mobile: values.mobile,
           role_id: values.role_id.value,
           status: values.status.value,
-          ...(values.password ? { password: values.password } : {}),
+          // ...(values.password ? { password: values.password } : {}),
         };
 
         console.log(payload);
@@ -253,7 +253,7 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
                     )}
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block mb-2 text-sm font-medium">
                       {isEdit ? "Change Password" : "Password"}{" "}
                       {!isEdit && <span className="text-red-600">*</span>}
@@ -288,7 +288,7 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
                         {formik.errors.password}
                       </p>
                     )}
-                  </div>
+                  </div> */}
 
                   <div>
                     <label className="block mb-2 text-sm font-medium">
