@@ -35,6 +35,7 @@ export default function PrivateLayout({ children }) {
     { path: "/device-brands", title: "Device Brands" },
     { path: "/device-models", title: "Device Models" },
     { path: "/top-pics", title: "Top Picks" },
+    { path: "/retailer", title: "Retailer" },
   ];
 
   const pageTitle =

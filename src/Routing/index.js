@@ -28,6 +28,7 @@ import ModerationQueue from "../Pages/Admin/Moderation/ModerationQueue";
 import DeviceBrandsList from "../Pages/Admin/DeviceBrands/DeviceBrandsList";
 import DeviceModelList from "../Pages/Admin/DeviceModels/DeviceModelList";
 import TopPicsList from "../Pages/Admin/TopPics/TopPicsList";
+import RetailerList from "../Pages/Admin/Retailer/RetailerList";
 
 
 export default function Routing() {
@@ -133,6 +134,14 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <StaffList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/retailer"
+          element={
+            <PrivateRoute>
+              <RetailerList />
             </PrivateRoute>
           }
         />

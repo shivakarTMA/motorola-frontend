@@ -14,6 +14,8 @@ import {
   MdBadge,
   MdSettings,
 } from "react-icons/md";
+import { FaBuilding } from "react-icons/fa";
+
 import { IoIosGift } from "react-icons/io";
 import { TbSitemapFilled } from "react-icons/tb";
 import { RiArticleFill, RiPushpin2Fill } from "react-icons/ri";
@@ -206,6 +208,13 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
           >
             <MdBadge className="menu--icon" />
             <span className="nav-text">Staff</span>
+          </Link>
+          <Link
+            to="/retailer"
+            className={`nav-link ${location.pathname === "/retailer" ? "active" : ""}`}
+          >
+            <FaBuilding  className="menu--icon" />
+            <span className="nav-text">Retailer</span>
           </Link>
 
           {/* <Link
