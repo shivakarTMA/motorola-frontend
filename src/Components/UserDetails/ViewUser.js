@@ -23,7 +23,7 @@ import {
 } from "react-icons/fi";
 import Tooltip from "../Common/Tooltip";
 import UserUpdateStatus from "../../Pages/Admin/AllUsers/UserUpdateStatus";
-import { FaBan, FaHeart, FaUserSlash } from "react-icons/fa";
+import { FaBan, FaHeart, FaUserSlash,FaUser,FaUserTimes,FaUserEdit} from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
 import { HiOutlineDocumentText } from "react-icons/hi";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
@@ -80,6 +80,24 @@ const getActionItems = (status) => {
           action: "BANNED",
           icon: FaBan,
           className: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100",
+        },
+        {
+          label: "Assign ",
+          action: "ASSIGN",
+          icon: FaUser,
+          className: "text-green-700 bg-green-50 border-green-200 hover:bg-green-100",
+        },
+        {
+          label: "Remove ",
+          action: "Remove",
+          icon: FaUserTimes,
+          className: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100",
+        },
+        {
+          label: "Change ",
+          action: "Change",
+          icon: FaUserEdit,
+          className: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100",
         },
       ];
 
@@ -191,6 +209,19 @@ const ViewUser = (props) => {
     ["Date of Birth", formatDOB(basicInfoUser?.date_of_birth) || "--"],
     ["Device Brand", basicInfoUser?.device_brand || "--"],
     ["Device Model", basicInfoUser?.device_model || "--"],
+   [
+  "User Type",
+  basicInfoUser?.user_type
+    ? basicInfoUser.user_type.charAt(0).toUpperCase() +
+        basicInfoUser.user_type.slice(1).toLowerCase()
+    : "--",
+],
+    ["Referrer Type", basicInfoUser?.referral_type || "--"],
+    ["Referrer Name", basicInfoUser?.referrer_name || "--"],
+    ["Campus", basicInfoUser?.campus?.name || "--"],
+    ["Tagged On", basicInfoUser?.campus_associated_at || "--"],
+    ["Tagged By", basicInfoUser?.campusAssociatedBy?.name || "--"],
+    ["Total Referrals", basicInfoUser?.total_referred_count || 0],
   ];
 
   const fetchUserDetails = async () => {
@@ -264,10 +295,17 @@ const ViewUser = (props) => {
 
       <div className="grid gap-6 lg:grid-cols-4">
         <div className="space-y-5">
+          <div className="sticky top-[50px]">
           <UserProfileCard basicInfoUser={basicInfoUser} />
           {/* Suspend / Ban / Reinstate actions for this user */}
+          <div>
+
+          <h2 className="my-[10px]">User Action</h2>
           <div className="flex items-center gap-2">
-            {getActionItems(basicInfoUser?.status).map((item) => {
+             {getActionItems(basicInfoUser?.status)
+      .filter((item) =>
+        ["SUSPENDED", "BANNED"].includes(item.action)
+      ).map((item) => {
               const Icon = item.icon;
 
               return (
@@ -289,6 +327,58 @@ const ViewUser = (props) => {
                 </Tooltip>
               );
             })}
+          </div>
+          </div>
+        
+<div>
+  <h2 className="my-[10px]">Campus Ambassador Action</h2>
+
+  <div className="flex items-center gap-2">
+    {getActionItems(basicInfoUser?.status)
+      .filter((item) => {
+        const campus = basicInfoUser?.campus;
+
+        const hasCampus =
+          campus !== null &&
+          campus !== undefined &&
+          (typeof campus !== "object" ||
+            Object.keys(campus).length > 0);
+
+        if (hasCampus) {
+          // Campus assigned: show Remove and Change
+          return ["Remove", "Change"].includes(item.action);
+        }
+
+        // No campus: show only Assign
+        return item.action === "ASSIGN";
+      })
+      .map((item) => {
+        const Icon = item.icon;
+
+        return (
+          <Tooltip
+            key={item.action}
+            id={`tooltip-view-user-${item.action}`}
+            content={item.label}
+            place="bottom"
+          >
+            <button
+              type="button"
+              title={item.label}
+              onClick={() => openStatusModal(item.action)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm transition ${item.className}`}
+            >
+              <Icon size={16} />
+              <span>{item.label}</span>
+            </button>
+          </Tooltip>
+        );
+      })}
+  </div>
+</div>
+
+
+
           </div>
         </div>
 

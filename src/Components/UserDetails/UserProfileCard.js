@@ -51,7 +51,7 @@ const StatusBadge = ({ status }) => {
 
 export default function UserProfileCard({ basicInfoUser }) {
   return (
-    <div className="rounded-xl bg-white p-4 shadow sticky top-[50px]">
+    <div className="rounded-xl bg-white p-4 shadow">
       <div className="flex flex-col items-center">
 
         {basicInfoUser?.profile_picture ? (

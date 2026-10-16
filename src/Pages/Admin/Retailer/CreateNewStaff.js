@@ -1,6 +1,8 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useEffect, useState } from "react";
 import Select from "react-select";
+import CreatableSelect from "react-select/creatable";
+
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
@@ -18,7 +20,6 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { authAxios } from "../../../Config/config";
 // import { authAxios } from "../../../config/config";
 import { sanitizeInput } from "../../../Helper/helper";
-import { locationOptions } from "./location";
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
   { value: "INACTIVE", label: "Inactive" },
@@ -27,6 +28,8 @@ const statusOptions = [
 const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
   const [showPassword, setShowPassword] = useState(false);
   const isEdit = !!editId;
+const [locationOptions, setLocationOptions] = useState([]);
+const [locationsLoading, setLocationsLoading] = useState(false);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -118,6 +121,55 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
     onClose();
   };
 
+useEffect(() => {
+  if (!open) return;
+
+  let isMounted = true;
+
+  const fetchLocations = async () => {
+    setLocationsLoading(true);
+
+    try {
+      const res = await authAxios().get("/retailer/locations");
+
+      if (res?.data?.success && Array.isArray(res?.data?.data)) {
+        const options = res.data.data.map((location) => ({
+          value: location,
+          label: location,
+        }));
+
+        if (isMounted) {
+          setLocationOptions(options);
+        }
+      } else {
+        if (isMounted) {
+          setLocationOptions([]);
+          toast.error(res?.data?.message || "Failed to fetch locations");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+
+      if (isMounted) {
+        setLocationOptions([]);
+        toast.error(
+          error?.response?.data?.message || "Failed to load locations"
+        );
+      }
+    } finally {
+      if (isMounted) {
+        setLocationsLoading(false);
+      }
+    }
+  };
+
+  fetchLocations();
+
+  return () => {
+    isMounted = false;
+  };
+}, [open]);
+
   return (
     <Transition appear show={open} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={handleClose}>
@@ -186,23 +238,86 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
     Location <span className="text-red-600">*</span>
   </label>
 
-  <Select
+  <CreatableSelect
     name="location"
     styles={customStyles}
     options={locationOptions}
-    placeholder="Select Location"
+    isClearable
+    isLoading={locationsLoading}
+    isDisabled={locationsLoading}
+    placeholder="Select or create a location"
+
     value={
-      locationOptions.find(
-        (option) => option.value === formik.values.location
-      ) || null
+      formik.values.location
+        ? locationOptions.find(
+            (option) =>
+              option.value.toLowerCase() ===
+              formik.values.location.toLowerCase()
+          ) || {
+            value: "__new__",
+            label: formik.values.location,
+          }
+        : null
     }
-    onChange={(option) =>
-      formik.setFieldValue("location", option?.value || "")
+
+    onChange={(option) => {
+      if (!option) {
+        formik.setFieldValue("location", "");
+        return;
+      }
+
+      formik.setFieldValue(
+        "location",
+        option.value === "__new__"
+          ? option.label
+          : option.value
+      );
+    }}
+
+    onCreateOption={(inputValue) => {
+      const cleaned = inputValue.trim();
+
+      if (!cleaned) return;
+
+      const existingLocation = locationOptions.find(
+        (option) =>
+          option.value.trim().toLowerCase() ===
+          cleaned.toLowerCase()
+      );
+
+      if (existingLocation) {
+        formik.setFieldValue(
+          "location",
+          existingLocation.value
+        );
+        return;
+      }
+
+      // Only update Formik.
+      // Do not add to locationOptions.
+      formik.setFieldValue("location", cleaned);
+    }}
+
+    isValidNewOption={(inputValue, selectValue, options) => {
+      const cleaned = inputValue.trim().toLowerCase();
+
+      if (!cleaned) return false;
+
+      return !options.some(
+        (option) =>
+          option.value.trim().toLowerCase() === cleaned
+      );
+    }}
+
+    formatCreateLabel={(inputValue) =>
+      `Create "${inputValue.trim()}"`
     }
+
     onBlur={() =>
       formik.setFieldTouched("location", true)
     }
-    isClearable
+
+    noOptionsMessage={() => "No locations found"}
   />
 
   {formik.touched.location && formik.errors.location && (
@@ -216,7 +331,7 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
 
                   <div>
                     <label className="block mb-2 text-sm font-medium">
-                      address <span className="text-red-600">*</span>
+                      Address <span className="text-red-600">*</span>
                     </label>
 
                     <input

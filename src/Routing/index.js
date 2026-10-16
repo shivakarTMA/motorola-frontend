@@ -29,6 +29,9 @@ import DeviceBrandsList from "../Pages/Admin/DeviceBrands/DeviceBrandsList";
 import DeviceModelList from "../Pages/Admin/DeviceModels/DeviceModelList";
 import TopPicsList from "../Pages/Admin/TopPics/TopPicsList";
 import RetailerList from "../Pages/Admin/Retailer/RetailerList";
+import CampusList from "../Pages/Admin/Campus/CampusList";
+import CampusReport from "../Pages/Admin/Reports/CampusReport";
+import RetailerReport from "../Pages/Admin/Reports/RetailerReport";
 
 
 export default function Routing() {
@@ -142,6 +145,30 @@ export default function Routing() {
           element={
             <PrivateRoute>
               <RetailerList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/campus"
+          element={
+            <PrivateRoute>
+              <CampusList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports-campus"
+          element={
+            <PrivateRoute>
+              <CampusReport />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports-retailer"
+          element={
+            <PrivateRoute>
+              <RetailerReport />
             </PrivateRoute>
           }
         />

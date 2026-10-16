@@ -362,7 +362,7 @@ useEffect(() => {
     className="w-full rounded-lg border border-gray-300
       bg-white py-2.5 pl-10 pr-10 text-sm text-gray-800
       outline-none transition
-      focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      focus:border-black focus:ring-1 focus:ring-black"
   />
 
   {search && (
@@ -404,6 +404,8 @@ useEffect(() => {
                     {/* <th className="px-2 py-4 ">position</th> */}
                     <th className="px-2 py-4 ">status</th>
                     <th className="px-2 py-4 ">Created At</th>
+                    <th className="px-2 py-4 ">Total Referral</th>
+                    
                     <th className="px-2 py-4 text-center">Actions</th>
                   </tr>
                 </thead>
@@ -455,7 +457,9 @@ useEffect(() => {
                             {row.status}
                           </span>
                         </td>
+                        {console.log(row?.total_referred_count,'dssddsdssdds')}
                         <td className="px-2 py-4">{formatViewDate(row.created_at) || "--"}</td>
+                        <td className="px-2 py-4">{row.total_referred_count || 0}</td>
                         <td className="px-2 py-4">
                           <div className="flex items-center justify-center gap-[1px]">
                             <Tooltip
@@ -626,11 +630,11 @@ useEffect(() => {
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
             <DialogTitle className="text-lg font-semibold text-gray-900">
-              Delete Staff
+              Delete Retailer
             </DialogTitle>
 
             <p className="mt-3 text-sm text-gray-600">
-              Are you sure you want to delete this staff?
+              Are you sure you want to delete this retailer?
             </p>
 
             <div className="mt-6 flex justify-end gap-3">

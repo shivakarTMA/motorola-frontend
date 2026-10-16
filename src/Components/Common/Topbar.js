@@ -93,7 +93,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
       <section className="top--bar p-3 border-b border-b-[#D4D4D4]">
         <div className="inner--container flex lg:flex-nowrap flex-wrap justify-between gap-3">
           {/* Left Section */}
-          <div className="topbar--left flex items-center gap-2 lg:w-[40%] w-[47%] order-1">
+          <div className="topbar--left flex items-center gap-2 lg:w-fit lg:mr-[20px] w-[47%] order-1">
             <div
               className="toggle--bar lg:w-[32px] w-[25px]"
               onClick={handleToggleMenu}
@@ -103,7 +103,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
             <h2 className="font-semibold lg:text-xl text-sm">{pageTitle}</h2>
           </div>
 
-          <div className="search--global flex w-full lg:order-2 order-3">
+          <div className="search--global flex lg:flex-1 w-full lg:order-2 order-3">
             <form
               onSubmit={handleSubmit}
               className="flex items-center gap-0 w-full"

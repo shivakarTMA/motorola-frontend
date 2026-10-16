@@ -174,3 +174,10 @@ export const filterActiveItems = (data) => {
 };
 export const sanitizeInput = (value = "") =>
   value.replace(/[^a-zA-Z0-9 @&*()_–—,.|:"'-]/g, "");
+
+export const capitalizeLocation = (value = "") => {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};

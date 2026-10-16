@@ -36,6 +36,9 @@ export default function PrivateLayout({ children }) {
     { path: "/device-models", title: "Device Models" },
     { path: "/top-pics", title: "Top Picks" },
     { path: "/retailer", title: "Retailer" },
+    { path: "/campus", title: "Campus Ambassador" },
+    { path: "/reports-campus", title: "Campus Ambassador Referral Report" },
+    { path: "/reports-retailer", title: "Retailer Report" },
   ];
 
   const pageTitle =

@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import Logo from "../../Assests/Images/logo.png";
 import { useSelector } from "react-redux";
 import { FaAngleDown, FaCircle, FaLayerGroup } from "react-icons/fa";
-import dashboardIcon from "../../Assests/Images/icons/dashboard.svg";
+import { SiGooglesheets } from "react-icons/si";
 import { MdBrandingWatermark, MdControlCamera, MdDashboard, MdDevices, MdFormatListBulleted, MdManageAccounts, MdTextFormat } from "react-icons/md";
 import { HiUsers } from "react-icons/hi";
 import {
@@ -14,6 +14,7 @@ import {
   MdBadge,
   MdSettings,
 } from "react-icons/md";
+import { FaUserTie } from "react-icons/fa";
 import { FaBuilding } from "react-icons/fa";
 
 import { IoIosGift } from "react-icons/io";
@@ -213,8 +214,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             to="/retailer"
             className={`nav-link ${location.pathname === "/retailer" ? "active" : ""}`}
           >
-            <FaBuilding  className="menu--icon" />
+            <FaUserTie  className="menu--icon" />
             <span className="nav-text">Retailer</span>
+          </Link>
+          <Link
+            to="/campus"
+            className={`nav-link ${location.pathname === "/campus" ? "active" : ""}`}
+          >
+            <FaBuilding  className="menu--icon" />
+            <span className="nav-text">Campus Ambassador</span>
           </Link>
 
           {/* <Link
@@ -292,13 +300,45 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             </div>
           )}
 
-          {/* <Link
-            to="/settings"
-            className={`nav-link ${location.pathname === "/settings" ? "active" : ""}`}
+    {/* <div
+  className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
+  onClick={() => toggleMenu("reports")}
+  style={{ cursor: "pointer" }}
           >
-            <MdSettings className="menu--icon" />
-            <span className="nav-text">Settings</span>
-          </Link> */}
+            <div className="flex items-center">
+              <SiGooglesheets className="menu--icon" />
+              <span className="nav-text">Reports</span>
+            </div>
+            <FaAngleDown
+              className={`downmenu transition ${
+                dropdownToggles["reports"] ? "rotate-[180deg]" : ""
+              }`}
+            />
+          </div>
+
+          {dropdownToggles["reports"] && (
+            <div className="pl-[40px] relative dropdown--menu--nav">
+              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
+              <Link
+                to="/reports-campus"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <div className="w-[15px] h-[15px]">
+                  <FaCircle className="menu--icon !text-[10px]" />
+                </div>
+                <span className="nav-text">Campus Ambassador Referral Report</span>
+              </Link>
+              <Link
+                to="/reports-retailer"
+                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+              >
+                <div className="w-[15px] h-[15px]">
+                <FaCircle className="menu--icon !text-[10px]" />
+              </div>
+                <span className="nav-text">Retailer Referral Report</span>
+              </Link>
+            </div>
+          )} */}
         </div>
       </div>
     </div>

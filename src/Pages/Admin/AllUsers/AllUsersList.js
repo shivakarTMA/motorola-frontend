@@ -19,6 +19,8 @@ import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 import Pagination from "../../../Components/Common/Pagination";
 // Adjust this import path to wherever you save UserUpdateStatus.jsx
 import UserUpdateStatus from "./UserUpdateStatus";
+import { FiX,FiSearch } from "react-icons/fi";
+import { FaUserPlus } from "react-icons/fa";
 
 const StatCard = ({
   title,
@@ -508,7 +510,40 @@ const AllUsersList = (props) => {
         </div>
 
         <div className="bg-white rounded-lg border p-4 mt-3">
-          <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-3 relative">
+          <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-3 relative">
+            <div className="relative w-full">
+            <FiSearch
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+          
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search user..."
+              aria-label="Search retailers"
+                styles={customStyles}
+
+              className="w-full rounded-[5px] border border-gray-300
+                bg-white h-[33px] sm:h-[40px] pl-10 pr-10 text-sm text-gray-800
+                outline-none transition
+                focus:border-black focus:ring-0.5 focus:ring-black"
+            />
+          
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2
+                  -translate-y-1/2 text-gray-400
+                  hover:text-gray-700"
+              >
+                <FiX size={18} />
+              </button>
+            )}
+          </div>
             <div className="">
               {/* Status */}
               <Select
@@ -582,6 +617,7 @@ const AllUsersList = (props) => {
                     <th className="px-2 py-4 min-w-[140px] text-center">
                       No. of Interactions
                     </th>
+                    <th className="px-2 py-4 min-w-[100px]">Referred By</th>
                     <th className="px-2 py-4 min-w-[100px] text-center">
                       Status
                     </th>
@@ -651,6 +687,9 @@ const AllUsersList = (props) => {
                           {row?.total_interactions}
                         </td>
 
+                        <td className="px-2 py-4">
+                        {row?.referrer_name}
+                        </td>
                         <td className="px-2 py-4 text-center">
                           <StatusBadge status={row.status} />
                         </td>
