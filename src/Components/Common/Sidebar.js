@@ -300,7 +300,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
             </div>
           )}
 
-    {/* <div
+    <div
   className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
   onClick={() => toggleMenu("reports")}
   style={{ cursor: "pointer" }}
@@ -338,7 +338,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
                 <span className="nav-text">Retailer Referral Report</span>
               </Link>
             </div>
-          )} */}
+          )} 
         </div>
       </div>
     </div>

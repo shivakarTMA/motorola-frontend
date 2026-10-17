@@ -3,20 +3,26 @@ import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { FiDownload, FiSearch, FiX } from "react-icons/fi";
+import {
+  FiDownload,
+  FiSearch,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 
 import { authAxios } from "../../../Config/config";
 import DateRangePicker from "../../../Components/Common/DateRangePickerField";
-import Pagination from "../../../Components/Common/Pagination";
-import { customStyles } from "../../../Helper/helper";
+import { customStyles, formatText } from "../../../Helper/helper";
+import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 
-const RetailerReport = () => {
+const RetailerReport = ({setLoading}) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [retailerList, setRetailerList] = useState([]);
-  const [loading, setLoading] = useState(false);
-
+  // const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const latestRequest = useRef(0);
 
   // ==========================================
@@ -37,7 +43,6 @@ const RetailerReport = () => {
     () => searchParams.get("city") || null
   );
 
-  // Search input
   const [search, setSearch] = useState(
     () => searchParams.get("search") || ""
   );
@@ -66,37 +71,26 @@ const RetailerReport = () => {
   useEffect(() => {
     let active = true;
 
-    const fetchCityOptions = async () => {
-      try {
-        const response = await authAxios().get("/retailer", {
-          params: {
-            page: 1,
-            limit: 100,
-          },
-        });
+  
+const fetchCityOptions = async () => {
+  try {
+    const response = await authAxios().get("/retailer/locations");
 
-        if (!active || !response?.data?.success) return;
+    if (!active || !response?.data?.success) return;
 
-        const items = response?.data?.data?.items || [];
+    const locations = response?.data?.data || [];
 
-        const cities = [
-          ...new Set(
-            items
-              .map((item) => item.location)
-              .filter(Boolean)
-          ),
-        ];
+    const options = locations.map((location) => ({
+      value: location,
+      label: location,
+    }));
 
-        const options = cities.map((city) => ({
-          value: city,
-          label: city,
-        }));
+    setCityOptions(options);
+  } catch (error) {
+    console.error("Error fetching city options:", error);
+  }
+};
 
-        setCityOptions(options);
-      } catch (error) {
-        console.error("Error fetching city options:", error);
-      }
-    };
 
     fetchCityOptions();
 
@@ -133,23 +127,20 @@ const RetailerReport = () => {
           limit: rowsPerPage,
         };
 
-        // City filter
         if (filterCity) {
           params.location = filterCity;
         }
 
-        // Search retailer
         if (debouncedSearch) {
           params.search = debouncedSearch;
         }
 
-        // Date range filter
         if (startDate && endDate) {
           params.date_from = format(startDate, "yyyy-MM-dd");
           params.date_to = format(endDate, "yyyy-MM-dd");
         }
 
-        const response = await authAxios().get("/retailer", {
+        const response = await authAxios().get("/retailer/report", {
           params,
         });
 
@@ -224,15 +215,8 @@ const RetailerReport = () => {
     }
 
     if (startDate && endDate) {
-      params.set(
-        "date_from",
-        format(startDate, "yyyy-MM-dd")
-      );
-
-      params.set(
-        "date_to",
-        format(endDate, "yyyy-MM-dd")
-      );
+      params.set("date_from", format(startDate, "yyyy-MM-dd"));
+      params.set("date_to", format(endDate, "yyyy-MM-dd"));
     }
 
     if (page > 1) {
@@ -285,25 +269,133 @@ const RetailerReport = () => {
   // DOWNLOAD REPORT
   // ==========================================
 
-  const handleDownloadReport = () => {
-    toast.info("Download API is not configured yet.");
+ 
+const handleDownloadReport = async () => {
+  if (downloading) return;
+
+  try {
+    setDownloading(true);
+
+    const params = {};
+
+    if (filterCity) {
+      params.location = filterCity;
+    }
+
+    if (search.trim()) {
+      params.search = search.trim();
+    }
+
+    if (startDate && endDate) {
+      params.date_from = format(startDate, "yyyy-MM-dd");
+      params.date_to = format(endDate, "yyyy-MM-dd");
+    }
+
+    const response = await authAxios().get(
+      "/retailer/report/excel",
+      {
+        params,
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+   
+   let fileName = "Retailer Report";
+
+if (startDate && endDate) {
+  const fromDate = format(startDate, "yyyy-MM-dd");
+  const toDate = format(endDate, "yyyy-MM-dd");
+
+  fileName += ` ${fromDate} ${toDate}`;
+}
+
+link.download = `${fileName}.xlsx`;
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast.success("Report downloaded successfully");
+  } catch (error) {
+    console.error("Error downloading retailer report:", error);
+
+    toast.error(
+      "Failed to download retailer report"
+    );
+  } finally {
+    setDownloading(false);
+  }
+};
+
+
+  const handlePageChange = (newPage) => {
+  if (
+    newPage < 1 ||
+    newPage > totalPages ||
+    newPage === page
+  ) {
+    return;
+  }
+
+  setPage(newPage);
+};
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 3;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
+    }
+
+    let start = Math.max(1, page - 1);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
   };
+
+  const visiblePages = getPageNumbers();
+
+  const paginationButtonClass =
+    "flex h-8 min-w-[30px] items-center justify-center " +
+    "rounded-md border text-xs font-medium transition-colors";
 
   // ==========================================
   // UI
   // ==========================================
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 max-w-full space-y-6">
 
       {/* Filters and Download */}
-      <div className="flex flex-col lg:flex-row justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4 w-full min-w-0">
 
         {/* Left Side - Filters */}
-        <div className="flex flex-col lg:flex-row flex-wrap gap-3 flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full min-w-0 xl:flex-1">
 
           {/* Date Range */}
-          <div className="lg:min-w-[200px] lg:w-fit w-full relative">
+          <div className="relative w-full min-w-0 h-10 [&>div]:h-full [&_button]:h-full">
             <DateRangePicker
               onChange={handleDateRangeChange}
               defaultPreset="Today"
@@ -314,34 +406,49 @@ const RetailerReport = () => {
           </div>
 
           {/* City */}
-          <div className="min-w-[180px] lg:w-fit w-full">
-            <Select
-              placeholder="Filter by City"
-              value={
-                cityOptions.find(
-                  (option) => option.value === filterCity
-                ) || null
-              }
-              options={cityOptions}
-              onChange={handleCityChange}
-              styles={customStyles}
-              isClearable
-            />
-          </div>
+          <div className="w-full min-w-0">
+  <Select
+    placeholder="Filter by Location"
+    value={
+      cityOptions.find(
+        (option) => option.value === filterCity
+      ) || null
+    }
+    options={cityOptions}
+    onChange={handleCityChange}
+    styles={{
+      ...customStyles,
+      control: (provided, state) => ({
+        ...customStyles.control?.(provided, state),
+        minHeight: "40px",
+        height: "40px",
+      }),
+      valueContainer: (provided) => ({
+        ...provided,
+        height: "40px",
+        padding: "0 8px",
+      }),
+      indicatorsContainer: (provided) => ({
+        ...provided,
+        height: "40px",
+      }),
+    }}
+    isClearable
+  />
+</div>
 
           {/* Search Retailer */}
-          <div className="relative w-full lg:w-[250px]">
-
+          <div className="relative w-full min-w-0">
             <FiSearch
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10"
             />
 
             <input
               type="text"
               value={search}
               onChange={handleSearchChange}
-              placeholder="Search retailers..."
+              placeholder="Search by name..."
               aria-label="Search retailers"
               className="w-full rounded-lg border border-gray-300
                 bg-white py-2.5 pl-10 pr-10 text-sm text-gray-800
@@ -360,31 +467,32 @@ const RetailerReport = () => {
                 <FiX size={18} />
               </button>
             )}
-
           </div>
-
         </div>
 
-        {/* Right Side - Download Button */}
-        <div className="flex items-start">
+        {/* Download Button */}
+        <div className="w-full md:w-fit md:ml-auto xl:w-auto xl:shrink-0">
           <button
             type="button"
             onClick={handleDownloadReport}
-            className="flex items-center justify-center gap-2 bg-black text-white px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors"
+            className="flex w-full xl:w-auto items-center justify-center
+              gap-2 bg-black text-white px-5 py-2.5 rounded-lg
+              text-sm font-medium whitespace-nowrap transition-colors
+              hover:bg-gray-800"
           >
             <FiDownload size={17} />
             Download Report
           </button>
         </div>
-
       </div>
 
       {/* Report Table */}
-      <div className="mt-3">
-        <div className="box--shadow bg-white rounded-[15px] p-4">
+      <div className="mt-3 w-full min-w-0 max-w-full">
+        <div className="box--shadow bg-white rounded-[15px] p-3 sm:p-4 w-full min-w-0 max-w-full">
 
-          <div className="relative overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-500">
+          {/* Table scrolls independently */}
+          <div className="relative w-full max-w-full overflow-x-auto">
+            <table className="w-full min-w-[850px] text-sm text-left text-gray-500">
 
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
@@ -411,78 +519,152 @@ const RetailerReport = () => {
                   <th className="px-2 py-4 min-w-[130px] text-center">
                     Total Signups
                   </th>
+                  <th className="px-2 py-4 min-w-[130px] ">
+                    Status
+                  </th>
                 </tr>
               </thead>
 
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-8 text-center text-gray-500"
-                    >
-                      Loading retailers...
-                    </td>
-                  </tr>
-                ) : retailerList.length > 0 ? (
-                  retailerList.map((row, index) => (
-                    <tr
-                      key={row.id || index}
-                      className="border-b hover:bg-gray-50 text-xs"
-                    >
+             <tbody>
+  {retailerList.length > 0 ? (
+    retailerList.map((row, index) => (
+      <tr
+        key={row.id || index}
+        className="border-b hover:bg-gray-50 text-xs"
+      >
+        <td className="px-2 py-4">
+          {(page - 1) * rowsPerPage + index + 1}
+        </td>
 
-                      <td className="px-2 py-4">
-                        {(page - 1) * rowsPerPage + index + 1}
-                      </td>
+        <td className="px-2 py-4">{row.name || "-"}</td>
 
-                      <td className="px-2 py-4">
-                        {row.name || "-"}
-                      </td>
+        <td className="px-2 py-4">
+          {row.referral_code || "-"}
+        </td>
 
-                      <td className="px-2 py-4">
-                        {row.referral_code || "-"}
-                      </td>
+        <td className="px-2 py-4">{row.address || "-"}</td>
 
-                      <td className="px-2 py-4">
-                        {row.address || "-"}
-                      </td>
+        <td className="px-2 py-4">{row.location || "-"}</td>
 
-                      <td className="px-2 py-4">
-                        {row.location || "-"}
-                      </td>
+        <td className="px-2 py-4 text-center">
+          {row.total_referred_count ?? 0}
+        </td>
+        <td className="px-2 py-4">
+          
+          {/* {row?.status
+  ? row.status.charAt(0).toUpperCase() + row.status.slice(1).toLowerCase()
+  : "-"} */}
 
-                      <td className="px-2 py-4 text-center">
-                        {row.total_referred_count ?? 0}
-                      </td>
+ <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              row.status === "ACTIVE"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {formatText(row.status)}
+                          </span>
 
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-6 text-center text-gray-500"
-                    >
-                      No records found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-
+  </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td
+        colSpan={6}
+        className="px-4 py-6 text-center text-gray-500"
+      >
+        No records found.
+      </td>
+    </tr>
+  )}
+</tbody>
             </table>
           </div>
 
-          {/* Pagination */}
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            rowsPerPage={rowsPerPage}
-            totalCount={totalCount}
-            currentDataLength={retailerList.length}
-            onPageChange={(newPage) => {
-              setPage(newPage);
-            }}
-          />
+          {/* ======================================
+              RESPONSIVE PAGINATION
+          ====================================== */}
+
+          <div className="mt-4 flex w-full min-w-0 flex-col items-start gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+
+            {/* Entries count */}
+            <div className="w-full text-left text-xs text-gray-600 sm:w-auto sm:text-sm">
+              {totalCount} entries found.
+            </div>
+
+            {/* Pagination buttons */}
+           {totalCount > rowsPerPage && (
+            <div className="flex w-full min-w-0 flex-wrap items-center justify-start gap-1 sm:w-auto sm:justify-end">
+
+              {/* Previous */}
+              <button
+                type="button"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page <= 1 }
+                className={`${paginationButtonClass} px-2 ${
+                  page <= 1
+                    ? "cursor-not-allowed text-gray-300 border-gray-200"
+                    : "text-gray-700 border-gray-200 hover:bg-gray-100"
+                }`}
+                aria-label="Previous page"
+              >
+                <FiChevronLeft size={16} />
+              </button>
+
+              {/* Page Numbers */}
+              {visiblePages.map((pageNumber) => (
+                <button
+                  key={pageNumber}
+                  type="button"
+                  onClick={() => handlePageChange(pageNumber)}
+                  // disabled={loading}
+                  className={`${paginationButtonClass} ${
+                    page === pageNumber
+                      ? "bg-black text-white border-black"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+
+              {/* Last Page */}
+              {visiblePages[visiblePages.length - 1] < totalPages && (
+                <>
+                  <span className="px-1 text-xs text-gray-500">
+                    ...
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(totalPages)}
+                    // disabled={loading}
+                    className={`${paginationButtonClass} bg-white text-gray-700 border-gray-200 hover:bg-gray-100`}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+
+              {/* Next */}
+              <button
+                type="button"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page >= totalPages }
+                className={`${paginationButtonClass} px-2 ${
+                  page >= totalPages
+                    ? "cursor-not-allowed text-gray-300 border-gray-200"
+                    : "text-gray-700 border-gray-200 hover:bg-gray-100"
+                }`}
+                aria-label="Next page"
+              >
+                <FiChevronRight size={16} />
+              </button>
+
+            </div>
+)}
+          </div>
 
         </div>
       </div>
@@ -490,4 +672,4 @@ const RetailerReport = () => {
   );
 };
 
-export default RetailerReport;
+export default IsLoadingHOC(RetailerReport);

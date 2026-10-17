@@ -5,7 +5,7 @@ import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { Link, useLocation } from "react-router-dom";
 import Select from "react-select";
-import { customStyles, formatViewDate } from "../../../Helper/helper";
+import { customStyles, formatText, formatViewDate } from "../../../Helper/helper";
 import CreateNewStaff from "./CreateCampus";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { authAxios } from "../../../Config/config";
@@ -252,7 +252,7 @@ useEffect(() => {
                                 : "bg-red-100 text-red-700"
                             }`}
                           >
-                            {row.status}
+                            {formatText(row.status)}
                           </span>
                         </td>
                         {console.log(row?.total_referred_count,'dssddsdssdds')}
@@ -349,7 +349,7 @@ useEffect(() => {
             </DialogTitle>
 
             <p className="mt-3 text-sm text-gray-600">
-              Are you sure you want to delete this Campus?
+              Are you sure you want to delete this campus?
             </p>
 
             <div className="mt-6 flex justify-end gap-3">

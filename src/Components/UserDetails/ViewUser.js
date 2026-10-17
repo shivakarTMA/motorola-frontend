@@ -216,7 +216,11 @@ const ViewUser = (props) => {
         basicInfoUser.user_type.slice(1).toLowerCase()
     : "--",
 ],
-    ["Referrer Type", basicInfoUser?.referral_type || "--"],
+    // ["Referrer Type", basicInfoUser?.referral_user_type_tag || "--"],
+    ["Referrer Type", basicInfoUser?.referral_user_type_tag
+    ? basicInfoUser.referral_user_type_tag.charAt(0).toUpperCase() +
+        basicInfoUser.referral_user_type_tag.slice(1).toLowerCase()
+    : "--"],
     ["Referrer Name", basicInfoUser?.referrer_name || "--"],
     ["Campus", basicInfoUser?.campus?.name || "--"],
     ["Tagged On", basicInfoUser?.campus_associated_at || "--"],

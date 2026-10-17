@@ -5,7 +5,7 @@ import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { Link, useLocation } from "react-router-dom";
 import Select from "react-select";
-import { customStyles, formatViewDate } from "../../../Helper/helper";
+import { customStyles, formatText, formatViewDate } from "../../../Helper/helper";
 import CreateNewStaff from "./CreateNewStaff";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { authAxios } from "../../../Config/config";
@@ -454,7 +454,7 @@ useEffect(() => {
                                 : "bg-red-100 text-red-700"
                             }`}
                           >
-                            {row.status}
+                            {formatText(row.status)}
                           </span>
                         </td>
                         {console.log(row?.total_referred_count,'dssddsdssdds')}
