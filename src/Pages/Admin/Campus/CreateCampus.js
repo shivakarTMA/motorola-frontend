@@ -40,7 +40,7 @@ const [locationsLoading, setLocationsLoading] = useState(false);
       status: null,
     },
     validationSchema: Yup.object({
-      name: Yup.string().trim().required("Name is required"),
+      name: Yup.string().required("Name is required"),
 
       location: Yup.string()
         .required("location is required"),
@@ -211,11 +211,13 @@ const [locationsLoading, setLocationsLoading] = useState(false);
                     <input
                       type="text"
                       name="name"
-                      value={formik.values.name}
-                       onChange={(e) => {
-        const cleaned = e.target.value.replace(/[0-9]/g, "");
-    formik.setFieldValue(e.target.name, cleaned);
-  }}
+  //                     value={formik.values.name}
+  //                      onChange={(e) => {
+  //       const cleaned = e.target.value.replace(/[0-9]/g, "");
+  //   formik.setFieldValue(e.target.name, cleaned);
+  // }}
+                     value={formik.values.name}
+                     onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Enter Name"

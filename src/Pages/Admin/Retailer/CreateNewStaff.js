@@ -214,11 +214,14 @@ useEffect(() => {
                     <input
                       type="text"
                       name="name"
-                      value={formik.values.name}
-                       onChange={(e) => {
-        const cleaned = e.target.value.replace(/[0-9]/g, "");
-    formik.setFieldValue(e.target.name, cleaned);
-  }}
+  //                     value={formik.values.name}
+  //                      onChange={(e) => {
+  //       // const cleaned = e.target.value.replace(/[0-9]/g, "");
+  //   formik.setFieldValue(e.target.name);
+  // }}
+             value={formik.values.name}
+                     onChange={formik.handleChange}
+
                       onBlur={formik.handleBlur}
                       className="custom--input w-full"
                       placeholder="Enter Name"
