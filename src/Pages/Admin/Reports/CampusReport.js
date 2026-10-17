@@ -558,7 +558,7 @@ const handleDownloadReport = async () => {
                       </td>
 
                       <td className="px-2 py-4 text-center">
-                        {row.total_referred_count ?? 0}
+                        {row.total_referrals || 0}
                       </td>
                     </tr>
                   ))

@@ -515,13 +515,13 @@ link.download = `${fileName}.xlsx`;
                   <th className="px-2 py-4 min-w-[150px]">
                     Location
                   </th>
-
-                  <th className="px-2 py-4 min-w-[130px] text-center">
-                    Total Signups
-                  </th>
                   <th className="px-2 py-4 min-w-[130px] ">
                     Status
                   </th>
+                  <th className="px-2 py-4 min-w-[130px] text-center">
+                    Total Signups
+                  </th>
+                 
                 </tr>
               </thead>
 
@@ -541,21 +541,11 @@ link.download = `${fileName}.xlsx`;
         <td className="px-2 py-4">
           {row.referral_code || "-"}
         </td>
-
-        <td className="px-2 py-4">{row.address || "-"}</td>
-
         <td className="px-2 py-4">{row.location || "-"}</td>
 
-        <td className="px-2 py-4 text-center">
-          {row.total_referred_count ?? 0}
-        </td>
-        <td className="px-2 py-4">
-          
-          {/* {row?.status
-  ? row.status.charAt(0).toUpperCase() + row.status.slice(1).toLowerCase()
-  : "-"} */}
-
- <span
+        <td className="px-2 py-4">{row.address || "-"}</td>
+<td className="px-2 py-4">
+                      <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                               row.status === "ACTIVE"
                                 ? "bg-green-100 text-green-700"
@@ -566,6 +556,12 @@ link.download = `${fileName}.xlsx`;
                           </span>
 
   </td>
+
+
+        <td className="px-2 py-4 text-center">
+          {row.total_referred_count ?? 0}
+        </td>
+        
       </tr>
     ))
   ) : (

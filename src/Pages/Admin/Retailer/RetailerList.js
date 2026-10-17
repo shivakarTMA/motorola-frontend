@@ -395,16 +395,16 @@ useEffect(() => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-                     <th className="px-2 py-4 text-center">QR Code</th>
-                    <th className="px-2 py-4 ">Retail ID</th>
-                    <th className="px-2 py-4 ">name</th>
+                     <th className="px-2 py-4 text-center whitespace-nowrap">QR Code</th>
+                    <th className="px-2 py-4 whitespace-nowrap">Retail ID</th>
+                    <th className="px-2 py-4 whitespace-nowrap">name</th>
                     {/* <th className="px-2 py-4 ">Referral Code</th> */}
-                    <th className="px-2 py-4 ">location</th>
-                    <th className="px-2 py-4 ">address</th>
+                    <th className="px-2 py-4 whitespace-nowrap">location</th>
+                    <th className="px-2 py-4 whitespace-nowrap">address</th>
                     {/* <th className="px-2 py-4 ">position</th> */}
-                    <th className="px-2 py-4 ">status</th>
-                    <th className="px-2 py-4 ">Created At</th>
-                    <th className="px-2 py-4 ">Total Referral</th>
+                    <th className="px-2 py-4 whitespace-nowrap">status</th>
+                    <th className="px-2 py-4 whitespace-nowrap">Created At</th>
+                    <th className="px-2 py-4 whitespace-nowrap">Total Referral</th>
                     
                     <th className="px-2 py-4 text-center">Actions</th>
                   </tr>

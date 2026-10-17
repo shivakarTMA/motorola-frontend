@@ -217,14 +217,14 @@ useEffect(() => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-                    <th className="px-2 py-4 ">ID</th>
-                    <th className="px-2 py-4 ">Name</th>
-                    <th className="px-2 py-4 ">location</th>
-                    <th className="px-2 py-4 ">address</th>
+                    <th className="px-2 py-4 whitespace-nowrap">ID</th>
+                    <th className="px-2 py-4 whitespace-nowrap">Name</th>
+                    <th className="px-2 py-4 whitespace-nowrap">location</th>
+                    <th className="px-2 py-4 whitespace-nowrap">address</th>
                     {/* <th className="px-2 py-4 ">position</th> */}
-                    <th className="px-2 py-4 ">No. of Ambassadors</th>
-                    <th className="px-2 py-4 ">status</th>
-                    <th className="px-2 py-4 ">Created At</th>
+                    <th className="px-2 py-4 whitespace-nowrap">No. of Ambassadors</th>
+                    <th className="px-2 py-4 whitespace-nowrap">status</th>
+                    <th className="px-2 py-4 whitespace-nowrap">Created At</th>
                     
                     <th className="px-2 py-4 text-center">Actions</th>
                   </tr>
