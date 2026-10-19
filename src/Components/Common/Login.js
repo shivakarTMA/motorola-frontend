@@ -198,7 +198,7 @@ const Login = (props) => {
               role: staff.role_id,
             }),
           );
-          dispatch(setUserType(staff.role_id));
+          dispatch(setUserType(staff.role_name));
           dispatch(setSessionExpiresAt(session_expires_at));
           // dispatch(setSessionExpiresAt(new Date(Date.now() + 10000).toISOString()));
           dispatch(setIsAuthenticated(true));

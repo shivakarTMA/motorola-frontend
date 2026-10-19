@@ -129,7 +129,7 @@ const StaffList = (props) => {
       }
     } catch (error) {
       console.error(error);
-      alert("Failed to delete tribe.");
+      alert("Failed to delete staff member.");
     } finally {
       setLoading(false);
     }

@@ -32,7 +32,18 @@ import RetailerList from "../Pages/Admin/Retailer/RetailerList";
 import CampusList from "../Pages/Admin/Campus/CampusList";
 import CampusReport from "../Pages/Admin/Reports/CampusReport";
 import RetailerReport from "../Pages/Admin/Reports/RetailerReport";
+import RoleBasedRoute from "./RoleBasedRoute";
 
+
+// Helper function — outside the Routing component
+const roleRoute = (element, allowedRoles) => (
+  <RoleBasedRoute allowedRoles={allowedRoles}>
+    <PrivateRoute>{element}</PrivateRoute>
+  </RoleBasedRoute>
+);
+
+const ADMIN_ONLY = ["Admin"];
+const ADMIN_MODERATOR = ["Admin", "Moderator"];
 
 export default function Routing() {
   const { accessToken, userType } = useSelector((state) => state.auth);
@@ -47,6 +58,7 @@ export default function Routing() {
       </Router>
     );
   }
+  
 
   return (
     <Router>
@@ -58,201 +70,178 @@ export default function Routing() {
 
         <Route
           path="/"
-          element={
-            <PrivateRoute>
-              <AdminDashboard />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <AdminDashboard />,
+            ADMIN_MODERATOR
+          )}
         />
         <Route
           path="/all-users"
-          element={
-            <PrivateRoute>
-              <AllUsersList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <AllUsersList />,
+            ADMIN_ONLY
+          )}
         />
         
         <Route
           path="/tribe-groups"
-          element={
-            <PrivateRoute>
-              <TribesGroupList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <TribesGroupList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/tribes"
-          element={
-            <PrivateRoute>
-              <TribesList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <TribesList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/app-banner"
-          element={
-            <PrivateRoute>
-              <AppBannerList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <AppBannerList />,
+            ADMIN_ONLY
+          )}
         />
 
         <Route
           path="/user/:id"
-          element={
-            <PrivateRoute>
-              <ViewUser />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <ViewUser />,
+            ADMIN_ONLY
+          )}
         />
 
         <Route
           path="/roles"
-          element={
-            <PrivateRoute>
-              <RolesList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <RolesList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/role"
-          element={
-            <PrivateRoute>
-              <CreateNewRole />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <CreateNewRole />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/role/:id"
-          element={
-            <PrivateRoute>
-              <CreateNewRole />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <CreateNewRole />,
+            ADMIN_ONLY
+          )}
         />
 
         <Route
           path="/staff"
-          element={
-            <PrivateRoute>
-              <StaffList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <StaffList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/retailer"
-          element={
-            <PrivateRoute>
-              <RetailerList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <RetailerList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/campus"
-          element={
-            <PrivateRoute>
-              <CampusList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <CampusList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/reports-campus"
-          element={
-            <PrivateRoute>
-              <CampusReport />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <CampusReport />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/reports-retailer"
-          element={
-            <PrivateRoute>
-              <RetailerReport />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <RetailerReport />,
+            ADMIN_ONLY
+          )}
         />
 
         <Route
           path="/modules"
-          element={
-            <PrivateRoute>
-              <ModulesList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <ModulesList />,
+            ADMIN_ONLY
+          )}
         />
 
         <Route
           path="/tiers"
-          element={
-            <PrivateRoute>
-              <TiersList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <TiersList />,
+            ADMIN_ONLY
+          )}
         />
+
         <Route
           path="/flagged-keywords"
-          element={
-            <PrivateRoute>
-              <FlaggedKeywordsList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <FlaggedKeywordsList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/hot-take"
-          element={
-            <PrivateRoute>
-              <HotTakeList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <HotTakeList />,
+            ADMIN_MODERATOR
+          )}
         />
         <Route
           path="/deep-dive"
-          element={
-            <PrivateRoute>
-              <DeepDiveList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <DeepDiveList />,
+            ADMIN_MODERATOR
+          )}
         />
         <Route
           path="/vibe-check"
-          element={
-            <PrivateRoute>
-              <VibeCheckList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <VibeCheckList />,
+            ADMIN_MODERATOR
+          )}
         />
         <Route
           path="/moderation-queue"
-          element={
-            <PrivateRoute>
-              <ModerationQueue />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <ModerationQueue />,
+            ADMIN_MODERATOR
+          )}
         />
         <Route
           path="/device-brands"
-          element={
-            <PrivateRoute>
-              <DeviceBrandsList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <DeviceBrandsList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/device-models"
-          element={
-            <PrivateRoute>
-              <DeviceModelList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <DeviceModelList />,
+            ADMIN_ONLY
+          )}
         />
         <Route
           path="/top-pics"
-          element={
-            <PrivateRoute>
-              <TopPicsList />
-            </PrivateRoute>
-          }
+          element={roleRoute(
+            <TopPicsList />,
+            ADMIN_MODERATOR
+          )}
         />
 
         
