@@ -5,18 +5,29 @@ import CustomDataTable from "../../../Components/Common/CustomDataTable";
 import Tooltip from "../../../Components/Common/Tooltip";
 import { Link } from "react-router-dom";
 import Select from "react-select";
-import { customStyles, formatViewDate } from "../../../Helper/helper";
+import {
+  customStyles,
+  filterActiveItems,
+  formatText,
+  formatViewDate,
+} from "../../../Helper/helper";
 import CreateNewStaff from "./CreateNewStaff";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 import { authAxios } from "../../../Config/config";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import Pagination from "../../../Components/Common/Pagination";
 
+const statusOptions = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
+];
+
 const StaffList = (props) => {
   const { setLoading } = props;
   const [users, setUsers] = useState([]);
   const [roleOptions, setRoleOptions] = useState([]);
   const [role, setRole] = useState(null);
+  const [status, setStatus] = useState(null);
   const [editStaffId, setEditStaffId] = useState(null);
 
   const [deleteModal, setDeleteModal] = useState(false);
@@ -28,91 +39,25 @@ const StaffList = (props) => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const columns = [
-    {
-      name: "Name",
-      selector: (row) => row.name,
-      sortable: true,
-    },
-    {
-      name: "Email",
-      selector: (row) => row.email,
-      sortable: true,
-      grow: 2,
-    },
-    {
-      name: "Mobile",
-      selector: (row) => row.mobile,
-      center: true,
-    },
-    {
-      name: "Role",
-      selector: (row) => row.role?.name ?? "--",
-      center: true,
-      sortable: true,
-    },
-    {
-      name: "Status",
-      selector: (row) => row.status,
-      center: true,
-      cell: (row) => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            row.status === "ACTIVE"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
-    },
-    {
-      name: "Actions",
-      center: true,
-      cell: (row) => (
-        <div className="flex items-center justify-center gap-[1px]">
-          <Tooltip id={`tooltip-edit-${row.id}`} content="Edit" place="left">
-            <button
-              onClick={() => {
-                setEditStaffId(row.id);
-                setCreateStaff(true);
-              }}
-              className="text-black bg-gray-100 w-[30px] h-[30px] flex items-center justify-center rounded-l-md"
-            >
-              <MdModeEdit size={18} />
-            </button>
-          </Tooltip>
-
-          <Tooltip
-            id={`tooltip-delete-${row.id}`}
-            content="Delete"
-            place="left"
-          >
-            <button
-              onClick={() => {
-                setDeleteId(row.id);
-                setDeleteModal(true);
-              }}
-              className="text-red-500 bg-red-100 w-[30px] h-[30px] flex items-center justify-center rounded-r-md"
-            >
-              <FiTrash2 size={18} />
-            </button>
-          </Tooltip>
-        </div>
-      ),
-    },
-  ];
-
-  const handleFetchStaff = async (currentPage = page) => {
+  const handleFetchStaff = async (
+    currentPage = page,
+    selectedRole = role,
+    selectedStatus = status,
+  ) => {
     try {
       setLoading(true);
 
       // Fetch staff data from API
       const response = await authAxios().get("/staff", {
         params: {
-          page,
+          page: currentPage,
           limit: rowsPerPage,
+          ...(selectedRole?.value != null && {
+            role_id: selectedRole.value,
+          }),
+          ...(selectedStatus?.value && {
+            status: selectedStatus.value,
+          }),
         },
       });
       const resData = response?.data;
@@ -144,7 +89,9 @@ const StaffList = (props) => {
       const resData = response?.data;
 
       if (resData?.success) {
-        const options = resData.data.items.map((item) => ({
+        const activeRoles = filterActiveItems(resData?.data?.items);
+
+        const options = activeRoles.map((item) => ({
           value: item.id,
           label: item.name,
         }));
@@ -161,8 +108,9 @@ const StaffList = (props) => {
   }, []);
 
   useEffect(() => {
-    handleFetchStaff();
-  }, []);
+    setPage(1);
+    handleFetchStaff(1, role, status);
+  }, [role, status]);
 
   const handleDelete = async () => {
     try {
@@ -191,17 +139,32 @@ const StaffList = (props) => {
     <>
       <div className="space-y-6">
         <div className="flex justify-between items-center gap-4">
-          <div className="min-w-[150px]">
-            {/* Role */}
-            <Select
-              styles={customStyles}
-              options={roleOptions}
-              value={role}
-              onChange={setRole}
-              isSearchable={false}
-              placeholder="Select Role"
-              className="w-full"
-            />
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Role filter */}
+            <div className="min-w-[180px]">
+              <Select
+                styles={customStyles}
+                options={roleOptions}
+                value={role}
+                onChange={setRole}
+                isClearable
+                isSearchable={false}
+                placeholder="Filter by Role"
+              />
+            </div>
+
+            {/* Status filter */}
+            <div className="min-w-[180px]">
+              <Select
+                styles={customStyles}
+                options={statusOptions}
+                value={status}
+                onChange={setStatus}
+                isClearable
+                isSearchable={false}
+                placeholder="Filter by Status"
+              />
+            </div>
           </div>
           <button
             type="button"
@@ -212,7 +175,6 @@ const StaffList = (props) => {
             <span>New Staff</span>
           </button>
         </div>
-
 
         <div className="mt-3">
           <div className="box--shadow bg-white rounded-[15px] p-4">
@@ -251,10 +213,12 @@ const StaffList = (props) => {
                                 : "bg-red-100 text-red-700"
                             }`}
                           >
-                            {row.status}
+                            {formatText(row.status)}
                           </span>
                         </td>
-                        <td className="px-2 py-4">{formatViewDate(row.created_at) || "--"}</td>
+                        <td className="px-2 py-4">
+                          {formatViewDate(row.created_at) || "--"}
+                        </td>
                         <td className="px-2 py-4">
                           <div className="flex items-center justify-center gap-[1px]">
                             <Tooltip
@@ -314,7 +278,7 @@ const StaffList = (props) => {
               currentDataLength={users.length}
               onPageChange={(newPage) => {
                 setPage(newPage);
-                handleFetchStaff(newPage);
+                handleFetchStaff(newPage, role, status);
               }}
             />
           </div>
