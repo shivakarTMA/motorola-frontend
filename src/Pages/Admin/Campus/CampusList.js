@@ -30,10 +30,15 @@ const StaffList = (props) => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const latestRequest = useRef(0);
 
+  const [sortDir, setSortDir] = useState("");
+  const [sortBy, setSortBy] = useState("associated_user_count");
+
 
 const handleFetchStaff = async (
   currentPage = page,
-  searchValue = debouncedSearch
+  searchValue = debouncedSearch,
+  currentSortBy = sortBy,
+  currentSortDir = sortDir
 ) => {
   const requestId = ++latestRequest.current;
 
@@ -42,13 +47,19 @@ const handleFetchStaff = async (
 
     const response = await authAxios().get("/campus", {
       params: {
-        page: currentPage,
-        limit: rowsPerPage,
-        ...(searchValue.trim()
-          ? { search: searchValue.trim() }
-          : {}),
-      },
-    });
+            page: currentPage,
+            limit: rowsPerPage,
+            ...(searchValue.trim()
+              ? { search: searchValue.trim() }
+              : {}),
+            ...(currentSortBy
+              ? {
+                  sort_by: currentSortBy,
+                  sort_dir: currentSortDir,
+                }
+              : {}),
+          },
+      });
 
     if (requestId !== latestRequest.current) return;
 
@@ -162,8 +173,8 @@ useEffect(() => {
 
 useEffect(() => {
   setPage(1);
-  handleFetchStaff(1, debouncedSearch);
-}, [debouncedSearch]);
+  handleFetchStaff(1, debouncedSearch, sortBy, sortDir);
+}, [debouncedSearch, sortBy, sortDir]);
 
   return (
     <>
@@ -222,7 +233,31 @@ useEffect(() => {
                     <th className="px-2 py-4 whitespace-nowrap">location</th>
                     <th className="px-2 py-4 whitespace-nowrap">address</th>
                     {/* <th className="px-2 py-4 ">position</th> */}
-                    <th className="px-2 py-4 whitespace-nowrap">No. of Ambassadors</th>
+                    <th
+                      className="px-2 py-4 whitespace-nowrap cursor-pointer select-none"
+                      onClick={() => {
+                        const nextDir = sortDir === "ASC" ? "DESC" : "ASC";
+
+                        setSortBy("associated_user_count");
+                        setSortDir(nextDir);
+                        setPage(1);
+
+                        handleFetchStaff(1, debouncedSearch, "associated_user_count", nextDir);
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>No. of Ambassadors</span>
+
+                        <span className="flex flex-col text-[10px] leading-[10px]">
+                          <span className={sortDir === "ASC" ? "text-black" : "text-gray-400"}>
+                            ▲
+                          </span>
+                          <span className={sortDir === "DESC" ? "text-black" : "text-gray-400"}>
+                            ▼
+                          </span>
+                        </span>
+                      </div>
+                    </th>
                     <th className="px-2 py-4 whitespace-nowrap">status</th>
                     <th className="px-2 py-4 whitespace-nowrap">Created At</th>
                     
@@ -255,7 +290,6 @@ useEffect(() => {
                             {formatText(row.status)}
                           </span>
                         </td>
-                        {console.log(row?.total_referred_count,'dssddsdssdds')}
                         <td className="px-2 py-4">{formatViewDate(row.created_at) || "--"}</td>
                         <td className="px-2 py-4">
                           <div className="flex items-center justify-center gap-[1px]">

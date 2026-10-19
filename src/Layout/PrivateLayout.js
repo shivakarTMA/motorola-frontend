@@ -24,7 +24,7 @@ export default function PrivateLayout({ children }) {
     { path: "/roles", title: "Roles" },
     { path: "/role", title: "Create Role" },
     { path: "/role/:id", title: "Edit Role" },
-    { path: "/staff", title: "Staff" },
+    { path: "/staff", title: "Staff List" },
     { path: "/modules", title: "Modules" },
     { path: "/tiers", title: "Tiers" },
     { path: "/flagged-keywords", title: "Flagged Keywords" },
@@ -35,9 +35,9 @@ export default function PrivateLayout({ children }) {
     { path: "/device-brands", title: "Device Brands" },
     { path: "/device-models", title: "Device Models" },
     { path: "/top-pics", title: "Top Picks" },
-    { path: "/retailer", title: "Retailer" },
-    { path: "/campus", title: "Campus Ambassador" },
-    { path: "/reports-campus", title: "Campus Ambassador Referral Report" },
+    { path: "/retailer", title: "Retailer List" },
+    { path: "/campus", title: "Campus List" },
+    { path: "/reports-campus", title: "Campus Ambassador Report" },
     { path: "/reports-retailer", title: "Retailer Report" },
   ];
 

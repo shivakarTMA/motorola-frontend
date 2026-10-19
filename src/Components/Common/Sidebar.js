@@ -1,53 +1,76 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../../Assests/Images/logo.png";
-import { useSelector } from "react-redux";
-import { FaAngleDown, FaCircle, FaLayerGroup } from "react-icons/fa";
+import { FaAngleDown, FaCircle, FaLayerGroup, FaUserTie, FaBuilding } from "react-icons/fa";
 import { SiGooglesheets } from "react-icons/si";
-import { MdBrandingWatermark, MdControlCamera, MdDashboard, MdDevices, MdFormatListBulleted, MdManageAccounts, MdTextFormat } from "react-icons/md";
+import { MdDashboard, MdDevices, MdTextFormat, MdAdminPanelSettings, MdBadge, MdSettings } from "react-icons/md";
 import { HiUsers } from "react-icons/hi";
-import {
-  MdGroups,
-  MdCampaign,
-  MdAssessment,
-  MdAdminPanelSettings,
-  MdBadge,
-  MdSettings,
-} from "react-icons/md";
-import { FaUserTie } from "react-icons/fa";
-import { FaBuilding } from "react-icons/fa";
-
-import { IoIosGift } from "react-icons/io";
 import { TbSitemapFilled } from "react-icons/tb";
 import { RiArticleFill, RiPushpin2Fill } from "react-icons/ri";
 
 const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
   const location = useLocation();
-  const { userType } = useSelector((state) => state.auth);
-
   const [dropdownToggles, setDropdownToggles] = useState({});
 
   const toggleMenu = (menuKey) => {
-    setDropdownToggles((prev) => {
-      const newState = {};
-
-      // If the same menu is clicked, toggle it; otherwise, open the new one only
-      if (!prev[menuKey]) {
-        newState[menuKey] = true;
-      }
-
-      return newState;
-    });
+    setDropdownToggles((prev) => ({
+      ...prev,
+      [menuKey]: !prev[menuKey],
+    }));
 
     if (window.innerWidth > 1200) {
       setToggleMenuBar(false);
     }
   };
+
   useEffect(() => {
     if (toggleMenuBar) {
       setDropdownToggles({});
     }
   }, [toggleMenuBar]);
+
+  // Keep the relevant parent menus open when a nested route is active.
+  useEffect(() => {
+    const path = location.pathname;
+
+    setDropdownToggles((prev) => ({
+      ...prev,
+      posts: ["/hot-take", "/deep-dive", "/vibe-check"].includes(path)
+        ? true
+        : prev.posts,
+      configuration: [
+        "/device-brands",
+        "/device-models",
+        "/staff",
+        "/retailer",
+        "/campus",
+        "/app-banner",
+        "/flagged-keywords",
+      ].includes(path)
+        ? true
+        : prev.configuration,
+      devices: ["/device-brands", "/device-models"].includes(path)
+        ? true
+        : prev.devices,
+      reports: ["/reports-campus", "/reports-retailer"].includes(path)
+        ? true
+        : prev.reports,
+    }));
+  }, [location.pathname]);
+
+  const isActive = (path) => location.pathname === path;
+
+  const submenuClass = (path) =>
+    `text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item ${
+      isActive(path) ? "active" : ""
+    }`;
+
+  const renderSubmenuItem = (to, label) => (
+    <Link to={to} className={submenuClass(to)} key={to}>
+      <FaCircle className="menu--icon !text-[10px]" />
+      <span className="nav-text">{label}</span>
+    </Link>
+  );
 
   return (
     <div className={`sidebar ${toggleMenuBar ? "activetoggle" : ""}`}>
@@ -56,7 +79,7 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
           <img
             src={Logo}
             alt="logo"
-          width="112"
+            width="112"
             height="100"
             className="mx-auto"
           />
@@ -67,14 +90,15 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
         <p className="text-[#949494] text-uppercase menu--head mb-3 px-[17px]">
           Overview
         </p>
+
         <div className="space-y-0 menu--list">
-          <Link
-            to="/"
-            className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
-          >
+          {/* Dashboard */}
+          <Link to="/" className={`nav-link ${isActive("/") ? "active" : ""}`}>
             <MdDashboard className="menu--icon" />
             <span className="nav-text">Dashboard</span>
           </Link>
+
+          {/* Post */}
           <div
             className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
             onClick={() => toggleMenu("posts")}
@@ -82,312 +106,160 @@ const Sidebar = ({ toggleMenuBar, setToggleMenuBar }) => {
           >
             <div className="flex items-center">
               <RiArticleFill className="menu--icon" />
-              <span className="nav-text">Posts</span>
+              <span className="nav-text">Post</span>
             </div>
             <FaAngleDown
               className={`downmenu transition ${
-                dropdownToggles["posts"] ? "rotate-[180deg]" : ""
+                dropdownToggles.posts ? "rotate-[180deg]" : ""
               }`}
             />
           </div>
 
-          {dropdownToggles["posts"] && (
+          {dropdownToggles.posts && (
             <div className="pl-[40px] relative dropdown--menu--nav">
-              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
-              <Link
-                to="/hot-take"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Hot Take</span>
-              </Link>
-              <Link
-                to="/deep-dive"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Deep Dive</span>
-              </Link>
-              <Link
-                to="/vibe-check"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Vibe Check</span>
-              </Link>
+              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]" />
+              {renderSubmenuItem("/hot-take", "Hot Take")}
+              {renderSubmenuItem("/deep-dive", "Deep Dive")}
+              {renderSubmenuItem("/vibe-check", "Vibe Check")}
             </div>
           )}
 
-           <Link
+          {/* Moderation Queue */}
+          <Link
             to="/moderation-queue"
-            className={`nav-link ${location.pathname === "/moderation-queue" ? "active" : ""}`}
+            className={`nav-link ${isActive("/moderation-queue") ? "active" : ""}`}
           >
             <MdAdminPanelSettings className="menu--icon" />
             <span className="nav-text">Moderation Queue</span>
           </Link>
 
-
+          {/* All Users */}
           <Link
             to="/all-users"
-            className={`nav-link ${location.pathname === "/all-users" ? "active" : ""}`}
+            className={`nav-link ${isActive("/all-users") ? "active" : ""}`}
           >
             <HiUsers className="menu--icon" />
             <span className="nav-text">All Users</span>
           </Link>
 
-          {/* <div
-            className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
-            onClick={() => toggleMenu("circles")}
-            style={{ cursor: "pointer" }}
-          >
-            <div className="flex items-center">
-              <MdGroups className="menu--icon" />
-              <span className="nav-text">Tribes</span>
-            </div>
-            <FaAngleDown
-              className={`downmenu transition ${
-                dropdownToggles["circles"] ? "rotate-[180deg]" : ""
-              }`}
-            />
-          </div>
-
-          {dropdownToggles["circles"] && (
-            <div className="pl-[40px] relative dropdown--menu--nav">
-              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
-              <Link
-                to="/tribes"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Tribes</span>
-              </Link>
-              <Link
-                to="/sub-tribes"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Sub-Tribes</span>
-              </Link>
-            </div>
-          )} */}
-
+          {/* Tribe Groups */}
           <Link
             to="/tribe-groups"
-            className={`nav-link ${location.pathname === "/tribe-groups" ? "active" : ""}`}
+            className={`nav-link ${isActive("/tribe-groups") ? "active" : ""}`}
           >
             <FaLayerGroup className="menu--icon" />
             <span className="nav-text">Tribe Groups</span>
           </Link>
 
+          {/* Tribes */}
           <Link
             to="/tribes"
-            className={`nav-link ${location.pathname === "/tribes" ? "active" : ""}`}
+            className={`nav-link ${isActive("/tribes") ? "active" : ""}`}
           >
             <TbSitemapFilled className="menu--icon" />
             <span className="nav-text">Tribes</span>
           </Link>
+
+          {/* Top Picks */}
           <Link
             to="/top-pics"
-            className={`nav-link ${location.pathname === "/top-pics" ? "active" : ""}`}
+            className={`nav-link ${isActive("/top-pics") ? "active" : ""}`}
           >
             <RiPushpin2Fill className="menu--icon" />
             <span className="nav-text">Top Picks</span>
           </Link>
 
-             <div
+          {/* Configuration */}
+          <div
             className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
             onClick={() => toggleMenu("configuration")}
             style={{ cursor: "pointer" }}
-             >
+          >
             <div className="flex items-center">
-              <SiGooglesheets className="menu--icon" />
+              <MdSettings className="menu--icon" />
               <span className="nav-text">Configuration</span>
             </div>
             <FaAngleDown
               className={`downmenu transition ${
-                dropdownToggles["configuration"] ? "rotate-[180deg]" : ""
+                dropdownToggles.configuration ? "rotate-[180deg]" : ""
               }`}
             />
           </div>
 
-          {dropdownToggles["configuration"] && (
-            <div className="pl-[40px] relative dropdown--menu--nav">
-              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
-              <Link
-                to="/reports-campus"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
+          {dropdownToggles.configuration && (
+            <div className="pl-[36px] relative dropdown--menu--nav pr-[17px]">
+              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[40px] top-[8px]" />
+
+              {/* Devices */}
+              <div
+                className="text-black flex justify-between items-center mb-2 text-sm dropdown--nav--item"
+                onClick={() => toggleMenu("devices")}
+                style={{ cursor: "pointer" }}
               >
-                <div className="w-[15px] h-[15px]">
+                <div className="flex items-center gap-[5px]">
                   <FaCircle className="menu--icon !text-[10px]" />
+                  <span className="nav-text">Devices</span>
                 </div>
-                <span className="nav-text">Campus Ambassador Referral Report</span>
-              </Link>
-              <Link
-                to="/reports-retailer"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <div className="w-[15px] h-[15px]">
-                <FaCircle className="menu--icon !text-[10px]" />
+                <FaAngleDown
+                  className={`downmenu transition ${
+                    dropdownToggles.devices ? "rotate-[180deg]" : ""
+                  }`}
+                />
               </div>
-                <span className="nav-text">Retailer Referral Report</span>
-              </Link>
-            </div>
-          )} 
 
+              {dropdownToggles.devices && (
+                <div className="pl-[6px] relative">
+                  <Link
+                    to="/device-brands"
+                    className={`${submenuClass("/device-brands")} submenu-link`}
+                  >
+                    <span className="nav-text">Brands</span>
+                  </Link>
 
+                  <Link
+                    to="/device-models"
+                    className={`${submenuClass("/device-models")} submenu-link`}
+                  >
+                    <span className="nav-text">Models</span>
+                  </Link>
+                </div>
+              )}
 
-
-
-
-
-
-
-
-          <Link
-            to="/app-banner"
-            className={`nav-link ${location.pathname === "/app-banner" ? "active" : ""}`}
-          >
-            <MdCampaign className="menu--icon" />
-            <span className="nav-text">App Banner</span>
-          </Link>
-
-          {/* <Link
-            to="/reports"
-            className={`nav-link ${location.pathname === "/reports" ? "active" : ""}`}
-          >
-            <MdAssessment className="menu--icon" />
-            <span className="nav-text">Reports</span>
-          </Link> */}
-
-          <Link
-            to="/staff"
-            className={`nav-link ${location.pathname === "/staff" ? "active" : ""}`}
-          >
-            <MdBadge className="menu--icon" />
-            <span className="nav-text">Staff List</span>
-          </Link>
-          <Link
-            to="/retailer"
-            className={`nav-link ${location.pathname === "/retailer" ? "active" : ""}`}
-          >
-            <FaUserTie  className="menu--icon" />
-            <span className="nav-text">Retailer List</span>
-          </Link>
-          <Link
-            to="/campus"
-            className={`nav-link ${location.pathname === "/campus" ? "active" : ""}`}
-          >
-            <FaBuilding  className="menu--icon" />
-            <span className="nav-text">Campus List</span>
-          </Link>
-
-          {/* <Link
-            to="/roles"
-            className={`nav-link ${location.pathname === "/roles" ? "active" : ""}`}
-          >
-            <MdManageAccounts className="menu--icon" />
-            <span className="nav-text">Roles</span>
-          </Link> */}
-
-          {/* <Link
-            to="/modules"
-            className={`nav-link ${location.pathname === "/modules" ? "active" : ""}`}
-          >
-            <MdControlCamera className="menu--icon" />
-            <span className="nav-text">Modules</span>
-          </Link> */}
-
-          {/* <Link
-            to="/tiers"
-            className={`nav-link ${location.pathname === "/tiers" ? "active" : ""}`}
-          >
-            <IoIosGift className="menu--icon" />
-            <span className="nav-text">Tiers</span>
-          </Link> */}
-
-          <Link
-            to="/flagged-keywords"
-            className={`nav-link ${location.pathname === "/flagged-keywords" ? "active" : ""}`}
-          >
-            <MdTextFormat className="menu--icon" />
-            <span className="nav-text">Flagged Keywords</span>
-          </Link>
-
-          <div
-            className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
-            onClick={() => toggleMenu("devices")}
-            style={{ cursor: "pointer" }}
-          >
-            <div className="flex items-center">
-              <MdDevices className="menu--icon" />
-              <span className="nav-text">Devices</span>
-            </div>
-            <FaAngleDown
-              className={`downmenu transition ${
-                dropdownToggles["devices"] ? "rotate-[180deg]" : ""
-              }`}
-            />
-          </div>
-
-          {dropdownToggles["devices"] && (
-            <div className="pl-[40px] relative dropdown--menu--nav">
-              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
-              <Link
-                to="/device-brands"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Brands</span>
-              </Link>
-              <Link
-                to="/device-models"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <FaCircle className="menu--icon !text-[10px]" />
-                <span className="nav-text">Models</span>
-              </Link>
+              {renderSubmenuItem("/staff", "Staff List")}
+              {renderSubmenuItem("/retailer", "Retailer List")}
+              {renderSubmenuItem("/campus", "Campus List")}
+              {renderSubmenuItem("/app-banner", "App Banner")}
+              {renderSubmenuItem("/flagged-keywords", "Flagged Keywords")}
             </div>
           )}
 
-              <div
+          {/* Reports */}
+          <div
             className="nav-link d-flex justify-between align-items-center mb-2 dropdown--menu"
             onClick={() => toggleMenu("reports")}
             style={{ cursor: "pointer" }}
-             >
+          >
             <div className="flex items-center">
               <SiGooglesheets className="menu--icon" />
               <span className="nav-text">Reports</span>
             </div>
             <FaAngleDown
               className={`downmenu transition ${
-                dropdownToggles["reports"] ? "rotate-[180deg]" : ""
+                dropdownToggles.reports ? "rotate-[180deg]" : ""
               }`}
             />
           </div>
 
-          {dropdownToggles["reports"] && (
+          {dropdownToggles.reports && (
             <div className="pl-[40px] relative dropdown--menu--nav">
-              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]"></div>
-              <Link
-                to="/reports-campus"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <div className="w-[15px] h-[15px]">
-                  <FaCircle className="menu--icon !text-[10px]" />
-                </div>
-                <span className="nav-text">Campus Ambassador Referral Report</span>
-              </Link>
-              <Link
-                to="/reports-retailer"
-                className="text-black flex items-center gap-[5px] mb-2 text-sm dropdown--nav--item"
-              >
-                <div className="w-[15px] h-[15px]">
-                <FaCircle className="menu--icon !text-[10px]" />
-              </div>
-                <span className="nav-text">Retailer Referral Report</span>
-              </Link>
+              <div className="absolute h-[calc(100%-15px)] w-[2px] bg-black left-[44px] top-[8px]" />
+              {renderSubmenuItem(
+                "/reports-campus",
+                "Campus Ambassador Report"
+              )}
+              {renderSubmenuItem("/reports-retailer", "Retailer Report")}
             </div>
-          )} 
+          )}
         </div>
       </div>
     </div>

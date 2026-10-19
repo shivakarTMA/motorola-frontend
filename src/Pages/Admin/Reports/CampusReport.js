@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { useSearchParams } from "react-router-dom";
@@ -17,9 +16,9 @@ import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 import { customStyles } from "../../../Helper/helper";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 
-const AmbassadorReport = ({setLoading}) => {
+const AmbassadorReport = ({ setLoading }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [ambassadorList, setAmbassadorList] = useState([]);
   // const [loading, setLoading] = useState(false);
   const latestRequest = useRef(0);
@@ -39,12 +38,10 @@ const [downloading, setDownloading] = useState(false);
   });
 
   const [filterCity, setFilterCity] = useState(
-    () => searchParams.get("city") || null
+    () => searchParams.get("city") || null,
   );
 
-  const [search, setSearch] = useState(
-    () => searchParams.get("search") || ""
-  );
+  const [search, setSearch] = useState(() => searchParams.get("search") || "");
 
   const [debouncedSearch, setDebouncedSearch] = useState(search);
 
@@ -52,9 +49,7 @@ const [downloading, setDownloading] = useState(false);
   // PAGINATION
   // ==========================================
 
-  const [page, setPage] = useState(
-    () => Number(searchParams.get("page")) || 1
-  );
+  const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
 
   const rowsPerPage = 10;
 
@@ -70,24 +65,24 @@ const [downloading, setDownloading] = useState(false);
   useEffect(() => {
     let active = true;
 
-  const fetchCityOptions = async () => {
-    try {
-      const response = await authAxios().get("/campus/locations");
-  
-      if (!active || !response?.data?.success) return;
-  
-      const locations = response?.data?.data || [];
-  
-      const options = locations.map((location) => ({
-        value: location,
-        label: location,
-      }));
-  
-      setCityOptions(options);
-    } catch (error) {
-      console.error("Error fetching city options:", error);
-    }
-  };
+    const fetchCityOptions = async () => {
+      try {
+        const response = await authAxios().get("/campus/locations");
+
+        if (!active || !response?.data?.success) return;
+
+        const locations = response?.data?.data || [];
+
+        const options = locations.map((location) => ({
+          value: location,
+          label: location,
+        }));
+
+        setCityOptions(options);
+      } catch (error) {
+        console.error("Error fetching city options:", error);
+      }
+    };
 
     fetchCityOptions();
 
@@ -112,93 +107,83 @@ const [downloading, setDownloading] = useState(false);
   // FETCH AMBASSADOR REPORT
   // ==========================================
 
- useEffect(() => {
-  const requestId = ++latestRequest.current;
+  useEffect(() => {
+    const requestId = ++latestRequest.current;
 
-  const fetchAmbassadorReport = async () => {
-    try {
-      setLoading(true);
+    const fetchAmbassadorReport = async () => {
+      try {
+        setLoading(true);
 
-      const params = {
-        page,
-        limit: rowsPerPage,
-      };
+        const params = {
+          page,
+          limit: rowsPerPage,
+        };
 
-      if (filterCity) {
-        params.location = filterCity;
-      }
+        if (filterCity) {
+          params.location = filterCity;
+        }
 
-      if (debouncedSearch) {
-        params.search = debouncedSearch;
-      }
+        if (debouncedSearch) {
+          params.search = debouncedSearch;
+        }
 
-      if (startDate && endDate) {
-        params.date_from = format(startDate, "yyyy-MM-dd");
-        params.date_to = format(endDate, "yyyy-MM-dd");
-      }
+        if (startDate && endDate) {
+          params.date_from = format(startDate, "yyyy-MM-dd");
+          params.date_to = format(endDate, "yyyy-MM-dd");
+        }
 
-      // Updated API endpoint
-      const response = await authAxios().get(
-        "/user/ambassador-report",
-        { params }
-      );
+        // Updated API endpoint
+        const response = await authAxios().get("/user/ambassador-report", {
+          params,
+        });
 
-      if (requestId !== latestRequest.current) return;
+        if (requestId !== latestRequest.current) return;
 
-      const resData = response?.data;
+        const resData = response?.data;
 
-      if (resData?.success) {
-        // Updated response structure
-        const items = resData?.data?.items || [];
+        if (resData?.success) {
+          // Updated response structure
+          const items = resData?.data?.items || [];
 
-        // No need to filter by user_type
-        setAmbassadorList(items);
+          // No need to filter by user_type
+          setAmbassadorList(items);
 
-        const pagination = resData?.data?.pagination;
+          const pagination = resData?.data?.pagination;
 
-        setTotalPages(pagination?.totalPages ?? 1);
-        setTotalCount(pagination?.total ?? 0);
-      } else {
+          setTotalPages(pagination?.totalPages ?? 1);
+          setTotalCount(pagination?.total ?? 0);
+        } else {
+          setAmbassadorList([]);
+          setTotalPages(1);
+          setTotalCount(0);
+
+          toast.error(resData?.message || "Failed to fetch ambassadors");
+        }
+      } catch (error) {
+        if (requestId !== latestRequest.current) return;
+
+        console.error("Error fetching ambassador report:", error);
+
         setAmbassadorList([]);
         setTotalPages(1);
         setTotalCount(0);
 
         toast.error(
-          resData?.message || "Failed to fetch ambassadors"
+          error?.response?.data?.message || "Failed to fetch ambassador report",
         );
+      } finally {
+        if (requestId === latestRequest.current) {
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      if (requestId !== latestRequest.current) return;
+    };
 
-      console.error("Error fetching ambassador report:", error);
+    fetchAmbassadorReport();
 
-      setAmbassadorList([]);
-      setTotalPages(1);
-      setTotalCount(0);
-
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to fetch ambassador report"
-      );
-    } finally {
-      if (requestId === latestRequest.current) {
-        setLoading(false);
-      }
-    }
-  };
-
-  fetchAmbassadorReport();
-
-  return () => {
-    latestRequest.current += 1;
-  };
-}, [
-  page,
-  filterCity,
-  debouncedSearch,
-  startDate,
-  endDate,
-]);
+    return () => {
+      latestRequest.current += 1;
+    };
+  }, [page, filterCity, debouncedSearch, startDate, endDate]);
 
   // ==========================================
   // SYNC FILTERS WITH URL
@@ -241,10 +226,7 @@ const [downloading, setDownloading] = useState(false);
   // FILTER HANDLERS
   // ==========================================
 
-  const handleDateRangeChange = ({
-    startDate: newStart,
-    endDate: newEnd,
-  }) => {
+  const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
     setStartDate(newStart);
     setEndDate(newEnd);
     setPage(1);
@@ -270,89 +252,78 @@ const [downloading, setDownloading] = useState(false);
   // DOWNLOAD REPORT
   // ==========================================
 
- 
-const handleDownloadReport = async () => {
-  if (downloading) return;
+  const handleDownloadReport = async () => {
+    if (downloading) return;
 
-  try {
-    setDownloading(true);
+    try {
+      setDownloading(true);
 
-    const params = {};
+      const params = {};
 
-    if (filterCity) {
-      params.location = filterCity;
-    }
+      if (filterCity) {
+        params.location = filterCity;
+      }
 
-    if (search.trim()) {
-      params.search = search.trim();
-    }
+      if (search.trim()) {
+        params.search = search.trim();
+      }
 
-    if (startDate && endDate) {
-      params.date_from = format(startDate, "yyyy-MM-dd");
-      params.date_to = format(endDate, "yyyy-MM-dd");
-    }
+      if (startDate && endDate) {
+        params.date_from = format(startDate, "yyyy-MM-dd");
+        params.date_to = format(endDate, "yyyy-MM-dd");
+      }
 
-    const response = await authAxios().get(
-      "/user/ambassador-report/excel",
-      {
+      const response = await authAxios().get("/user/ambassador-report/excel", {
         params,
         responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      let fileName = "Campus Ambassador Referral Report";
+
+      if (startDate && endDate) {
+        const fromDate = format(startDate, "yyyy-MM-dd");
+        const toDate = format(endDate, "yyyy-MM-dd");
+
+        fileName += ` ${fromDate} ${toDate}`;
       }
-    );
 
-    const blob = new Blob([response.data], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+      link.download = `${fileName}.xlsx`;
 
-    const url = window.URL.createObjectURL(blob);
+      document.body.appendChild(link);
+      link.click();
 
-    const link = document.createElement("a");
-    link.href = url;
-  let fileName = "Campus Ambassador Referral Report";
- 
- if (startDate && endDate) {
-   const fromDate = format(startDate, "yyyy-MM-dd");
-   const toDate = format(endDate, "yyyy-MM-dd");
- 
-   fileName += ` ${fromDate} ${toDate}`;
- }
- 
- link.download = `${fileName}.xlsx`;
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-    document.body.appendChild(link);
-    link.click();
+      toast.success("Report downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading retailer report:", error);
 
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
-    toast.success("Report downloaded successfully");
-  } catch (error) {
-    console.error("Error downloading retailer report:", error);
-
-    toast.error(
-      "Failed to download retailer report"
-    );
-  } finally {
-    setDownloading(false);
-  }
-};
-
+      toast.error("Failed to download retailer report");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   // ==========================================
   // RESPONSIVE PAGINATION
   // ==========================================
 
- const handlePageChange = (newPage) => {
-  if (
-    newPage < 1 ||
-    newPage > totalPages ||
-    newPage === page
-  ) {
-    return;
-  }
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === page) {
+      return;
+    }
 
-  setPage(newPage);
-};
+    setPage(newPage);
+  };
 
   const getPageNumbers = () => {
     const pages = [];
@@ -391,15 +362,12 @@ const handleDownloadReport = async () => {
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-6">
-
       {/* Filters and Download */}
       <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4 w-full min-w-0">
-
         {/* Left Side - Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full min-w-0 xl:flex-1">
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-fit min-w-0 xl:flex-1">
           {/* Date Range */}
-           <div className="relative w-full min-w-0 h-10 [&>div]:h-full [&_button]:h-full">
+          <div className="relative w-full min-w-0 h-10 [&>div]:h-full [&_button]:h-full">
             <DateRangePicker
               onChange={handleDateRangeChange}
               defaultPreset="Today"
@@ -410,36 +378,35 @@ const handleDownloadReport = async () => {
           </div>
 
           {/* City */}
-          <div className="w-full min-w-0">
-  <Select
-    placeholder="Filter by Location"
-    value={
-      cityOptions.find(
-        (option) => option.value === filterCity
-      ) || null
-    }
-    options={cityOptions}
-    onChange={handleCityChange}
-    styles={{
-      ...customStyles,
-      control: (provided, state) => ({
-        ...customStyles.control?.(provided, state),
-        minHeight: "40px",
-        height: "40px",
-      }),
-      valueContainer: (provided) => ({
-        ...provided,
-        height: "40px",
-        padding: "0 8px",
-      }),
-      indicatorsContainer: (provided) => ({
-        ...provided,
-        height: "40px",
-      }),
-    }}
-    isClearable
-  />
-</div>
+          {/* <div className="w-full min-w-0">
+            <Select
+              placeholder="Filter by Location"
+              value={
+                cityOptions.find((option) => option.value === filterCity) ||
+                null
+              }
+              options={cityOptions}
+              onChange={handleCityChange}
+              styles={{
+                ...customStyles,
+                control: (provided, state) => ({
+                  ...customStyles.control?.(provided, state),
+                  minHeight: "40px",
+                  height: "40px",
+                }),
+                valueContainer: (provided) => ({
+                  ...provided,
+                  height: "40px",
+                  padding: "0 8px",
+                }),
+                indicatorsContainer: (provided) => ({
+                  ...provided,
+                  height: "40px",
+                }),
+              }}
+              isClearable
+            />
+          </div> */}
 
           {/* Search */}
           <div className="relative w-full min-w-0">
@@ -493,32 +460,20 @@ const handleDownloadReport = async () => {
       {/* Report Table */}
       <div className="mt-3 w-full min-w-0 max-w-full">
         <div className="box--shadow bg-white rounded-[15px] p-3 sm:p-4 w-full min-w-0 max-w-full">
-
           {/* Table scrolls independently */}
           <div className="relative w-full max-w-full overflow-x-auto">
             <table className="w-full min-w-[850px] text-sm text-left text-gray-500">
-
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
-                  <th className="px-2 py-4 min-w-[70px]">
-                    S.No
-                  </th>
+                  <th className="px-2 py-4 min-w-[70px]">S.No</th>
 
-                  <th className="px-2 py-4 min-w-[180px]">
-                    Ambassador Name
-                  </th>
+                  <th className="px-2 py-4 min-w-[180px]">Ambassador Name</th>
 
-                  <th className="px-2 py-4 min-w-[150px]">
-                    Username
-                  </th>
+                  <th className="px-2 py-4 min-w-[150px]">Username</th>
 
-                  <th className="px-2 py-4 min-w-[200px]">
-                    Campus Name
-                  </th>
+                  <th className="px-2 py-4 min-w-[200px]">Campus Name</th>
 
-                  <th className="px-2 py-4 min-w-[150px]">
-                    Location
-                  </th>
+                  <th className="px-2 py-4 min-w-[150px]">Location</th>
 
                   <th className="px-2 py-4 min-w-[130px] text-center">
                     Total Referrals
@@ -527,7 +482,7 @@ const handleDownloadReport = async () => {
               </thead>
 
               <tbody>
-              { ambassadorList.length > 0 ? (
+                {ambassadorList.length > 0 ? (
                   ambassadorList.map((row, index) => (
                     <tr
                       key={row.id || index}
@@ -537,24 +492,16 @@ const handleDownloadReport = async () => {
                         {(page - 1) * rowsPerPage + index + 1}
                       </td>
 
-                      <td className="px-2 py-4">
-                        {row.name || "-"}
-                      </td>
+                      <td className="px-2 py-4">{row.name || "-"}</td>
 
                       <td className="px-2 py-4">
-                        {row.display_username ||
-                          row.username ||
-                          "-"}
+                        {row.display_username || row.username || "-"}
                       </td>
 
-                      <td className="px-2 py-4">
-                        {row.campus?.name || "-"}
-                      </td>
+                      <td className="px-2 py-4">{row.campus?.name || "-"}</td>
 
                       <td className="px-2 py-4">
-                        {row.campus?.location ||
-                          row.city ||
-                          "-"}
+                        {row.campus?.location || row.city || "-"}
                       </td>
 
                       <td className="px-2 py-4 text-center">
@@ -581,85 +528,79 @@ const handleDownloadReport = async () => {
           ====================================== */}
 
           <div className="mt-4 flex w-full min-w-0 flex-col items-start gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-         
-                     {/* Entries count */}
-                     <div className="w-full text-left text-xs text-gray-600 sm:w-auto sm:text-sm">
-                       {totalCount} entries found.
-                     </div>
-         
-                     {/* Pagination buttons */}
-                     {totalCount > rowsPerPage && (
-                     <div className="flex w-full min-w-0 flex-wrap items-center justify-start gap-1 sm:w-auto sm:justify-end">
-         
-                       {/* Previous */}
-                       <button
-                         type="button"
-                         onClick={() => handlePageChange(page - 1)}
-                         disabled={page <= 1 }
-                         className={`${paginationButtonClass} px-2 ${
-                           page <= 1
-                             ? "cursor-not-allowed text-gray-300 border-gray-200"
-                             : "text-gray-700 border-gray-200 hover:bg-gray-100"
-                         }`}
-                         aria-label="Previous page"
-                       >
-                         <FiChevronLeft size={16} />
-                       </button>
-         
-                       {/* Page Numbers */}
-                       {visiblePages.map((pageNumber) => (
-                         <button
-                           key={pageNumber}
-                           type="button"
-                           onClick={() => handlePageChange(pageNumber)}
-                          //  disabled={loading}
-                           className={`${paginationButtonClass} ${
-                             page === pageNumber
-                               ? "bg-black text-white border-black"
-                               : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                           }`}
-                         >
-                           {pageNumber}
-                         </button>
-                       ))}
-         
-                       {/* Last Page */}
-                       {visiblePages[visiblePages.length - 1] < totalPages && (
-                         <>
-                           <span className="px-1 text-xs text-gray-500">
-                             ...
-                           </span>
-         
-                           <button
-                             type="button"
-                             onClick={() => handlePageChange(totalPages)}
-                            //  disabled={loading}
-                             className={`${paginationButtonClass} bg-white text-gray-700 border-gray-200 hover:bg-gray-100`}
-                           >
-                             {totalPages}
-                           </button>
-                         </>
-                       )}
-         
-                       {/* Next */}
-                       <button
-                         type="button"
-                         onClick={() => handlePageChange(page + 1)}
-                         disabled={page >= totalPages}
-                         className={`${paginationButtonClass} px-2 ${
-                           page >= totalPages
-                             ? "cursor-not-allowed text-gray-300 border-gray-200"
-                             : "text-gray-700 border-gray-200 hover:bg-gray-100"
-                         }`}
-                         aria-label="Next page"
-                       >
-                         <FiChevronRight size={16} />
-                       </button>
-         
-                     </div>
-                    )}
-                   </div>
+            {/* Entries count */}
+            <div className="w-full text-left text-xs text-gray-600 sm:w-auto sm:text-sm">
+              {totalCount} entries found.
+            </div>
 
+            {/* Pagination buttons */}
+            {totalCount > rowsPerPage && (
+              <div className="flex w-full min-w-0 flex-wrap items-center justify-start gap-1 sm:w-auto sm:justify-end">
+                {/* Previous */}
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page <= 1}
+                  className={`${paginationButtonClass} px-2 ${
+                    page <= 1
+                      ? "cursor-not-allowed text-gray-300 border-gray-200"
+                      : "text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                  aria-label="Previous page"
+                >
+                  <FiChevronLeft size={16} />
+                </button>
+
+                {/* Page Numbers */}
+                {visiblePages.map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => handlePageChange(pageNumber)}
+                    //  disabled={loading}
+                    className={`${paginationButtonClass} ${
+                      page === pageNumber
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+
+                {/* Last Page */}
+                {visiblePages[visiblePages.length - 1] < totalPages && (
+                  <>
+                    <span className="px-1 text-xs text-gray-500">...</span>
+
+                    <button
+                      type="button"
+                      onClick={() => handlePageChange(totalPages)}
+                      //  disabled={loading}
+                      className={`${paginationButtonClass} bg-white text-gray-700 border-gray-200 hover:bg-gray-100`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                {/* Next */}
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= totalPages}
+                  className={`${paginationButtonClass} px-2 ${
+                    page >= totalPages
+                      ? "cursor-not-allowed text-gray-300 border-gray-200"
+                      : "text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                  aria-label="Next page"
+                >
+                  <FiChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

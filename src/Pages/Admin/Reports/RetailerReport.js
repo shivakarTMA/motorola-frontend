@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { useSearchParams } from "react-router-dom";
@@ -17,7 +16,7 @@ import DateRangePicker from "../../../Components/Common/DateRangePickerField";
 import { customStyles, formatText } from "../../../Helper/helper";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
 
-const RetailerReport = ({setLoading}) => {
+const RetailerReport = ({ setLoading }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [retailerList, setRetailerList] = useState([]);
@@ -40,12 +39,10 @@ const RetailerReport = ({setLoading}) => {
   });
 
   const [filterCity, setFilterCity] = useState(
-    () => searchParams.get("city") || null
+    () => searchParams.get("city") || null,
   );
 
-  const [search, setSearch] = useState(
-    () => searchParams.get("search") || ""
-  );
+  const [search, setSearch] = useState(() => searchParams.get("search") || "");
 
   const [debouncedSearch, setDebouncedSearch] = useState(search);
 
@@ -53,9 +50,7 @@ const RetailerReport = ({setLoading}) => {
   // PAGINATION
   // ==========================================
 
-  const [page, setPage] = useState(
-    () => Number(searchParams.get("page")) || 1
-  );
+  const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
 
   const rowsPerPage = 10;
 
@@ -71,26 +66,24 @@ const RetailerReport = ({setLoading}) => {
   useEffect(() => {
     let active = true;
 
-  
-const fetchCityOptions = async () => {
-  try {
-    const response = await authAxios().get("/retailer/locations");
+    const fetchCityOptions = async () => {
+      try {
+        const response = await authAxios().get("/retailer/locations");
 
-    if (!active || !response?.data?.success) return;
+        if (!active || !response?.data?.success) return;
 
-    const locations = response?.data?.data || [];
+        const locations = response?.data?.data || [];
 
-    const options = locations.map((location) => ({
-      value: location,
-      label: location,
-    }));
+        const options = locations.map((location) => ({
+          value: location,
+          label: location,
+        }));
 
-    setCityOptions(options);
-  } catch (error) {
-    console.error("Error fetching city options:", error);
-  }
-};
-
+        setCityOptions(options);
+      } catch (error) {
+        console.error("Error fetching city options:", error);
+      }
+    };
 
     fetchCityOptions();
 
@@ -162,9 +155,7 @@ const fetchCityOptions = async () => {
           setTotalPages(1);
           setTotalCount(0);
 
-          toast.error(
-            resData?.message || "Failed to fetch retailers"
-          );
+          toast.error(resData?.message || "Failed to fetch retailers");
         }
       } catch (error) {
         if (requestId !== latestRequest.current) return;
@@ -176,8 +167,7 @@ const fetchCityOptions = async () => {
         setTotalCount(0);
 
         toast.error(
-          error?.response?.data?.message ||
-            "Failed to fetch retailer report"
+          error?.response?.data?.message || "Failed to fetch retailer report",
         );
       } finally {
         if (requestId === latestRequest.current) {
@@ -191,13 +181,7 @@ const fetchCityOptions = async () => {
     return () => {
       latestRequest.current += 1;
     };
-  }, [
-    page,
-    filterCity,
-    debouncedSearch,
-    startDate,
-    endDate,
-  ]);
+  }, [page, filterCity, debouncedSearch, startDate, endDate]);
 
   // ==========================================
   // SYNC FILTERS WITH URL
@@ -240,10 +224,7 @@ const fetchCityOptions = async () => {
   // FILTER HANDLERS
   // ==========================================
 
-  const handleDateRangeChange = ({
-    startDate: newStart,
-    endDate: newEnd,
-  }) => {
+  const handleDateRangeChange = ({ startDate: newStart, endDate: newEnd }) => {
     setStartDate(newStart);
     setEndDate(newEnd);
     setPage(1);
@@ -269,86 +250,75 @@ const fetchCityOptions = async () => {
   // DOWNLOAD REPORT
   // ==========================================
 
- 
-const handleDownloadReport = async () => {
-  if (downloading) return;
+  const handleDownloadReport = async () => {
+    if (downloading) return;
 
-  try {
-    setDownloading(true);
+    try {
+      setDownloading(true);
 
-    const params = {};
+      const params = {};
 
-    if (filterCity) {
-      params.location = filterCity;
-    }
+      if (filterCity) {
+        params.location = filterCity;
+      }
 
-    if (search.trim()) {
-      params.search = search.trim();
-    }
+      if (search.trim()) {
+        params.search = search.trim();
+      }
 
-    if (startDate && endDate) {
-      params.date_from = format(startDate, "yyyy-MM-dd");
-      params.date_to = format(endDate, "yyyy-MM-dd");
-    }
+      if (startDate && endDate) {
+        params.date_from = format(startDate, "yyyy-MM-dd");
+        params.date_to = format(endDate, "yyyy-MM-dd");
+      }
 
-    const response = await authAxios().get(
-      "/retailer/report/excel",
-      {
+      const response = await authAxios().get("/retailer/report/excel", {
         params,
         responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+
+      let fileName = "Retailer Report";
+
+      if (startDate && endDate) {
+        const fromDate = format(startDate, "yyyy-MM-dd");
+        const toDate = format(endDate, "yyyy-MM-dd");
+
+        fileName += ` ${fromDate} ${toDate}`;
       }
-    );
 
-    const blob = new Blob([response.data], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+      link.download = `${fileName}.xlsx`;
 
-    const url = window.URL.createObjectURL(blob);
+      document.body.appendChild(link);
+      link.click();
 
-    const link = document.createElement("a");
-    link.href = url;
-   
-   let fileName = "Retailer Report";
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-if (startDate && endDate) {
-  const fromDate = format(startDate, "yyyy-MM-dd");
-  const toDate = format(endDate, "yyyy-MM-dd");
+      toast.success("Report downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading retailer report:", error);
 
-  fileName += ` ${fromDate} ${toDate}`;
-}
-
-link.download = `${fileName}.xlsx`;
-
-    document.body.appendChild(link);
-    link.click();
-
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
-    toast.success("Report downloaded successfully");
-  } catch (error) {
-    console.error("Error downloading retailer report:", error);
-
-    toast.error(
-      "Failed to download retailer report"
-    );
-  } finally {
-    setDownloading(false);
-  }
-};
-
+      toast.error("Failed to download retailer report");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const handlePageChange = (newPage) => {
-  if (
-    newPage < 1 ||
-    newPage > totalPages ||
-    newPage === page
-  ) {
-    return;
-  }
+    if (newPage < 1 || newPage > totalPages || newPage === page) {
+      return;
+    }
 
-  setPage(newPage);
-};
+    setPage(newPage);
+  };
 
   const getPageNumbers = () => {
     const pages = [];
@@ -387,13 +357,10 @@ link.download = `${fileName}.xlsx`;
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-6">
-
       {/* Filters and Download */}
       <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4 w-full min-w-0">
-
         {/* Left Side - Filters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full min-w-0 xl:flex-1">
-
           {/* Date Range */}
           <div className="relative w-full min-w-0 h-10 [&>div]:h-full [&_button]:h-full">
             <DateRangePicker
@@ -407,35 +374,34 @@ link.download = `${fileName}.xlsx`;
 
           {/* City */}
           <div className="w-full min-w-0">
-  <Select
-    placeholder="Filter by Location"
-    value={
-      cityOptions.find(
-        (option) => option.value === filterCity
-      ) || null
-    }
-    options={cityOptions}
-    onChange={handleCityChange}
-    styles={{
-      ...customStyles,
-      control: (provided, state) => ({
-        ...customStyles.control?.(provided, state),
-        minHeight: "40px",
-        height: "40px",
-      }),
-      valueContainer: (provided) => ({
-        ...provided,
-        height: "40px",
-        padding: "0 8px",
-      }),
-      indicatorsContainer: (provided) => ({
-        ...provided,
-        height: "40px",
-      }),
-    }}
-    isClearable
-  />
-</div>
+            <Select
+              placeholder="Filter by Location"
+              value={
+                cityOptions.find((option) => option.value === filterCity) ||
+                null
+              }
+              options={cityOptions}
+              onChange={handleCityChange}
+              styles={{
+                ...customStyles,
+                control: (provided, state) => ({
+                  ...customStyles.control?.(provided, state),
+                  minHeight: "40px",
+                  height: "40px",
+                }),
+                valueContainer: (provided) => ({
+                  ...provided,
+                  height: "40px",
+                  padding: "0 8px",
+                }),
+                indicatorsContainer: (provided) => ({
+                  ...provided,
+                  height: "40px",
+                }),
+              }}
+              isClearable
+            />
+          </div>
 
           {/* Search Retailer */}
           <div className="relative w-full min-w-0">
@@ -489,92 +455,72 @@ link.download = `${fileName}.xlsx`;
       {/* Report Table */}
       <div className="mt-3 w-full min-w-0 max-w-full">
         <div className="box--shadow bg-white rounded-[15px] p-3 sm:p-4 w-full min-w-0 max-w-full">
-
           {/* Table scrolls independently */}
           <div className="relative w-full max-w-full overflow-x-auto">
             <table className="w-full min-w-[850px] text-sm text-left text-gray-500">
-
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
-                  <th className="px-2 py-4 min-w-[70px]">
-                    S.No
-                  </th>
+                  <th className="px-2 py-4 min-w-[70px]">S.No</th>
 
-                  <th className="px-2 py-4 min-w-[180px]">
-                    Retailer Name
-                  </th>
+                  <th className="px-2 py-4 min-w-[180px]">Retailer Name</th>
 
-                  <th className="px-2 py-4 min-w-[150px]">
-                    Retailer Code
-                  </th>
+                  <th className="px-2 py-4 min-w-[150px]">Retailer Code</th>
 
-                  <th className="px-2 py-4 min-w-[200px]">
-                    Address
-                  </th>
+                  <th className="px-2 py-4 min-w-[200px]">Address</th>
 
-                  <th className="px-2 py-4 min-w-[150px]">
-                    Location
-                  </th>
-                  <th className="px-2 py-4 min-w-[130px] ">
-                    Status
-                  </th>
+                  <th className="px-2 py-4 min-w-[150px]">Location</th>
+                  <th className="px-2 py-4 min-w-[130px] ">Status</th>
                   <th className="px-2 py-4 min-w-[130px] text-center">
                     Total Signups
                   </th>
-                 
                 </tr>
               </thead>
 
-             <tbody>
-  {retailerList.length > 0 ? (
-    retailerList.map((row, index) => (
-      <tr
-        key={row.id || index}
-        className="border-b hover:bg-gray-50 text-xs"
-      >
-        <td className="px-2 py-4">
-          {(page - 1) * rowsPerPage + index + 1}
-        </td>
+              <tbody>
+                {retailerList.length > 0 ? (
+                  retailerList.map((row, index) => (
+                    <tr
+                      key={row.id || index}
+                      className="border-b hover:bg-gray-50 text-xs"
+                    >
+                      <td className="px-2 py-4">
+                        {(page - 1) * rowsPerPage + index + 1}
+                      </td>
 
-        <td className="px-2 py-4">{row.name || "-"}</td>
+                      <td className="px-2 py-4">{row.name || "-"}</td>
 
-        <td className="px-2 py-4">
-          {row.referral_code || "-"}
-        </td>
-        <td className="px-2 py-4">{row.location || "-"}</td>
+                      <td className="px-2 py-4">{row.referral_code || "-"}</td>
+                      <td className="px-2 py-4">{row.location || "-"}</td>
 
-        <td className="px-2 py-4">{row.address || "-"}</td>
-<td className="px-2 py-4">
-                      <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              row.status === "ACTIVE"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {formatText(row.status)}
-                          </span>
+                      <td className="px-2 py-4">{row.address || "-"}</td>
+                      <td className="px-2 py-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            row.status === "ACTIVE"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {formatText(row.status)}
+                        </span>
+                      </td>
 
-  </td>
-
-
-        <td className="px-2 py-4 text-center">
-          {row.total_referred_count ?? 0}
-        </td>
-        
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td
-        colSpan={6}
-        className="px-4 py-6 text-center text-gray-500"
-      >
-        No records found.
-      </td>
-    </tr>
-  )}
-</tbody>
+                      <td className="px-2 py-4 text-center">
+                        {row.total_referred_count ?? 0}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-6 text-center text-gray-500"
+                    >
+                      No records found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
             </table>
           </div>
 
@@ -583,85 +529,79 @@ link.download = `${fileName}.xlsx`;
           ====================================== */}
 
           <div className="mt-4 flex w-full min-w-0 flex-col items-start gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-
             {/* Entries count */}
             <div className="w-full text-left text-xs text-gray-600 sm:w-auto sm:text-sm">
               {totalCount} entries found.
             </div>
 
             {/* Pagination buttons */}
-           {totalCount > rowsPerPage && (
-            <div className="flex w-full min-w-0 flex-wrap items-center justify-start gap-1 sm:w-auto sm:justify-end">
-
-              {/* Previous */}
-              <button
-                type="button"
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page <= 1 }
-                className={`${paginationButtonClass} px-2 ${
-                  page <= 1
-                    ? "cursor-not-allowed text-gray-300 border-gray-200"
-                    : "text-gray-700 border-gray-200 hover:bg-gray-100"
-                }`}
-                aria-label="Previous page"
-              >
-                <FiChevronLeft size={16} />
-              </button>
-
-              {/* Page Numbers */}
-              {visiblePages.map((pageNumber) => (
+            {totalCount > rowsPerPage && (
+              <div className="flex w-full min-w-0 flex-wrap items-center justify-start gap-1 sm:w-auto sm:justify-end">
+                {/* Previous */}
                 <button
-                  key={pageNumber}
                   type="button"
-                  onClick={() => handlePageChange(pageNumber)}
-                  // disabled={loading}
-                  className={`${paginationButtonClass} ${
-                    page === pageNumber
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page <= 1}
+                  className={`${paginationButtonClass} px-2 ${
+                    page <= 1
+                      ? "cursor-not-allowed text-gray-300 border-gray-200"
+                      : "text-gray-700 border-gray-200 hover:bg-gray-100"
                   }`}
+                  aria-label="Previous page"
                 >
-                  {pageNumber}
+                  <FiChevronLeft size={16} />
                 </button>
-              ))}
 
-              {/* Last Page */}
-              {visiblePages[visiblePages.length - 1] < totalPages && (
-                <>
-                  <span className="px-1 text-xs text-gray-500">
-                    ...
-                  </span>
-
+                {/* Page Numbers */}
+                {visiblePages.map((pageNumber) => (
                   <button
+                    key={pageNumber}
                     type="button"
-                    onClick={() => handlePageChange(totalPages)}
+                    onClick={() => handlePageChange(pageNumber)}
                     // disabled={loading}
-                    className={`${paginationButtonClass} bg-white text-gray-700 border-gray-200 hover:bg-gray-100`}
+                    className={`${paginationButtonClass} ${
+                      page === pageNumber
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
                   >
-                    {totalPages}
+                    {pageNumber}
                   </button>
-                </>
-              )}
+                ))}
 
-              {/* Next */}
-              <button
-                type="button"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page >= totalPages }
-                className={`${paginationButtonClass} px-2 ${
-                  page >= totalPages
-                    ? "cursor-not-allowed text-gray-300 border-gray-200"
-                    : "text-gray-700 border-gray-200 hover:bg-gray-100"
-                }`}
-                aria-label="Next page"
-              >
-                <FiChevronRight size={16} />
-              </button>
+                {/* Last Page */}
+                {visiblePages[visiblePages.length - 1] < totalPages && (
+                  <>
+                    <span className="px-1 text-xs text-gray-500">...</span>
 
-            </div>
-)}
+                    <button
+                      type="button"
+                      onClick={() => handlePageChange(totalPages)}
+                      // disabled={loading}
+                      className={`${paginationButtonClass} bg-white text-gray-700 border-gray-200 hover:bg-gray-100`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                {/* Next */}
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= totalPages}
+                  className={`${paginationButtonClass} px-2 ${
+                    page >= totalPages
+                      ? "cursor-not-allowed text-gray-300 border-gray-200"
+                      : "text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                  aria-label="Next page"
+                >
+                  <FiChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </div>
-
         </div>
       </div>
     </div>
