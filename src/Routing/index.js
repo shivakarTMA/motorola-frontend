@@ -32,14 +32,13 @@ import RetailerList from "../Pages/Admin/Retailer/RetailerList";
 import CampusList from "../Pages/Admin/Campus/CampusList";
 import CampusReport from "../Pages/Admin/Reports/CampusReport";
 import RetailerReport from "../Pages/Admin/Reports/RetailerReport";
-import RoleBasedRoute from "./RoleBasedRoute";
 
 
 // Helper function — outside the Routing component
 const roleRoute = (element, allowedRoles) => (
-  <RoleBasedRoute allowedRoles={allowedRoles}>
-    <PrivateRoute>{element}</PrivateRoute>
-  </RoleBasedRoute>
+  <PrivateRoute allowedRoles={allowedRoles}>
+    {element}
+  </PrivateRoute>
 );
 
 const ADMIN_ONLY = ["Admin"];

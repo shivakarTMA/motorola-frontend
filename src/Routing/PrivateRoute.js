@@ -14,11 +14,11 @@ import { IoCloseCircle } from "react-icons/io5";
 // against a runaway/huge session_expires_at value.
 const MAX_TIMEOUT_MS = 2147483647;
 
-export default function PrivateRoute({ children }) {
+export default function PrivateRoute({ children, allowedRoles = ["Admin", "Moderator"] }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const { accessToken, user, sessionExpiresAt } = useSelector(
+  const { accessToken, user, userType, sessionExpiresAt } = useSelector(
     (state) => state.auth,
   );
 
@@ -148,6 +148,11 @@ export default function PrivateRoute({ children }) {
   // Check authentication before rendering
   if (!accessToken) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check role permissions.
+  if (!allowedRoles.includes(userType)) {
+    return <Navigate to="/" replace />;
   }
 
   const popupMessage =
