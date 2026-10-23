@@ -11,7 +11,7 @@ import { authAxios } from "../../Config/config";
 import { toast } from "react-toastify";
 
 const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
-  const { user } = useSelector((state) => state.auth);
+  const { user, userType } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchItem, setSearchItem] = useState("");
@@ -88,6 +88,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
     console.log(searchItem);
     setSearchItem("");
   };
+  
   return (
     <>
       <section className="top--bar p-3 border-b border-b-[#D4D4D4]">
@@ -173,7 +174,7 @@ const Topbar = ({ setToggleMenuBar, toggleMenuBar, pageTitle }) => {
               <p className="text-sm text-right leading-none">
                 <span className="text-black font-semibold">{user?.name}</span>
                 <br />
-                <span className="text-[12px]">Super Admin</span>
+                <span className="text-[12px]">{userType}</span>
               </p>
               <div className=" bg-[#EAEAEA] rounded-full items-center justify-center w-10 h-10 md:flex hidden">
                 <img src={userIcon} className="w-4" />
