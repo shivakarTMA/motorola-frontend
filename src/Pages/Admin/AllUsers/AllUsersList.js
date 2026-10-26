@@ -270,22 +270,37 @@ const AllUsersList = (props) => {
       }
 
       // "New Users" card -> filter by created_at, falling back to last 30 days
+      // if (isNewUsersFilter) {
+      //   params.date_filter_field = "created_at";
+      //   if (startDate && endDate) {
+      //     params.date_from = format(startDate, "yyyy-MM-dd");
+      //     params.date_to = format(endDate, "yyyy-MM-dd");
+      //   } else {
+      //     const from = new Date();
+      //     from.setDate(from.getDate() - 30);
+      //     params.date_from = format(from, "yyyy-MM-dd");
+      //     params.date_to = format(new Date(), "yyyy-MM-dd");
+      //   }
+      // } else if (dateFilterField === "created_at" && startDate && endDate) {
+      //   params.date_from = format(startDate, "yyyy-MM-dd");
+      //   params.date_to = format(endDate, "yyyy-MM-dd");
+      //   params.date_filter_field = "created_at";
+      // }
+
+      
       if (isNewUsersFilter) {
         params.date_filter_field = "created_at";
+
         if (startDate && endDate) {
           params.date_from = format(startDate, "yyyy-MM-dd");
           params.date_to = format(endDate, "yyyy-MM-dd");
-        } else {
-          const from = new Date();
-          from.setDate(from.getDate() - 30);
-          params.date_from = format(from, "yyyy-MM-dd");
-          params.date_to = format(new Date(), "yyyy-MM-dd");
         }
       } else if (dateFilterField === "created_at" && startDate && endDate) {
         params.date_from = format(startDate, "yyyy-MM-dd");
         params.date_to = format(endDate, "yyyy-MM-dd");
         params.date_filter_field = "created_at";
       }
+
 
       if (
         !isNewUsersFilter &&
