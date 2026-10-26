@@ -161,7 +161,8 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
               <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
                 <div className="border-b px-6 py-4">
                   <Dialog.Title className="text-lg font-semibold">
-                    Add New Staff
+                    {/* Add New Staff */}
+                   {isEdit ? "Edit Staff" : "Add New Staff"}
                   </Dialog.Title>
                 </div>
 

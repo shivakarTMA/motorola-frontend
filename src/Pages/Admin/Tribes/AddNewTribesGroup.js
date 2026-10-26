@@ -213,7 +213,9 @@ const AddNewTribesGroup = ({ open, onClose, onSuccess, editId }) => {
               <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
                 <div className="border-b px-6 py-4">
                   <Dialog.Title className="text-lg font-semibold">
-                    Add New Tribe Group
+                    {/* Add New Tribe Group */}
+                  {isEdit ? "Edit Tribe Group" : "Add New Tribe Group"}
+
                   </Dialog.Title>
                 </div>
 

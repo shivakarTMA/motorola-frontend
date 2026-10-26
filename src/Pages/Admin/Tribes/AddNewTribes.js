@@ -268,7 +268,9 @@ const AddNewCircle = ({
               <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
                 <div className="border-b px-6 py-4">
                   <Dialog.Title className="text-lg font-semibold">
-                    Add New Tribes
+                    {/* Add New Tribes */}
+                  {isEdit ? "Edit Tribes" : "Add New Tribes"}
+
                   </Dialog.Title>
                 </div>
 

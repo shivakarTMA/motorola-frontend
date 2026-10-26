@@ -163,7 +163,8 @@ const CreateNewKeyword = ({ open, onClose, onSuccess, editId }) => {
               <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
                 <div className="border-b px-6 py-4">
                   <Dialog.Title className="text-lg font-semibold">
-                    Add New Keyword
+                  {isEdit ? "Edit Keyword" : "Add New Keyword"}
+
                   </Dialog.Title>
                 </div>
 

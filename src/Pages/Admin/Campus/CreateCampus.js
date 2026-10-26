@@ -197,7 +197,7 @@ const [locationsLoading, setLocationsLoading] = useState(false);
               <Dialog.Panel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
                 <div className="border-b px-6 py-4">
                   <Dialog.Title className="text-lg font-semibold">
-                   {isEdit ? "Edit Campus Ambassador" : "Add Campus Ambassador"} 
+                   {isEdit ? "Edit Campus" : "Add Campus"} 
                   </Dialog.Title>
                 </div>
 
