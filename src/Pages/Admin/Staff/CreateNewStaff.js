@@ -24,7 +24,6 @@ const statusOptions = [
 ];
 
 const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
-  // const [showPassword, setShowPassword] = useState(false);
   const isEdit = !!editId;
 
   const formik = useFormik({
@@ -33,7 +32,6 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
       name: "",
       email: "",
       mobile: "",
-      // password: "",
       role_id: null,
       status: null,
     },
@@ -48,16 +46,6 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
         .matches(/^[0-9]{10}$/, "Mobile must be 10 digits")
         .required("Mobile is required"),
 
-      // password: Yup.string().when([], {
-      //   is: () => !isEdit,
-      //   then: (schema) =>
-      //     schema
-      //       .min(6, "Password must be at least 6 characters")
-      //       .required("Password is required"),
-        // otherwise: (schema) =>
-        //   schema.min(6, "Password must be at least 6 characters").notRequired(),
-      // }),
-
       role_id: Yup.object().nullable().required("Role is required"),
 
       status: Yup.object().nullable().required("Status is required"),
@@ -70,24 +58,41 @@ const CreateNewStaff = ({ open, onClose, onSuccess, roleOptions, editId }) => {
           mobile: values.mobile,
           role_id: values.role_id.value,
           status: values.status.value,
-          // ...(values.password ? { password: values.password } : {}),
         };
 
-        console.log(payload);
+        let response;
+
         if (isEdit) {
-          await authAxios().put(`/staff/${editId}`, payload);
-          toast.success("Staff Updated Successfully");
+          response = await authAxios().put(`/staff/${editId}`, payload);
         } else {
-          await authAxios().post("/staff/register", payload);
-          toast.success("Staff Created Successfully");
+          response = await authAxios().post("/staff/register", payload);
         }
+
+        if (response.data.success === false) {
+          toast.error(
+            response.data.errors?.[0] ||
+            response.data.message ||
+            "Something went wrong"
+          );
+          return;
+        }
+
+        toast.success(
+          isEdit
+            ? "Staff Updated Successfully"
+            : "Staff Created Successfully"
+        );
 
         onSuccess?.();
         resetForm();
         onClose();
       } catch (err) {
         console.error(err);
-        toast.error(err.response?.data?.message || "Something went wrong");
+        toast.error(
+          err.response?.data?.errors?.[0] ||
+          err.response?.data?.message ||
+          "Something went wrong"
+        );
       }
     },
   });
