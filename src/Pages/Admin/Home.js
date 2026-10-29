@@ -32,7 +32,7 @@ import IsLoadingHOC from "../../Components/Common/IsLoadingHOC";
 import DateRangePicker from "../../Components/Common/DateRangePickerField";
 import CustomDataTable from "../../Components/Common/CustomDataTable";
 import Tooltip from "../../Components/Common/Tooltip";
-import { FiEye, FiTrash2 } from "react-icons/fi";
+import { FiDownload, FiEye, FiTrash2 } from "react-icons/fi";
 import ModerationDetailModal from "./Moderation/ModerationDetailModal";
 import PollModerationDetailModal from "./Moderation/PollModerationDetailModal";
 import ArticleModerationDetailModal from "./Moderation/ArticleModerationDetailModal";
@@ -40,6 +40,7 @@ import PostModerationDetailModal from "./Moderation/PostModerationDetailModal";
 import CommentArticleDetails from "./Moderation/CommentModeration/CommentArticleDetails";
 import CommentPostDetails from "./Moderation/CommentModeration/CommentPostDetails";
 import CommentPollDetails from "./Moderation/CommentModeration/CommentPollDetails";
+import { useSelector } from "react-redux";
 
 const StatCard = ({
   title,
@@ -99,12 +100,13 @@ const AdminDashboard = (props) => {
   const [modalType, setModalType] = useState(null);
   const [modalCommentType, setModalCommentType] = useState(null);
   const [modalCommentParentType, setModalCommentParentType] = useState(null);
-
+  const [downloading, setDownloading] = useState(false);
   const [filterTribeGroup, setFilterTribeGroup] = useState(null);
   const [filterTribe, setFilterTribe] = useState(null);
 
   const [tribeGroupOptions, setTribeGroupOptions] = useState([]);
   const [tribeOptions, setTribeOptions] = useState([]);
+  const userType = useSelector(state=> state?.auth?.userType)
 
   const [moderationStats, setModerationStats] = useState({
     totalFlagged: 0,
@@ -512,12 +514,72 @@ const handleContentBarClick = (category) => {
     navigate(`/moderation-queue?${params.toString()}`);
   };
 
+
+  
+const handleDownloadReport = async () => {
+  if (downloading) return;
+setLoading(true)
+  try {
+    setDownloading(true);
+
+    const params = {};
+
+    if (startDate && endDate) {
+      params.date_from = format(startDate, "yyyy-MM-dd");
+      params.date_to = format(endDate, "yyyy-MM-dd");
+    }
+
+    if (filterTribeGroup?.value) {
+      params.tribe_group_id = filterTribeGroup.value;
+    }
+
+    if (filterTribe?.value) {
+      params.tribe_id = filterTribe.value;
+    }
+
+    const response = await authAxios().get(
+      "/dashboard/excel",
+      {
+        params,
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "Dashboard_Report.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(url);
+
+    toast.success("Report downloaded successfully");
+    setLoading(false)
+  } catch (error) {
+    console.error("Error downloading dashboard report:", error);
+    toast.error("Failed to download dashboard report");
+  } finally {
+    setDownloading(false);
+    setLoading(false)
+
+  }
+};
+
+
   return (
     <>
       <div>
         <div className="space-y-6">
-          <div className="w-full relative flex gap-2 items-center justify-between">
-            <div className="max-w-[200px] w-full">
+          <div className="w-full relative flex md:flex-row flex-col gap-2 md:items-center justify-between">
+            <div className="md:w-fit md:max-w-[260px] md:min-w-[200px]">
               <DateRangePicker
                 onChange={handleDateRangeChange}
                 defaultPreset="Today"
@@ -525,19 +587,37 @@ const handleContentBarClick = (category) => {
                 panelOffsetLeft={0}
               />
             </div>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-3 w-full xl:w-auto">
             <div className="border px-2 py-1 rounded-lg">
               <div className="w-fit flex items-center gap-2">
-                <div className="text-[18px] font-medium text-gray-500 flex gap-2 items-center">
+                <div className="md:text-[18px] text-[14px] font-medium text-gray-500 flex gap-2 items-center">
                   <FaCircle className="text-[12px] text-[#3774d0]" />
                   <span className="leading-1">Total Users</span>
                 </div>
                 <div className="flex">
-                  <span className="text-[20px] font-semibold leading-1">
+                  <span className="md:text-[20px] text-[16px] font-semibold leading-1">
                     {allDashboardData?.total_users_count}
                   </span>
                 </div>
               </div>
             </div>
+            {userType === "Admin" && (
+           <div className="w-full sm:w-auto">
+                        <button
+                          type="button"
+                          onClick={handleDownloadReport}
+                          disabled={allDashboardData?.total_users_count === 0}
+                          className={`flex w-full xl:w-auto items-center justify-center
+                            gap-2 ${allDashboardData?.total_users_count === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-black text-white'}
+                             px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors
+                            hover:bg-gray-800`}
+                        >
+                          <FiDownload size={17} />
+                          Export Data
+                        </button>
+                      </div>
+)}
+</div>
           </div>
           {/* Top Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-2">

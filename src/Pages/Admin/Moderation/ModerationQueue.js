@@ -26,6 +26,7 @@ import { FaCircle } from "react-icons/fa6";
 import CommentArticleDetails from "./CommentModeration/CommentArticleDetails";
 import CommentPostDetails from "./CommentModeration/CommentPostDetails";
 import CommentPollDetails from "./CommentModeration/CommentPollDetails";
+import { useSelector } from "react-redux";
 
 const statusType = [
   { label: "Resolved", value: "ACTIONED" },
@@ -68,6 +69,7 @@ const ModerationQueue = (props) => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const userType = useSelector(state=> state?.auth?.userType)
 
   const fetchModerationList = async (currentPage = page) => {
     try {
@@ -279,7 +281,7 @@ const ModerationQueue = (props) => {
 
     const handleDownloadReport = async () => {
     if (downloading) return;
-
+setLoading(true)
     try {
       setDownloading(true);
 
@@ -341,12 +343,15 @@ const ModerationQueue = (props) => {
       window.URL.revokeObjectURL(url);
 
       toast.success("Report downloaded successfully");
+      setLoading(false)
     } catch (error) {
       console.error("Error downloading moderation report:", error);
 
       toast.error("Failed to download moderation report");
     } finally {
       setDownloading(false);
+      setLoading(false)
+
     }
   };
 
@@ -488,7 +493,8 @@ const ModerationQueue = (props) => {
               </div>
             </div>
           </div>
-
+            {userType === "Admin" && (
+          
           <div className="w-full md:w-fit md:ml-auto xl:w-auto xl:shrink-0">
             <button
               type="button"
@@ -503,6 +509,7 @@ const ModerationQueue = (props) => {
               Export Data
             </button>
           </div>
+            )}
         </div>
 
         <div className="mt-3">
