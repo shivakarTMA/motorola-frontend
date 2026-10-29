@@ -15,7 +15,7 @@ import {
   formatWithTimeDate,
 } from "../../../Helper/helper";
 import Tooltip from "../../../Components/Common/Tooltip";
-import { FiEye } from "react-icons/fi";
+import { FiDownload, FiEye } from "react-icons/fi";
 import ModerationDetailModal from "./ModerationDetailModal";
 import PostModerationDetailModal from "./PostModerationDetailModal";
 import ArticleModerationDetailModal from "./ArticleModerationDetailModal";
@@ -46,6 +46,7 @@ const ModerationQueue = (props) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [editPostId, setEditPostId] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState(
     () => searchParams.get("status") || null,
@@ -128,7 +129,14 @@ const ModerationQueue = (props) => {
     }
 
     fetchModerationList();
-  }, [startDate, endDate, filterTribeGroup, filterTribe, itemTypeFilter, statusFilter]);
+  }, [
+    startDate,
+    endDate,
+    filterTribeGroup,
+    filterTribe,
+    itemTypeFilter,
+    statusFilter,
+  ]);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
@@ -269,132 +277,231 @@ const ModerationQueue = (props) => {
     setItemTypeFilter(option?.value || null);
   };
 
+    const handleDownloadReport = async () => {
+    if (downloading) return;
+
+    try {
+      setDownloading(true);
+
+      const params = {};
+
+
+
+      if (statusFilter) {
+        params.status = statusFilter;
+      }
+
+      if (itemTypeFilter) {
+        params.item_type = itemTypeFilter;
+      }
+
+      if (filterTribeGroup?.value) {
+        params.circle_group_id = filterTribeGroup.value;
+      }
+
+      if (filterTribe?.value) {
+        params.circle_id = filterTribe.value;
+      }
+
+      if (startDate && endDate) {
+        params.date_from = format(startDate, "yyyy-MM-dd");
+        params.date_to = format(endDate, "yyyy-MM-dd");
+        params.date_filter_field = "created_at";
+      }
+
+      const response = await authAxios().get("/moderation/excel", {
+        params,
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+
+      let fileName = "Moderation Report";
+
+      if (startDate && endDate) {
+        const fromDate = format(startDate, "yyyy-MM-dd");
+        const toDate = format(endDate, "yyyy-MM-dd");
+
+        fileName += ` ${fromDate} ${toDate}`;
+      }
+
+      link.download = `${fileName}.xlsx`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Report downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading moderation report:", error);
+
+      toast.error("Failed to download moderation report");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between gap-4 relative">
-          <div className="lg:flex lg:flex-row grid grid-cols-2 gap-2 flex-1">
-            <div className="lg:min-w-[200px] lg:w-fit w-full col-span-2">
-              <div className="custom--date">
-                <DateRangePicker
-                  onChange={handleDateRangeChange}
-                  defaultPreset="Today"
-                  panelOffsetTop={100}
-                  panelOffsetLeft={0}
-                />
+        <div className="flex gap-4 justify-between items-start">
+          <div className="space-y-6">
+            <div className="flex justify-between gap-4 relative">
+              <div className="lg:flex lg:flex-row grid grid-cols-2 gap-2 flex-1">
+                <div className="lg:min-w-[200px] lg:w-fit w-full col-span-2">
+                  <div className="custom--date">
+                    <DateRangePicker
+                      onChange={handleDateRangeChange}
+                      defaultPreset="Today"
+                      panelOffsetTop={100}
+                      panelOffsetLeft={0}
+                    />
+                  </div>
+                </div>
+
+                <div className="min-w-[180px] lg:w-fit w-full">
+                  <Select
+                    value={filterTribeGroup}
+                    options={tribeGroupOptions}
+                    onChange={handleTribeGroupChange}
+                    styles={customStyles}
+                    placeholder="Select Tribe Group"
+                    isClearable
+                  />
+                </div>
+
+                <div className="min-w-[170px] lg:w-fit w-full">
+                  <Select
+                    value={filterTribe}
+                    options={tribeOptions}
+                    onChange={handleTribeChange}
+                    styles={customStyles}
+                    placeholder="Select Tribe"
+                    isClearable
+                    isDisabled={!filterTribeGroup}
+                  />
+                </div>
+
+                <div className="lg:min-w-[180px] lg:w-fit w-full">
+                  <Select
+                    placeholder="Filter by Item Type"
+                    value={
+                      itemType.find((o) => o.value === itemTypeFilter) || null
+                    }
+                    options={itemType}
+                    onChange={handleItemTypeChange}
+                    isClearable
+                    styles={customStyles}
+                  />
+                </div>
+
+                <div className="lg:min-w-[180px] lg:w-fit w-full">
+                  <Select
+                    placeholder="Filter by status"
+                    value={
+                      statusType.find((o) => o.value === statusFilter) || null
+                    }
+                    options={statusType}
+                    onChange={handleStatusChange}
+                    isClearable
+                    styles={customStyles}
+                  />
+                </div>
               </div>
             </div>
-            <div className="min-w-[180px] lg:w-fit w-full">
-              <Select
-                value={filterTribeGroup}
-                options={tribeGroupOptions}
-                onChange={handleTribeGroupChange}
-                styles={customStyles}
-                placeholder="Select Tribe Group"
-                isClearable
-              />
-            </div>
 
-            <div className="min-w-[170px] lg:w-fit w-full">
-              <Select
-                value={filterTribe}
-                options={tribeOptions}
-                onChange={handleTribeChange}
-                styles={customStyles}
-                placeholder="Select Tribe"
-                isClearable
-                isDisabled={!filterTribeGroup}
-              />
-            </div>
-            <div className="lg:min-w-[180px] lg:w-fit w-full">
-              <Select
-                placeholder="Filter by Item Type"
-                value={itemType.find((o) => o.value === itemTypeFilter) || null}
-                options={itemType}
-                onChange={handleItemTypeChange}
-                isClearable
-                styles={customStyles}
-              />
-            </div>
-            <div className="lg:min-w-[180px] lg:w-fit w-full">
-              <Select
-                placeholder="Filter by status"
-                value={statusType.find((o) => o.value === statusFilter) || null}
-                options={statusType}
-                onChange={handleStatusChange}
-                isClearable
-                styles={customStyles}
-              />
+            <div className="flex flex-wrap gap-y-2 py-0">
+              <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+                <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#F59E0B]" />
+                  <span>Total Flagged Posts</span>
+                </div>
+                <div className="pr-2 flex">
+                  <span className="text-[13px] font-semibold">
+                    {moderationStats?.total_flagged_posts}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+                <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#1F9254]" />
+                  <span>Total Approved Posts</span>
+                </div>
+                <div className="pr-2 flex">
+                  <span className="text-[13px] font-semibold">
+                    {moderationStats?.total_approved_posts}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+                <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#ff9900]" />
+                  <span>Total Rejected Posts</span>
+                </div>
+                <div className="pr-2 flex">
+                  <span className="text-[13px] font-semibold">
+                    {moderationStats?.total_rejected_posts}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+                <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#ff9900]" />
+                  <span>Total Warnings</span>
+                </div>
+                <div className="pr-2 flex">
+                  <span className="text-[13px] font-semibold">
+                    {moderationStats?.total_warnings}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
+                <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#EF4444]" />
+                  <span>Total Suspended users</span>
+                </div>
+                <div className="pr-2 flex">
+                  <span className="text-[13px] font-semibold">
+                    {moderationStats?.total_suspended_users}
+                  </span>
+                </div>
+              </div>
+              <div className="w-fit flex items-center gap-2 lg:pl-2">
+                <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
+                  <FaCircle className="text-[10px] text-[#B91C1C]" />
+                  <span>Total Banned Users</span>
+                </div>
+                <div className="pr-2 flex">
+                  <span className="text-[13px] font-semibold">
+                    {moderationStats?.total_banned_users}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap gap-y-2 py-0">
-          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
-            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#F59E0B]" />
-              <span>Total Flagged Posts</span>
-            </div>
-            <div className="pr-2 flex">
-              <span className="text-[13px] font-semibold">
-                {moderationStats?.total_flagged_posts}
-              </span>
-            </div>
-          </div>
-          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
-            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#1F9254]" />
-              <span>Total Approved Posts</span>
-            </div>
-            <div className="pr-2 flex">
-              <span className="text-[13px] font-semibold">
-                {moderationStats?.total_approved_posts}
-              </span>
-            </div>
-          </div>
-          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
-            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#ff9900]" />
-              <span>Total Rejected Posts</span>
-            </div>
-            <div className="pr-2 flex">
-              <span className="text-[13px] font-semibold">
-                {moderationStats?.total_rejected_posts}
-              </span>
-            </div>
-          </div>
-          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
-            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#ff9900]" />
-              <span>Total Warnings</span>
-            </div>
-            <div className="pr-2 flex">
-              <span className="text-[13px] font-semibold">
-                {moderationStats?.total_warnings}
-              </span>
-            </div>
-          </div>
-          <div className="w-fit flex items-center gap-2 lg:border-r lg:pl-2">
-            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#EF4444]" />
-              <span>Total Suspended users</span>
-            </div>
-            <div className="pr-2 flex">
-              <span className="text-[13px] font-semibold">
-                {moderationStats?.total_suspended_users}
-              </span>
-            </div>
-          </div>
-          <div className="w-fit flex items-center gap-2 lg:pl-2">
-            <div className="text-[13px] font-medium text-gray-600 flex gap-2 items-center">
-              <FaCircle className="text-[10px] text-[#B91C1C]" />
-              <span>Total Banned Users</span>
-            </div>
-            <div className="pr-2 flex">
-              <span className="text-[13px] font-semibold">
-                {moderationStats?.total_banned_users}
-              </span>
-            </div>
+          <div className="w-full md:w-fit md:ml-auto xl:w-auto xl:shrink-0">
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              disabled={moderationList.length === 0}
+              className={`flex w-full xl:w-auto items-center justify-center
+                gap-2 ${moderationList.length === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-black text-white'}
+                 px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors
+                hover:bg-gray-800`}
+            >
+              <FiDownload size={17} />
+              Export Data
+            </button>
           </div>
         </div>
 
@@ -404,7 +511,6 @@ const ModerationQueue = (props) => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                   <tr>
-                    {/* <th className="px-2 py-4 min-w-[80px]">Report ID</th> */}
                     <th className="px-2 py-4 min-w-[120px]">Reported Date</th>
                     <th className="px-2 py-4 min-w-[120px]">Reported Time</th>
                     <th className="px-2 py-4 min-w-[100px] ">Item Type</th>
@@ -445,14 +551,14 @@ const ModerationQueue = (props) => {
 
                         <td className="px-2 py-4">
                           {row?.post?.type === "POST"
-                                ? "Hot Take"
-                                : row?.post?.type === "ARTICLE"
-                                  ? "Deep Dive"
-                                  : row?.content_type === "POLL"
-                                    ? "Vibe Check"
-                                    : row?.content_type === "COMMENT"
-                                    ? "Comment"
-                                    : "--"}
+                            ? "Hot Take"
+                            : row?.post?.type === "ARTICLE"
+                              ? "Deep Dive"
+                              : row?.content_type === "POLL"
+                                ? "Vibe Check"
+                                : row?.content_type === "COMMENT"
+                                  ? "Comment"
+                                  : "--"}
                         </td>
                         <td className="px-2 py-4">
                           {row?.matchedKeyword?.keyword
@@ -464,17 +570,17 @@ const ModerationQueue = (props) => {
                         </td>
                         <td className="px-2 py-4">
                           {row.post?.circle?.circleGroup?.name ||
-                          row.poll?.circle?.circleGroup?.name ||
-                          row.comment?.poll?.circle?.circleGroup?.name ||
-                          row.comment?.post?.circle?.circleGroup?.name ||
-                          "--"}
+                            row.poll?.circle?.circleGroup?.name ||
+                            row.comment?.poll?.circle?.circleGroup?.name ||
+                            row.comment?.post?.circle?.circleGroup?.name ||
+                            "--"}
                         </td>
                         <td className="px-2 py-4">
                           {row.post?.circle?.name ||
-                          row.poll?.circle?.name ||
-                          row.comment?.poll?.circle?.name ||
-                          row.comment?.post?.circle?.name ||
-                          "--"}
+                            row.poll?.circle?.name ||
+                            row.comment?.poll?.circle?.name ||
+                            row.comment?.post?.circle?.name ||
+                            "--"}
                         </td>
                         <td className="px-2 py-4">
                           {row?.reviewer?.name ? row.reviewer?.name : "--"}
@@ -579,17 +685,18 @@ const ModerationQueue = (props) => {
         />
       )}
 
-      {(modalCommentParentType === "ARTICLE" && modalCommentType === "COMMENT") && (
-        <CommentArticleDetails
-          isOpen={true}
-          onClose={closeModal}
-          report={selectedReport}
-          editId={editPostId}
-          onSubmit={handleModerationUpdate}
-        />
-      )}
+      {modalCommentParentType === "ARTICLE" &&
+        modalCommentType === "COMMENT" && (
+          <CommentArticleDetails
+            isOpen={true}
+            onClose={closeModal}
+            report={selectedReport}
+            editId={editPostId}
+            onSubmit={handleModerationUpdate}
+          />
+        )}
 
-      {(modalCommentParentType === "POST" && modalCommentType === "COMMENT") && (
+      {modalCommentParentType === "POST" && modalCommentType === "COMMENT" && (
         <CommentPostDetails
           isOpen={true}
           onClose={closeModal}
@@ -599,7 +706,7 @@ const ModerationQueue = (props) => {
         />
       )}
 
-      {(modalCommentParentType === "POLL" && modalCommentType === "COMMENT") && (
+      {modalCommentParentType === "POLL" && modalCommentType === "COMMENT" && (
         <CommentPollDetails
           isOpen={true}
           onClose={closeModal}
@@ -608,8 +715,6 @@ const ModerationQueue = (props) => {
           onSubmit={handleModerationUpdate}
         />
       )}
-
-
     </>
   );
 };
