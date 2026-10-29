@@ -69,7 +69,7 @@ const ModerationQueue = (props) => {
   const [rowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const userType = useSelector(state=> state?.auth?.userType)
+  const userType = useSelector((state) => state?.auth?.userType);
 
   const fetchModerationList = async (currentPage = page) => {
     try {
@@ -279,15 +279,13 @@ const ModerationQueue = (props) => {
     setItemTypeFilter(option?.value || null);
   };
 
-    const handleDownloadReport = async () => {
+  const handleDownloadReport = async () => {
     if (downloading) return;
-setLoading(true)
+    setLoading(true);
     try {
       setDownloading(true);
 
       const params = {};
-
-
 
       if (statusFilter) {
         params.status = statusFilter;
@@ -343,22 +341,21 @@ setLoading(true)
       window.URL.revokeObjectURL(url);
 
       toast.success("Report downloaded successfully");
-      setLoading(false)
+      setLoading(false);
     } catch (error) {
       console.error("Error downloading moderation report:", error);
 
       toast.error("Failed to download moderation report");
     } finally {
       setDownloading(false);
-      setLoading(false)
-
+      setLoading(false);
     }
   };
 
   return (
     <>
       <div className="space-y-6">
-        <div className="flex gap-4 justify-between items-start">
+        <div className="flex gap-4 justify-between items-start flex-wrap">
           <div className="space-y-6">
             <div className="flex justify-between gap-4 relative">
               <div className="lg:flex lg:flex-row grid grid-cols-2 gap-2 flex-1">
@@ -373,7 +370,7 @@ setLoading(true)
                   </div>
                 </div>
 
-                <div className="min-w-[180px] lg:w-fit w-full">
+                <div className="lg:min-w-[180px] lg:w-fit w-full">
                   <Select
                     value={filterTribeGroup}
                     options={tribeGroupOptions}
@@ -384,7 +381,7 @@ setLoading(true)
                   />
                 </div>
 
-                <div className="min-w-[170px] lg:w-fit w-full">
+                <div className="lg:min-w-[170px] lg:w-fit w-full">
                   <Select
                     value={filterTribe}
                     options={tribeOptions}
@@ -493,23 +490,22 @@ setLoading(true)
               </div>
             </div>
           </div>
-            {userType === "Admin" && (
-          
-          <div className="w-full md:w-fit md:ml-auto xl:w-auto xl:shrink-0">
-            <button
-              type="button"
-              onClick={handleDownloadReport}
-              disabled={moderationList.length === 0}
-              className={`flex w-full xl:w-auto items-center justify-center
-                gap-2 ${moderationList.length === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-black text-white'}
+          {userType === "Admin" && (
+            <div className="w-full md:w-fit md:ml-auto xl:w-auto xl:shrink-0">
+              <button
+                type="button"
+                onClick={handleDownloadReport}
+                disabled={moderationList.length === 0}
+                className={`flex w-full xl:w-auto items-center justify-center
+                gap-2 ${moderationList.length === 0 ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-black text-white"}
                  px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors
                 hover:bg-gray-800`}
-            >
-              <FiDownload size={17} />
-              Export Data
-            </button>
-          </div>
-            )}
+              >
+                <FiDownload size={17} />
+                Export Data
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mt-3">
