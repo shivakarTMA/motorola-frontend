@@ -553,7 +553,7 @@ setLoading(true)
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "Dashboard_Report.xlsx";
+    link.download = "Dashboard Report.xlsx";
 
     document.body.appendChild(link);
     link.click();
@@ -601,22 +601,6 @@ setLoading(true)
                 </div>
               </div>
             </div>
-            {userType === "Admin" && (
-           <div className="w-full sm:w-auto">
-                        <button
-                          type="button"
-                          onClick={handleDownloadReport}
-                          disabled={allDashboardData?.total_users_count === 0}
-                          className={`flex w-full xl:w-auto items-center justify-center
-                            gap-2 ${allDashboardData?.total_users_count === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-black text-white'}
-                             px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors
-                            hover:bg-gray-800`}
-                        >
-                          <FiDownload size={17} />
-                          Export Data
-                        </button>
-                      </div>
-)}
 </div>
           </div>
           {/* Top Cards */}
@@ -676,7 +660,7 @@ setLoading(true)
           </div>
 
           <div className="flex lg:flex-row flex-col justify-between lg:items-center lg:!mt-10  gap-2">
-            <div className="flex lg:justify-end gap-2 mb-4">
+            <div className="flex lg:justify-end gap-2 lg:mb-4">
               <div className="min-w-[180px] w-full">
                 <Select
                   value={filterTribeGroup}
@@ -700,6 +684,22 @@ setLoading(true)
                 />
               </div>
             </div>
+            {userType === "Admin" && (
+           <div className="w-full sm:w-auto mb-4">
+                        <button
+                          type="button"
+                          onClick={handleDownloadReport}
+                          disabled={allDashboardData?.total_users_count === 0}
+                          className={`flex w-full xl:w-auto items-center justify-center
+                            gap-2 ${allDashboardData?.total_users_count === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-black text-white'}
+                             px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors
+                            hover:bg-gray-800`}
+                        >
+                          <FiDownload size={17} />
+                          Export Data
+                        </button>
+                      </div>
+)}
           </div>
 
           <div className="grid lg:grid-cols-2 gap-2 !mt-0">
