@@ -1,5 +1,5 @@
 import { Dialog, Transition, Switch } from "@headlessui/react";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { customStyles, formatWithTimeDate } from "../../../Helper/helper";
@@ -16,6 +16,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
+import CommentsModal from "./CommentsModal";
 
 const statusOptions = [
   { value: "PUBLISHED", label: "Published" },
@@ -49,6 +50,8 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmHidePostOpen, setConfirmHidePostOpen] = useState(false);
 
+  const [commentsOpen, setCommentsOpen] = useState(false);
+
   const prevRef = useRef(null);
   const nextRef = useRef(null);
 
@@ -56,12 +59,12 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
     (opt) => opt.value !== postDetails?.status,
   );
 
-  useEffect(() => {
-    if (!editId || !open) return;
+  const fetchPostDetails = useCallback(
+    async (silent = false) => {
+      if (!editId) return;
 
-    const fetchPostDetails = async () => {
       try {
-        setLoading(true);
+        if (!silent) setLoading(true);
 
         const res = await authAxios().get(`/post/${editId}`);
 
@@ -75,12 +78,22 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
           err.response?.data?.message || "Failed to fetch post details",
         );
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
-    };
+    },
+    [editId],
+  );
 
+  useEffect(() => {
+    if (!editId || !open) return;
     fetchPostDetails();
-  }, [editId, open]);
+  }, [editId, open, fetchPostDetails]);
+
+  // Runs after a comment is deleted successfully.
+  const handleCommentDeleted = () => {
+    fetchPostDetails(true); // refresh the details (comments_count, etc.)
+    onSuccess?.();          // refresh the Hot Take list in the parent
+  };
 
   const handleUpdateStatus = async () => {
     try {
@@ -336,10 +349,19 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
                             <FiHeart size={20} />
                             {showValue(postDetails?.likes_count)}
                           </span>
-                          <span className="flex items-center gap-2 text-sm">
+                          {/* <span className="flex items-center gap-2 text-sm">
                             <FiMessageSquare size={20} />
                             {showValue(postDetails?.comments_count)}
-                          </span>
+                          </span> */}
+                          <button
+                            type="button"
+                            onClick={() => setCommentsOpen(true)}
+                            aria-label="View comments"
+                            className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors"
+                          >
+                            <FiMessageSquare size={20} />
+                            {showValue(postDetails?.comments_count)}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -611,6 +633,13 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
           </div>
         </Dialog>
       </Transition>
+
+      <CommentsModal
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        postId={editId}
+        onDeleted={handleCommentDeleted}
+      />
     </>
   );
 };

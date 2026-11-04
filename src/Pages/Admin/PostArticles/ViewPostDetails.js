@@ -1,5 +1,5 @@
 import { Dialog, Transition, Switch } from "@headlessui/react";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { customStyles, formatWithTimeDate } from "../../../Helper/helper";
@@ -16,6 +16,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
+import CommentsModal from "./CommentsModal";
 
 const statusOptions = [
   { value: "PUBLISHED", label: "Published" },
@@ -45,26 +46,22 @@ const showValue = (value) => {
 const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
   const [postDetails, setPostDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(null);
-  const [remark, setRemark] = useState("");
-  const [remarkError, setRemarkError] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [pendingValue, setPendingValue] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTopPickOpen, setConfirmTopPickOpen] = useState(false);
+  const [confirmHidePostOpen, setConfirmHidePostOpen] = useState(false);
+
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   const prevRef = useRef(null);
   const nextRef = useRef(null);
 
-  const filteredStatusOptions = statusOptions.filter(
-    (opt) => opt.value !== postDetails?.status,
-  );
+  const fetchPostDetails = useCallback(
+    async (silent = false) => {
+      if (!editId) return;
 
-  useEffect(() => {
-    if (!editId || !open) return;
-
-    const fetchPostDetails = async () => {
       try {
-        setLoading(true);
+        if (!silent) setLoading(true);
 
         const res = await authAxios().get(`/post/${editId}`);
 
@@ -78,50 +75,25 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
           err.response?.data?.message || "Failed to fetch post details",
         );
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
-    };
+    },
+    [editId],
+  );
 
+  useEffect(() => {
+    if (!editId || !open) return;
     fetchPostDetails();
-  }, [editId, open]);
+  }, [editId, open, fetchPostDetails]);
 
-  const handleUpdateStatus = async () => {
-    // if (!selectedStatus) {
-    //   toast.error("Please select a status");
-    //   return;
-    // }
-
-    // if (!remark.trim()) {
-    //   setRemarkError("Remark is required.");
-    //   return;
-    // }
-
-    try {
-      setLoading(true);
-
-      const res = await authAxios().put(`/post/${editId}`, {
-        status: selectedStatus.value,
-        remark: remark.trim(),
-      });
-
-      if (res.data.success) {
-        toast.success(res.data.message || "Status updated successfully");
-
-        onSuccess?.(); // Refresh the list
-        handleClose();
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update status");
-    } finally {
-      setLoading(false);
-    }
+  // Runs after a comment is deleted successfully.
+  const handleCommentDeleted = () => {
+    fetchPostDetails(true); // refresh the details (comments_count, etc.)
+    onSuccess?.();          // refresh the Hot Take list in the parent
   };
 
   const handleClose = () => {
     setPostDetails(null);
-    setSelectedStatus(null);
-    setRemark("");
-    setRemarkError("");
     onClose();
   };
 
@@ -168,12 +140,19 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
     ["Tribe Name", showValue(postDetails?.circle?.name)],
   ];
 
-  const handleToggle = (checked) => {
+  const handleToggleTopPick = (checked) => {
     setPendingValue(checked);
-    setConfirmOpen(true);
+    setConfirmTopPickOpen(true);
   };
 
-  const handleConfirm = async () => {
+  const isHidden = postDetails?.status === "HIDDEN";
+
+  const handleToggleHidePost = () => {
+    if (isHidden) return; // safety: already hidden
+    setConfirmHidePostOpen(true);
+  };
+
+  const handleConfirmTopPick = async () => {
     try {
       setLoading(true);
 
@@ -196,13 +175,39 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
       );
     } finally {
       setLoading(false);
-      setConfirmOpen(false);
+      setConfirmTopPickOpen(false);
     }
   };
 
   const handleCancel = () => {
     setPendingValue(enabled); // reset pending value
-    setConfirmOpen(false);
+    setConfirmTopPickOpen(false);
+  };
+
+  const handleConfirmHidePost = async () => {
+    try {
+      setLoading(true);
+
+      const res = await authAxios().put(`/post/${editId}`, {
+        status: "HIDDEN",
+      });
+
+      if (res.data.success) {
+        // keeps the badge and the switch in sync
+        setPostDetails((prev) => ({ ...prev, status: "HIDDEN" }));
+        toast.success(res.data.message || "Hot Take hidden successfully");
+        onSuccess?.();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to hide Hot Take");
+    } finally {
+      setLoading(false);
+      setConfirmHidePostOpen(false); // closes the confirmation modal
+    }
+  };
+
+  const handleCancelHidePost = () => {
+    setConfirmHidePostOpen(false);
   };
 
   return (
@@ -321,10 +326,19 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
                             <FiHeart size={20} />
                             {showValue(postDetails?.likes_count)}
                           </span>
-                          <span className="flex items-center gap-2 text-sm">
+                          {/* <span className="flex items-center gap-2 text-sm">
                             <FiMessageSquare size={20} />
                             {showValue(postDetails?.comments_count)}
-                          </span>
+                          </span> */}
+                          <button
+                            type="button"
+                            onClick={() => setCommentsOpen(true)}
+                            aria-label="View comments"
+                            className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors"
+                          >
+                            <FiMessageSquare size={20} />
+                            {showValue(postDetails?.comments_count)}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -367,7 +381,7 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
                           </span>
                           <Switch
                             checked={enabled}
-                            onChange={handleToggle}
+                            onChange={handleToggleTopPick}
                             className={`${
                               enabled ? "bg-blue-600" : "bg-gray-300"
                             } relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
@@ -379,67 +393,28 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
                             />
                           </Switch>
                         </div>
+                        <div className="flex items-center justify-between gap-4 text-sm">
+                          <span className="font-semibold text-black">
+                            Hide Hot Take
+                          </span>
+                          <Switch
+                            checked={isHidden}
+                            onChange={handleToggleHidePost}
+                            disabled={isHidden}
+                            className={`${
+                              isHidden
+                                ? "bg-blue-600 opacity-60 cursor-not-allowed"
+                                : "bg-gray-300"
+                            } relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
+                          >
+                            <span
+                              className={`${
+                                isHidden ? "translate-x-6" : "translate-x-1"
+                              } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                            />
+                          </Switch>
+                        </div>
                       </div>
-
-                      {/* <div className="mt-5 bg-gray-50 rounded-lg p-4 space-y-4">
-                      <div>
-                        <label className="block mb-2 text-sm font-medium">
-                          Update Status
-                        </label>
-                        <Select
-                          options={filteredStatusOptions}
-                          value={selectedStatus}
-                          onChange={(val) => {
-                            setSelectedStatus(val);
-                          }}
-                          placeholder="Select status"
-                          styles={customStyles}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block mb-2 text-sm font-medium">
-                          Remark<span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={remark}
-                          onChange={(e) => {
-                            setRemark(e.target.value);
-                            if (remarkError) setRemarkError("");
-                          }}
-                          placeholder="Write a remark"
-                          className="custom--input w-full bg-white"
-                        />
-                        {remarkError && (
-                          <p className="text-[11px] text-red-500 mt-1">
-                            {remarkError}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-auto flex justify-end gap-3 pt-5">
-                      <button
-                        type="button"
-                        onClick={handleClose}
-                        className="custom--btn !bg-white !border !border-black !text-black"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleUpdateStatus}
-                        disabled={
-                          loading ||
-                          !selectedStatus ||
-                          selectedStatus.value === postDetails?.status
-                        }
-                        className="custom--btn disabled:opacity-60"
-                      >
-                        {loading ? "Updating..." : "Submit"}
-                      </button>
-                    </div> */}
                     </div>
                   </div>
                 </Dialog.Panel>
@@ -449,12 +424,12 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
         </Dialog>
       </Transition>
 
-      {/* Confirmation modal */}
-      <Transition appear show={confirmOpen} as={Fragment}>
+      {/* Confirmation Top Picks modal */}
+      <Transition appear show={confirmTopPickOpen} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-50"
-          onClose={() => setConfirmOpen(false)}
+          onClose={() => setConfirmTopPickOpen(false)}
         >
           <Transition.Child
             as={Fragment}
@@ -501,7 +476,7 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
 
                     <button
                       type="button"
-                      onClick={handleConfirm}
+                      onClick={handleConfirmTopPick}
                       className="custom--btn disabled:opacity-60"
                     >
                       Confirm
@@ -513,6 +488,76 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
           </div>
         </Dialog>
       </Transition>
+
+      {/* Confirmation Hide Post modal */}
+      <Transition appear show={confirmHidePostOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={() => setConfirmHidePostOpen(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/40" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-200"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-150"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+                  <Dialog.Title className="text-lg font-semibold text-gray-800 mb-2">
+                    Hide Hot Take?
+                  </Dialog.Title>
+                  <p className="text-xs text-gray-500 mb-5">
+                    Are you sure you want to hide this Hot Take?
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={handleCancelHidePost}
+                      disabled={loading}
+                      className="custom--btn !bg-white !text-black border !border-black"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmHidePost}
+                      disabled={loading}
+                      className="custom--btn disabled:opacity-60"
+                    >
+                      {loading ? "Please wait..." : "Confirm"}
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      <CommentsModal
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        postId={editId}
+        onDeleted={handleCommentDeleted}
+      />
+
     </>
   );
 };

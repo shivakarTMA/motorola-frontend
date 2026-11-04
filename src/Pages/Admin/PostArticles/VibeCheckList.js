@@ -372,7 +372,7 @@ const VibeCheckList = (props) => {
         <div>
           <div className="flex lg:flex-row flex-col-reverse justify-between lg:gap-3 gap-2 w-full relative">
             <div className="flex lg:flex-nowrap flex-wrap gap-2 lg:items-center">
-              <div className="md:min-w-[200px] w-fit">
+              <div className="md:min-w-[200px] lg:w-fit w-full">
                 <DateRangePicker
                   onChange={handleDateRangeChange}
                   defaultPreset="Today"

@@ -1,5 +1,5 @@
 import { Dialog, Transition, Switch } from "@headlessui/react";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { customStyles, formatWithTimeDate } from "../../../Helper/helper";
@@ -7,6 +7,7 @@ import { authAxios } from "../../../Config/config";
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 import { format } from "date-fns";
 import { FiHeart, FiMessageSquare } from "react-icons/fi";
+import CommentsModal from "./CommentsModal";
 
 const statusOptions = [
   { value: "PUBLISHED", label: "Published" },
@@ -60,33 +61,48 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
   const [remarkError, setRemarkError] = useState("");
   const [confirmHidePostOpen, setConfirmHidePostOpen] = useState(false);
 
+  const [commentsOpen, setCommentsOpen] = useState(false);
+
   const filteredStatusOptions = statusOptions.filter(
     (opt) => opt.value !== postDetails?.status,
   );
 
-  useEffect(() => {
-    if (!editId || !open) return;
+  const fetchPostDetails = useCallback(
+    async (silent = false) => {
+      if (!editId) return;
 
-    const fetchPostDetails = async () => {
       try {
-        setLoading(true);
+        if (!silent) setLoading(true);
 
         const res = await authAxios().get(`/poll/${editId}`);
 
         if (res.data.success) {
-          setPostDetails(res.data.data);
+          const data = res.data.data;
+          setPostDetails(data);
         }
       } catch (err) {
         toast.error(
           err.response?.data?.message || "Failed to fetch poll details",
         );
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
-    };
+    },
+    [editId],
+  );
 
+  useEffect(() => {
+    if (!editId || !open) return;
     fetchPostDetails();
-  }, [editId, open]);
+  }, [editId, open, fetchPostDetails]);
+
+  
+  // Runs after a comment is deleted successfully.
+  const handleCommentDeleted = () => {
+    fetchPostDetails(true); // refresh the details (comments_count, etc.)
+    onSuccess?.();          // refresh the Hot Take list in the parent
+  };
+
 
   const handleClose = () => {
     setPostDetails(null);
@@ -331,10 +347,19 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
                               <FiHeart size={20} />
                               {showValue(postDetails?.likes_count)}
                             </span>
-                            <span className="flex items-center gap-2 text-sm">
+                            {/* <span className="flex items-center gap-2 text-sm">
                               <FiMessageSquare size={20} />
                               {showValue(postDetails?.comments_count)}
-                            </span>
+                            </span> */}
+                            <button
+                              type="button"
+                              onClick={() => setCommentsOpen(true)}
+                              aria-label="View comments"
+                              className="flex items-center gap-2 text-sm hover:text-blue-600 transition-colors"
+                            >
+                              <FiMessageSquare size={20} />
+                              {showValue(postDetails?.comments_count)}
+                            </button>
                           </div>
 
                           <span className="text-sm text-black">
@@ -526,6 +551,14 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
           </div>
         </Dialog>
       </Transition>
+
+      <CommentsModal
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        postId={editId}
+        onDeleted={handleCommentDeleted}
+        postType="poll"
+      />
     </>
   );
 };
