@@ -47,6 +47,7 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
   const [enabled, setEnabled] = useState(false);
   const [pendingValue, setPendingValue] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmHidePostOpen, setConfirmHidePostOpen] = useState(false);
 
   const prevRef = useRef(null);
   const nextRef = useRef(null);
@@ -153,6 +154,13 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
     ["Tribe Name", showValue(postDetails?.circle?.name)],
   ];
 
+  const isHidden = postDetails?.status === "HIDDEN";
+
+  const handleToggleHidePost = () => {
+    if (isHidden) return; // safety: already hidden
+    setConfirmHidePostOpen(true);
+  };
+
   const handleToggle = (checked) => {
     setPendingValue(checked);
     setConfirmOpen(true);
@@ -188,6 +196,32 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
   const handleCancel = () => {
     setPendingValue(enabled); // reset pending value
     setConfirmOpen(false);
+  };
+
+    const handleConfirmHidePost = async () => {
+    try {
+      setLoading(true);
+
+      const res = await authAxios().put(`/post/${editId}`, {
+        status: "HIDDEN",
+      });
+
+      if (res.data.success) {
+        // keeps the badge and the switch in sync
+        setPostDetails((prev) => ({ ...prev, status: "HIDDEN" }));
+        toast.success(res.data.message || "Deep Dive hidden successfully");
+        onSuccess?.();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to hide Deep Dive");
+    } finally {
+      setLoading(false);
+      setConfirmHidePostOpen(false); // closes the confirmation modal
+    }
+  };
+
+  const handleCancelHidePost = () => {
+    setConfirmHidePostOpen(false);
   };
 
   return (
@@ -360,6 +394,27 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
                             />
                           </Switch>
                         </div>
+                        <div className="flex items-center justify-between gap-4 text-sm">
+                          <span className="font-semibold text-black">
+                            Hide Deep Dive
+                          </span>
+                          <Switch
+                            checked={isHidden}
+                            onChange={handleToggleHidePost}
+                            disabled={isHidden}
+                            className={`${
+                              isHidden
+                                ? "bg-blue-600 opacity-60 cursor-not-allowed"
+                                : "bg-gray-300"
+                            } relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
+                          >
+                            <span
+                              className={`${
+                                isHidden ? "translate-x-6" : "translate-x-1"
+                              } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                            />
+                          </Switch>
+                        </div>
                       </div>
 
                       {/* <div className="mt-5 bg-gray-50 rounded-lg p-4 space-y-4">
@@ -486,6 +541,68 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
                       className="custom--btn disabled:opacity-60"
                     >
                       Confirm
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+            {/* Confirmation Hide Post modal */}
+      <Transition appear show={confirmHidePostOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={() => setConfirmHidePostOpen(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/40" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-200"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-150"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+                  <Dialog.Title className="text-lg font-semibold text-gray-800 mb-2">
+                    Hide Deep Dive?
+                  </Dialog.Title>
+                  <p className="text-xs text-gray-500 mb-5">
+                    Are you sure you want to hide this Deep Dive?
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={handleCancelHidePost}
+                      disabled={loading}
+                      className="custom--btn !bg-white !text-black border !border-black"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmHidePost}
+                      disabled={loading}
+                      className="custom--btn disabled:opacity-60"
+                    >
+                      {loading ? "Please wait..." : "Confirm"}
                     </button>
                   </div>
                 </Dialog.Panel>
