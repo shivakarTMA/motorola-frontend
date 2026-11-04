@@ -172,6 +172,25 @@ const CommentPostDetails = ({
     }
   };
 
+  const getCommentHtml = () => {
+    if (!postDetails?.comment?.content) return "";
+
+    try {
+      const content =
+        typeof postDetails.comment.content === "string"
+          ? JSON.parse(postDetails.comment.content)
+          : postDetails.comment.content;
+
+      const converter = new QuillDeltaToHtmlConverter(content, {});
+      return converter.convert();
+    } catch (err) {
+      console.error("Failed to convert comment content:", err);
+      return postDetails?.comment?.content || "";
+    }
+  };
+
+  const commentHtml = getCommentHtml();
+
   const html = getHtmlContent();
   const media = postDetails?.comment?.post?.media || [];
 
@@ -485,7 +504,14 @@ const CommentPostDetails = ({
 
                         <div className="flex gap-2 text-sm pt-3">
                             <span className="text-black font-semibold">Flagged Comment:</span>
-                            <span>{postDetails?.comment?.content || "--"}</span>
+                             {commentHtml ? (
+                                <div
+                                  className="article--content"
+                                  dangerouslySetInnerHTML={{ __html: commentHtml }}
+                                />
+                              ) : (
+                                <span>--</span>
+                              )}
                         </div>
 
                         <div className="mt-3 flex items-center gap-5 text-black px-2">
