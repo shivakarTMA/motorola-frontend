@@ -39,6 +39,9 @@ const HotTakeList = (props) => {
   const [viewPostDetails, setViewPostDetails] = useState(false);
   const [editPostId, setEditPostId] = useState(null);
 
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [startDate, setStartDate] = useState(() => {
     const from = searchParams.get("date_from");
     return from ? new Date(from) : null;
@@ -74,7 +77,7 @@ const HotTakeList = (props) => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const fetchHotTakeList = async (currentPage = page) => {
+  const fetchHotTakeList = async (currentPage = page, searchText = debouncedSearch) => {
     try {
       setLoading(true);
 
@@ -83,6 +86,10 @@ const HotTakeList = (props) => {
         limit: rowsPerPage,
         type: "POST",
       };
+
+      if (searchText) {
+        params.search = searchText;
+      }
 
       if (statusFilter) {
         params.status = statusFilter;
@@ -138,9 +145,9 @@ const HotTakeList = (props) => {
       return;
     }
 
-    fetchHotTakeList(page);
+    fetchHotTakeList(debouncedSearch);
   }, [
-    page,
+    debouncedSearch,
     startDate,
     endDate,
     statusFilter,
@@ -150,6 +157,19 @@ const HotTakeList = (props) => {
     sortBy,
     sortOrder,
   ]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [startDate, endDate]);
 
   const fetchUsersList = async () => {
     try {
@@ -405,6 +425,18 @@ const HotTakeList = (props) => {
 
         <div className="mt-3">
           <div className="box--shadow bg-white rounded-[15px] p-4">
+            <div className="mt-0 mb-5">
+              {/* Search */}
+              <div className="lg:max-w-[300px] w-full ">
+                <input
+                  type="text"
+                  placeholder="Search by hot take..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="custom--input w-full"
+                />
+              </div>
+            </div>
             <div className="relative overflow-x-auto">
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">

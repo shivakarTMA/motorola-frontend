@@ -435,7 +435,7 @@ const VibeCheckList = (props) => {
               <div className="lg:max-w-[300px] w-full ">
                 <input
                   type="text"
-                  placeholder="Search by question..."
+                  placeholder="Search by vibe check..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="custom--input w-full"
