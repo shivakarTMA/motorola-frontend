@@ -391,9 +391,17 @@ const handleContentBarClick = (category) => {
         },
       },
     },
+    // Custom tooltip
+      tooltip: {
+        formatter: function () {
+          const category = this.series.xAxis.categories[this.x];
+
+          return `${category}: <b>${this.y}</b>`;
+        },
+      },
     series: [
       {
-        name: filterTribe?.label || filterTribeGroup?.label || "Content",
+        // name: filterTribe?.label || filterTribeGroup?.label || "Content",
         color: "#3774d0",
         data: hasContentData
           ? [
@@ -442,9 +450,17 @@ const handleContentBarClick = (category) => {
       legend: {
         enabled: false,
       },
+      // Custom tooltip
+      tooltip: {
+        formatter: function () {
+          const category = this.series.xAxis.categories[this.x];
+
+          return `${category}: <b>${this.y}</b>`;
+        },
+      },
       series: [
         {
-          name: filterTribe?.label || filterTribeGroup?.label || "Engagement",
+          // name: filterTribe?.label || filterTribeGroup?.label || "Engagement",
           color: "#00A870",
           data: hasEngagementData
             ? [
