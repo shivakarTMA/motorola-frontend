@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MdModeEdit } from "react-icons/md";
 import { FiEye, FiPlus, FiTrash2 } from "react-icons/fi";
 import CustomDataTable from "../../../Components/Common/CustomDataTable";
@@ -6,6 +6,7 @@ import Tooltip from "../../../Components/Common/Tooltip";
 import { authAxios } from "../../../Config/config";
 import { toast } from "react-toastify";
 import IsLoadingHOC from "../../../Components/Common/IsLoadingHOC";
+import { IoClose } from "react-icons/io5";
 import {
   customStyles,
   filterActiveItems,
@@ -61,6 +62,11 @@ const DeepDiveList = (props) => {
     searchParams.get("circle_group_id"),
   );
   const [tribeIdFromUrl] = useState(() => searchParams.get("circle_id"));
+
+  const [userNameInput, setUserNameInput] = useState("");
+  const [showUserResults, setShowUserResults] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const userSearchRef = useRef(null);
 
   const [filterTribeGroup, setFilterTribeGroup] = useState(null);
   const [filterTribe, setFilterTribe] = useState(null);
@@ -172,41 +178,79 @@ const DeepDiveList = (props) => {
   }, [startDate, endDate]);
 
   const fetchUsersList = async (search = "") => {
+    if (!search.trim()) {
+      setUserOptions([]);
+      setShowUserResults(false);
+      return;
+    }
+
     try {
+      setLoadingUsers(true);
+
       const response = await authAxios().get("/user", {
         params: {
-          search: search,
+          search,
         },
-      })
-      const resData = response?.data;
+      });
 
-      console.log(resData, "resData");
+      const resData = response?.data;
 
       if (resData?.success) {
         const options = (resData.data.items || [])
-        .filter((user) => user.display_username || user.username)
-        .map((user) => ({
-          value: user.id,
-          label: user.username,
-        }));
-        console.log(options, "options");
-        setUserOptions(options);
-        // NEW: resolve pending user_id from the URL now that we have labels
+          .filter((user) => user.display_username || user.username)
+          .map((user) => ({
+            value: user.id,
+            label: user.username,
+          }));
+
+        // Resolve user_id from URL
         if (userIdFromUrl) {
           const match = options.find(
-            (o) => String(o.value) === String(userIdFromUrl),
+            (o) => String(o.value) === String(userIdFromUrl)
           );
-          if (match) setFilterUserNameGroup(match);
+
+          if (match) {
+            setFilterUserNameGroup(match);
+            setUserNameInput(match.label);
+          }
         }
-      } else {
-        toast.error(response.data?.message);
+
+        setUserOptions(options);
+        setShowUserResults(true);
       }
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Unable to load tribe groups",
+        error?.response?.data?.message || "Unable to load users"
       );
+    } finally {
+      setLoadingUsers(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchUsersList(userNameInput);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [userNameInput]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        userSearchRef.current &&
+        !userSearchRef.current.contains(event.target)
+      ) {
+        setShowUserResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchTribeGroupList = async () => {
     try {
@@ -288,7 +332,10 @@ const DeepDiveList = (props) => {
 
   useEffect(() => {
     fetchTribeGroupList();
-    fetchUsersList();
+
+    if (userIdFromUrl) {
+      fetchUsersList("");
+    }
   }, []);
 
   useEffect(() => {
@@ -389,7 +436,7 @@ const DeepDiveList = (props) => {
                 styles={customStyles}
               />
             </div>
-            <div className="min-w-[180px] lg:w-fit w-full">
+            {/* <div className="min-w-[180px] lg:w-fit w-full">
               <Select
                 value={filterUserNameGroup}
                 options={userOptions}
@@ -411,6 +458,82 @@ const DeepDiveList = (props) => {
                 isClearable
                 isSearchable
               />
+            </div> */}
+            <div
+              className="min-w-[180px] lg:w-fit w-full relative"
+              ref={userSearchRef}
+            >
+              <input
+                type="text"
+                placeholder="Filter by Username"
+                value={userNameInput}
+                disabled={!!filterUserNameGroup}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setUserNameInput(value);
+                  setFilterUserNameGroup(null);
+                  setPage(1);
+                }}
+                onFocus={() => {
+                  if (userOptions.length > 0) {
+                    setShowUserResults(true);
+                  }
+                }}
+                className="custom--input w-full pr-9"
+              />
+
+              {/* Clear Selected Username */}
+              {filterUserNameGroup && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserNameInput("");
+                    setFilterUserNameGroup(null);
+                    setUserOptions([]);
+                    setShowUserResults(false);
+                    setPage(1);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-500 text-lg font-semibold"
+                  title="Remove selected username"
+                >
+                  <IoClose />
+                </button>
+              )}
+
+              {/* Search Results */}
+              {showUserResults && (
+                <div className="absolute top-full left-0 w-full bg-white rounded-lg shadow-lg border z-50 max-h-[250px] overflow-y-auto">
+
+                  {loadingUsers && (
+                    <p className="p-3 text-sm text-gray-500">
+                      Searching...
+                    </p>
+                  )}
+
+                  {!loadingUsers && userOptions.length === 0 && (
+                    <p className="p-3 text-sm text-gray-500">
+                      No users found
+                    </p>
+                  )}
+
+                  {!loadingUsers &&
+                    userOptions.map((user) => (
+                      <div
+                        key={user.value}
+                        className="p-3 hover:bg-gray-100 cursor-pointer border-b text-sm"
+                        onClick={() => {
+                          setFilterUserNameGroup(user);
+                          setUserNameInput(user.label);
+                          setShowUserResults(false);
+                          setPage(1);
+                        }}
+                      >
+                        {user.label}
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
             <div className="min-w-[180px] lg:w-fit w-full">
               <Select
