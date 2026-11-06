@@ -401,9 +401,10 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
                             )}
                           </span>
                         </div>
+                        {(postDetails?.status === "PUBLISHED" || postDetails?.status === "HIDDEN") && (
                         <div className="flex items-center justify-between gap-4 text-sm">
                           <span className="font-semibold text-black">
-                            Hide Vibe Check
+                            Hide
                           </span>
                           <Switch
                             checked={isHidden}
@@ -422,6 +423,7 @@ const ViewPollDetails = ({ open, onClose, editId, onSuccess }) => {
                             />
                           </Switch>
                         </div>
+                        )}
                       </div>
 
                       {/* <div className="mt-5 bg-gray-50 rounded-lg p-4 space-y-4">

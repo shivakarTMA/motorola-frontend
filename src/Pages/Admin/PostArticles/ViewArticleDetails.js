@@ -416,9 +416,10 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
                             />
                           </Switch>
                         </div>
+                        {(postDetails?.status === "PUBLISHED" || postDetails?.status === "HIDDEN") && (
                         <div className="flex items-center justify-between gap-4 text-sm">
                           <span className="font-semibold text-black">
-                            Hide Deep Dive
+                            Hide
                           </span>
                           <Switch
                             checked={isHidden}
@@ -437,6 +438,7 @@ const ViewArticleDetails = ({ open, onClose, editId, onSuccess }) => {
                             />
                           </Switch>
                         </div>
+                        )}
                       </div>
 
                       {/* <div className="mt-5 bg-gray-50 rounded-lg p-4 space-y-4">

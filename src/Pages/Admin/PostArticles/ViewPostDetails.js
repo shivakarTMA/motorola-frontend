@@ -393,27 +393,30 @@ const ViewPostDetails = ({ open, onClose, editId, onSuccess }) => {
                             />
                           </Switch>
                         </div>
-                        <div className="flex items-center justify-between gap-4 text-sm">
-                          <span className="font-semibold text-black">
-                            Hide Hot Take
-                          </span>
-                          <Switch
-                            checked={isHidden}
-                            onChange={handleToggleHidePost}
-                            disabled={isHidden}
-                            className={`${
-                              isHidden
-                                ? "bg-blue-600 opacity-60 cursor-not-allowed"
-                                : "bg-gray-300"
-                            } relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
-                          >
-                            <span
+                        {/* Hide switch is disabled if the post is already hidden */}
+                        {(postDetails?.status === "PUBLISHED" || postDetails?.status === "HIDDEN") && (
+                          <div className="flex items-center justify-between gap-4 text-sm">
+                            <span className="font-semibold text-black">
+                              Hide
+                            </span>
+                            <Switch
+                              checked={isHidden}
+                              onChange={handleToggleHidePost}
+                              disabled={isHidden}
                               className={`${
-                                isHidden ? "translate-x-6" : "translate-x-1"
-                              } inline-block h-4 w-4 transform rounded-full bg-white transition`}
-                            />
-                          </Switch>
-                        </div>
+                                isHidden
+                                  ? "bg-blue-600 opacity-60 cursor-not-allowed"
+                                  : "bg-gray-300"
+                              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
+                            >
+                              <span
+                                className={`${
+                                  isHidden ? "translate-x-6" : "translate-x-1"
+                                } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                              />
+                            </Switch>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

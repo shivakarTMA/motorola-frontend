@@ -172,24 +172,25 @@ const VibeCheckList = (props) => {
     setPage(1);
   }, [startDate, endDate]);
 
-  const fetchUsersList = async () => {
+  const fetchUsersList = async (search = "") => {
     try {
-      const params = {
-        limit: 5000,
-      };
       const response = await authAxios().get("/user", {
-        params,
-      });
+        params: {
+          search: search,
+        },
+      })
       const resData = response?.data;
 
       console.log(resData, "resData");
 
       if (resData?.success) {
-        const options = (resData.data.items || []).map((group) => ({
-          value: group.id,
-          label: group.username,
+        const options = (resData.data.items || [])
+        .filter((user) => user.display_username || user.username)
+        .map((user) => ({
+          value: user.id,
+          label: user.username,
         }));
-        console.log(options, "options");
+
         setUserOptions(options);
         // NEW: resolve pending user_id from the URL now that we have labels
         if (userIdFromUrl) {
@@ -397,11 +398,24 @@ const VibeCheckList = (props) => {
                 <Select
                   value={filterUserNameGroup}
                   options={userOptions}
-                  onChange={handleUserNameChange}
+                  onChange={(option) => {
+                    handleUserNameChange(option);
+
+                    // When clear button is clicked
+                    if (!option) {
+                      fetchUsersList("");
+                    }
+                  }}
+                  onInputChange={(inputValue, actionMeta) => {
+                    if (actionMeta.action === "input-change") {
+                      fetchUsersList(inputValue);
+                    }
+                  }}
                   styles={customStyles}
                   placeholder="Filter by Username"
                   isClearable
-                />
+                  isSearchable
+              />
               </div>
               <div className="lg:min-w-[180px] lg:w-fit w-[48%]">
                 <Select
